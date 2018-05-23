@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
-#from skimage import io, exposure, img_as_uint, img_as_float
 
 #do NOT use 'path' as a variable in program,
 #it's a dummy test variable for saving images
 #consider using sdss.files.filename() instead
+
 ##pathBright = '/home/fermi/dbektesevic/run_results/'
 ##pathDim = '/home/fermi/dbektesevic/run_results/'
-pathBright = '/home/dino/Desktop/LFDS/'
-pathDim =  '/home/dino/Desktop/LFDS/'
+pathBright = '/home/dino/Desktop/LFDS3/'
+pathDim =  '/home/dino/Desktop/LFDS3/'
 
 
 def _check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
@@ -67,49 +66,49 @@ def _check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
                 pass
 
         if debug:
-            print "RO: "
-            print "Ro_tresh:    ", dro
-            print "  PROCESED IMAGE: "
-            print "    ro1:    ", ro1.tolist()
-            print "    avg(ro1):    ", np.average(ro1)
-            print "  MINAREARECT IMAGE: "
-            print "    ro2:    ", ro2.tolist()
-            print "    avg(ro2):    ", np.average(ro2)
-            print "------------------------------------------"
-            print "avg1-avg2:    ", abs(np.average(ro1)-np.average(ro2))
+            print ("RO: "                                                 )
+            print ("Ro_tresh:    ", dro                                   )
+            print ("  PROCESED IMAGE: "                                   )
+            print ("    ro1:    ", ro1.tolist()                           )
+            print ("    avg(ro1):    ", np.average(ro1)                   )
+            print ("  MINAREARECT IMAGE: "                                )
+            print ("    ro2:    ", ro2.tolist()                           )
+            print ("    avg(ro2):    ", np.average(ro2)                   )
+            print ("------------------------------------------"           )
+            print ("avg1-avg2:    ", abs(np.average(ro1)-np.average(ro2)) )
 
         if abs(np.average(ro1)-np.average(ro2))>dro:
-            if debug: print "Ro test:    FAILED"
+            if debug: print("Ro test:    FAILED")
             return True
 
 
         if debug:
-            print "\nTHETA: "
-            print "Theta_tresh:    ", thetaTresh
-            print "Lineset_tresh    ", lineSetTresh
-            print "  PROCESED IMAGE: "
-            print "    theta1    ", theta1.tolist()
-            print "    max1-min1    ", abs(theta1.max()-theta1.min())
-            print "  MINAREARECT IMAGE: "
-            print "    theta2    ", theta2.tolist()
-            print "    max2-min2    ", abs(theta2.max()-theta2.min())
-            print "------------------------------------------"
-            print "Average(theta1-theta2):    ",abs(np.average(theta1-theta2))
+            print ("\nTHETA: "                                                 )
+            print ("Theta_tresh:    ", thetaTresh                              )
+            print ("Lineset_tresh    ", lineSetTresh                           )
+            print ("  PROCESED IMAGE: "                                        )
+            print ("    theta1    ", theta1.tolist()                           )
+            print ("    max1-min1    ", abs(theta1.max()-theta1.min())         )
+            print ("  MINAREARECT IMAGE: "                                     )
+            print ("    theta2    ", theta2.tolist()                           )
+            print ("    max2-min2    ", abs(theta2.max()-theta2.min())         )
+            print ("------------------------------------------"                )
+            print ("Average(theta1-theta2):    ",abs(np.average(theta1-theta2)))
 
         dtheta1=abs(theta1.max()-theta1.min())
         if dtheta1> thetaTresh:
-            if debug: print "Theta1 tresh test:    FAILED"
+            if debug: print("Theta1 tresh test:    FAILED")
             return True
 
         dtheta2=abs(theta2.max()-theta2.min())
         if dtheta2> thetaTresh:
-            if debug: print "Theta2 tresh test:    FAILED"
+            if debug: print ("Theta2 tresh test:    FAILED")
             return True
 
 
         dtheta = abs(theta1-theta2)
         if np.average(dtheta)> lineSetTresh:
-            if debug: print "Lineset tresh test:    FAILED"
+            if debug: print ("Lineset tresh test:    FAILED")
             return True
 
 def _draw_lines(hough, image, nlines, name, path=pathDim,
@@ -148,11 +147,6 @@ def _draw_lines(hough, image, nlines, name, path=pathDim,
         try:
              x0 = np.cos(theta)*rho
              y0 = np.sin(theta)*rho
-             #print x0, y0
-             #print int(x0 + (n_x+n_y)*(-np.sin(theta)))
-             #print int(y0 + (n_x+n_y)*np.cos(theta))
-             #print int(x0 - (n_x+n_y)*(-np.sin(theta)))
-             #print int(y0 - (n_x+n_y)*np.cos(theta))
              pt1 = ( int(x0 + (n_x+n_y)*(-np.sin(theta))),
                      int(y0 + (n_x+n_y)*np.cos(theta)) )
              pt2 = ( int(x0 - (n_x+n_y)*(-np.sin(theta))),
@@ -194,11 +188,6 @@ def _fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
     box_img = np.zeros(img.shape, dtype=np.uint8)
     canny = cv2.Canny(img, 0, 255)
 
-    #in CV2 findContours modifies the original image
-    #in CV3+ findContours doesnt modify the original image but instead
-    #returns it as first parameter of the function.
-    #so CV2: contours, heirarchy = cv2.findContours
-    #in CV3: img, contours, hierarchy = cv2.findContours
     contoursimg, contours, hierarchy = cv2.findContours(canny, contoursMode, contoursMethod)
 
     boxes = list()
@@ -213,8 +202,6 @@ def _fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
         if l>minAreaRectMinLen and w>minAreaRectMinLen:
             if (l/w>lwTresh):
                 detection = True
-                #in CV2 the name of the function is cv2.cv.BoxPoints
-                #in CV3 the name of the function is cv2.boxPoints
                 box = cv2.boxPoints(rect)
                 box = np.asarray(box, dtype=np.int32)
                 cv2.fillPoly(box_img, [box], (255, 255,255))
@@ -237,8 +224,6 @@ def _dictify_hough(shape,houghVals):
     x2 = int(x0 + (n_x+n_y)*np.sin(theta))
     y2 = int(y0 - (n_x+n_y)*np.cos(theta))
 
-    #OMFG DINO!!!!! KOJA JBN GREŠKA; SPREMAŠ Y0 A NE Y1 TO NEIDE!
-    #print {"x1":x1, "y1":y0, "x2":x2, "y2":y2}
     return {"x1":x1, "y1":y1, "x2":x2, "y2":y2}
 
 
@@ -285,14 +270,14 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
     if debug:
         cv2.imwrite(pathBright+"1equBRIGHT.png", equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 3])
-        print "BRIGHT: saving EQU with removed stars"
+        print("BRIGHT: saving EQU with removed stars")
 
     equ = cv2.dilate(equ, dilateKernel)
 
     if debug:
             cv2.imwrite(pathBright+"2dilateBRIGHT.png", equ,
                         [cv2.IMWRITE_PNG_COMPRESSION, 3])
-            print "BRIGHT: saving dilated image."
+            print("BRIGHT: saving dilated image.")
 
 
     detection, box_img = _fit_minAreaRect(equ, contoursMode,
@@ -303,7 +288,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
     if debug:
         cv2.imwrite(pathBright+"3contoursBRIGHT.png", box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 3])
-        print "BRIGHT: saving contours"
+        print ("BRIGHT: saving contours")
 
     if detection:
         equhough = cv2.HoughLines(equ, houghMethod, np.pi/180, 1)
@@ -314,7 +299,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
                         "5equhoughBRIGHT", path=pathBright)
             _draw_lines(boxhough, box_img,  nlinesInSet,
                         "4boxhoughBRIGHT", path=pathBright)
-            print "BRIGHT!"
+            print("BRIGHT!")
 
         if _check_theta(equhough, boxhough, nlinesInSet, dro,
                         thetaTresh, lineSetTresh, debug):
@@ -322,7 +307,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
         else:
             return (True, _dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print "BRIGHT: no boxes found"
+        if debug: print("BRIGHT: no boxes found")
         return (False, None)
 
 
@@ -368,21 +353,21 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh,
     equ = cv2.equalizeHist(gray_image)
 
     if debug:
-        print "DIM: saving EQU with stars removed"
+        print("DIM: saving EQU with stars removed")
         cv2.imwrite(pathDim+"6equDIM.png", equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     opening = cv2.erode(equ, erodeKernel)
 
     if debug:
-        print "DIM: saving eroded EQU with stars removed"
+        print("DIM: saving eroded EQU with stars removed")
         cv2.imwrite(pathDim+'7erodedDIM.png', opening,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     equ = cv2.dilate(opening, dilateKernel)
 
     if debug:
-        print "DIM: saving dilated eroded EQU with stars removed"
+        print("DIM: saving dilated eroded EQU with stars removed")
         cv2.imwrite(pathDim+'8openedDIM.png', equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
@@ -393,7 +378,7 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh,
     if debug:
         cv2.imwrite(pathDim+"9contoursDIM.png", box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
-        print "DIM: saveamo konture"
+        print("DIM: saveamo konture")
 
     if detection:
         equhough = cv2.HoughLines(equ, houghMethod, np.pi/180, 1)
@@ -404,7 +389,7 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh,
                         compression=4)
             _draw_lines(boxhough, box_img, nlinesInSet, "11boxhoughDIM",
                         compression=4, color=(0,0,255))
-            print "DIM"
+            print("DIM")
 
 
         if _check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
@@ -413,5 +398,5 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh,
         else:
             return (True, _dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print "DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!"
+        if debug: print("DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!")
         return (False, None)

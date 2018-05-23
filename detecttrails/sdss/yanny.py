@@ -18,7 +18,7 @@ Purpose:
         3) enums are not yet supported.
 
 Functions:
-    read:  
+    read:
         A convenience function to read from a yanny parameter file. See docs
         for this function for full info.
     readone:
@@ -39,10 +39,12 @@ Classes:
 Modification History:
     Created: 2010-04-07, Erin Sheldon, BNL
 """
+
 import os
+import re
 import sys
 from sys import stdout
-import re
+from io import IOBase
 
 import numpy
 
@@ -67,7 +69,7 @@ _numpy2yanny=\
 badbracket_reg=re.compile('\{ .*\{ .*\} .*\}')
 
 
-def readone(fname, names=None, indices=None, getpars=False, defchar=255, 
+def readone(fname, names=None, indices=None, getpars=False, defchar=255,
             verbose=False):
     """
     Module:
@@ -99,7 +101,7 @@ def read(fname, one=False, names=None, indices=None, getpars=False, defchar=255,
     Purpose:
 
         Read data from a yanny parameter file, as described here
-        
+
             http://www.sdss.org/dr7/dm/flatFiles/yanny.html
 
         This is a convenience function; under the hood, a Yanny object is
@@ -123,16 +125,15 @@ def read(fname, one=False, names=None, indices=None, getpars=False, defchar=255,
 
     Inputs:
         fname: The file name.
-    
     Optional Inputs:
-        one: 
+        one:
             Return the first struct.  Normally the result is a dictionary keyed
             by structure name, in this case just the structure is returned.
             Can be used in conjunction with names or indices
-        names: 
+        names:
             A name or sequence of names, representing a subset of structures to
             return.
-        indices: 
+        indices:
             An indices or sequence if indices representing a subset of the
             structures to return.
         getpars:  If True, return a tuple (structs, pars).
@@ -235,7 +236,7 @@ class Yanny():
 
     Reading a file:
         result = y.read(one=False, names=None, indices=None, getpars=False)
-        
+
         See docs for the read() method for more details.
 
     Useful Methods: (see individual methods for more details)
@@ -260,7 +261,7 @@ class Yanny():
         self.open(self._fname, self._mode)
 
     def open(self, fname=None, mode='r'):
-        if isinstance(self._fobj, file):
+        if isinstance(self._fobj, IOBase):
             self._fobj.close()
 
         self._fname = fname
@@ -290,7 +291,7 @@ class Yanny():
         Purpose:
 
             Read data from a yanny parameter file, as described here
-            
+
                 http://www.sdss.org/dr7/dm/flatFiles/yanny.html
 
             The result is a dictionary keyed by the structure names, if any
@@ -311,18 +312,18 @@ class Yanny():
             from sdsspy import yanny
             y=yanny.Yanny(fname, mode='r', verbose=False)
             result = y.read(one=False, names=None, indices=None, getpars=False)
-            
+
             # by default all data are read
 
         Optional Inputs:
-            one: 
+            one:
                 Return the first struct.  Normally the result is a dictionary keyed
                 by structure name, in this case just the structure is returned.
                 Can be used in conjunction with names or indices
-            names: 
+            names:
                 A name or sequence of names, representing a subset of structures to
                 return.
-            indices: 
+            indices:
                 An indices or sequence if indices representing a subset of the
                 structures to return.
             getpars:  If True, return a tuple (structs, pars).
@@ -399,7 +400,7 @@ class Yanny():
 
 
         if indices is not None:
-            
+
             indices=numpy.array(indices, ndmin=1, copy=False)
 
             if indices.max() > (len(nameordered)-1):
@@ -476,7 +477,7 @@ class Yanny():
         structs = {}
         pars = {}
         while 1:
-            
+
             line = self.get_line()
             if line is None:
                 break
@@ -494,7 +495,7 @@ class Yanny():
                     # find opening and closing { }
                     typedef = self.get_full_typedef(line)
                     if self.verbose:
-                        print 'typedef is:\n',typedef
+                        print('typedef is:\n',typedef)
                     name, descr = self.typedef2dtype(typedef)
                     allnames.append(name)
                     structs[name] = {}
@@ -527,7 +528,7 @@ class Yanny():
                             # just glob anything after the first white space
                             # into a string
                             val = valstring
-                        
+
                         pars[parname] = val
 
         if len(structs) > 0:
@@ -557,7 +558,7 @@ class Yanny():
         n = len( struct['lines'] )
         descr = struct['descr']
         if self.verbose:
-            print 'descr:',descr
+            print('descr:',descr)
         data = numpy.zeros(n, dtype=descr)
         # now run through the lines and interpret in terms of the given data type
 
@@ -604,7 +605,7 @@ class Yanny():
                 if len(thisdata.shape) > 0:
                     # we want to reshape to a flat array to make this easier
                     thisdata = thisdata.reshape(thisdata.size)
-                
+
                 for j in range(thisdata.size):
                     # string to number conversion must happen explicitly
                     thisdata[j] = words[word_index]
@@ -701,7 +702,7 @@ class Yanny():
                 line = line.strip()
 
         if self.verbose and verbose:
-            print "line: '%s'" % line
+            print( "line: '%s'" % line)
         return line
 
 
@@ -752,7 +753,6 @@ class Yanny():
         yanny_type = ys[0]
         numpy_type = self.yanny_type_to_numpy_type(yanny_type)
         fieldname = ys[1]
-        
 
         left_loc = fieldname.find('[')
         right_loc = fieldname.rfind(']')
@@ -824,15 +824,14 @@ class Yanny():
         if name[-1] == ';':
             name = name[0:-1]
 
-         
         if self.verbose:
-            print "struct name: '%s'" % name
-            print "field defs:"
+            print("struct name: '%s'" % name)
+            print("field defs:")
         descr = []
         for f in field_defs:
             d = self.get_yanny_def_as_descr(f)
             if self.verbose:
-                print '  ',f,'descr:',d
+                print( '  ',f,'descr:',d)
 
             descr.append(d)
 
@@ -874,9 +873,3 @@ class Yanny():
             #print 'tdef: ',tdef
 
         return tdef
-
-
-                
-
-
-

@@ -1,15 +1,17 @@
-from removestars import remove_stars
-from processfield import process_field_bright, process_field_dim
-import fitsio
-from sdss import files
-
 import os
 import traceback
+
 import numpy as _np
+import fitsio
+
 import cv2
 from cv2 import RETR_LIST, RETR_EXTERNAL, RETR_CCOMP, RETR_TREE
 from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE,
                  CHAIN_APPROX_TC89_L1, CHAIN_APPROX_TC89_KCOS)
+
+from .removestars import remove_stars
+from .processfield import process_field_bright, process_field_dim
+from .sdss import files
 
 
 def process_field(results, errors, run, camcol, filter, field,
@@ -34,16 +36,9 @@ def process_field(results, errors, run, camcol, filter, field,
         origPathName = files.filename('frame', run=run, camcol=camcol,
                                       field=field, filter=filter)
 
-        unpackPath = os.environ["FITSDMP"]
+        img = fitsio.read(origPathName)#unpackedfits)
 
-        fname = origPathName.split("/")[-1]
-        unpackedfits = os.path.join(unpackPath, fname)
-
-        os.popen("bunzip2 -qkc "+origPathName+".bz2 >"+unpackedfits)
-
-        img = fitsio.read(unpackedfits)
-
-        h = fitsio.read_header(unpackedfits)
+        h = fitsio.read_header(origPathName)#unpackedfits)
         printit = (str(run)+" "+str(camcol)+" "+filter+" "+str(field)+" "
                    +str(h['TAI'])+" "+str(h['CRPIX1'])+" "+str(h['CRPIX2'])+" "
                    +str(h['CRVAL1'])+" "+str(h['CRVAL2'])+" "+str(h['CD1_1'])+" "
@@ -67,7 +62,7 @@ def process_field(results, errors, run, camcol, filter, field,
                     results.write(printit+str(res["x1"])+" "+str(res["y1"])+" "+
                                   str(res["x2"])+" "+str(res["y2"])+"\n")
 
-    except Exception, e:
+    except Exception as e:
         if params_bright["debug"] or params_dim["debug"]:
             traceback.print_exc(limit=3)
         errors.write(str(run)+","+str(camcol)+","+str(field)+","+str(filter)+"\n")

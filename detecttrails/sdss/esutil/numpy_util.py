@@ -150,7 +150,6 @@ import sys
 from sys import stdout, stderr
 import copy
 import stat
-import misc
 import pydoc
 
 try:
@@ -158,6 +157,8 @@ try:
     have_numpy=True
 except:
     have_numpy=False
+
+from . import misc
 
 def where1(conditional_expression):
     """

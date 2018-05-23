@@ -125,10 +125,10 @@ def get_python_version(numerical=False):
         pyvers='v%s.%s.%s' % sys.version_info[0:3]
     return pyvers
 
-import ostools
-import io
+from . import ostools
+from . import io
 
 try:
-    import sqlite_util
+    from . import sqlite_util
 except:
     pass

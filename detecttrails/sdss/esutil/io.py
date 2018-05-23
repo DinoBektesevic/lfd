@@ -37,19 +37,18 @@ license="""
 
 """
 
-
-
-
-import numpy_util
-import json_util
-import ostools
-import hdfs
-from hdfs import is_in_hdfs
 import os
-
 import copy
-
 from sys import stdout, stderr
+
+
+from . import numpy_util
+from . import json_util
+from . import ostools
+from . import hdfs
+from .hdfs import is_in_hdfs
+
+
 
 try:
     import fitsio

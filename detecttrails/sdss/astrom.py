@@ -41,7 +41,7 @@ class Astrom(object):
     """
     def __init__(self, **keys):
         from . import util
-        
+
         self.keys=keys
         self.load()
 
@@ -62,19 +62,15 @@ class Astrom(object):
         ra,dec:
             The equatorial coords in degrees
         """
- 
+
         mu,nu=self.pix2munu(field,filter,row,col,color=color)
-	global err_ra
-	err_ra = row
-	global err_dec
-	err_dec = col 
         ra,dec=gc2eq(mu,nu,self._node, self._incl)
         return ra,dec
 
     def eq2pix(self, field, filter, ra, dec, color=0.3):
         """
         convert from equatorial coordinates (ra,dec) to pixel coordinates
-        (row,col) 
+        (row,col)
 
         parameters
         ----------
@@ -88,7 +84,7 @@ class Astrom(object):
         row,col: scalar or arrays
             The pixel coords
         """
- 
+
         mu,nu = eq2gc(ra, dec, self._node, self._incl)
         row,col = self.munu2pix(field, filter, mu, nu, color=color)
 
@@ -110,7 +106,7 @@ class Astrom(object):
         ----------
         field: integer
             SDSS field number
-        mu,nu: 
+        mu,nu:
             SDSS great circle coordinates in degrees
 
         outputs
@@ -163,7 +159,7 @@ class Astrom(object):
         nudiff = nu - fd['d']
         row_guess = ( mudiff*fd['f'] - fd['c']*nudiff )/det
         col_guess = ( fd['b']*nudiff - mudiff*fd['e'] )/det
- 
+
         row=zeros(mu.size,dtype='f8')
         col=zeros(mu.size,dtype='f8')
         for i in xrange(mu.size):
@@ -173,17 +169,10 @@ class Astrom(object):
 
             rowcol_guess=array([row_guess[i], col_guess[i]])
 
-            #rowcol = scipy.optimize.fsolve(self._pix2munu_for_fit, rowcol_guess)
-	    rowcol, infodict, ier, msg = scipy.optimize.fsolve(self._pix2munu_for_fit, rowcol_guess, full_output=True)
+            rowcol = scipy.optimize.fsolve(self._pix2munu_for_fit, rowcol_guess)
 
             row[i] = rowcol[0]
             col[i] = rowcol[1]
-	    if ier != 1:
-	        raise ValueError("Fsolve() could not find convergence for ra: {}, dec: {} \n\
-initial guess: \n    row:{}  col:{} \n\
-final guess: \n    row:{} col:{} \n\
-field:{}\nfilter:'{}'\nmu:{}\nnu:{}\n".format(err_ra, err_dec, row_guess, col_guess, rowcol[0], rowcol[1],
-          field, filter, mu, nu))
 
         if are_scalar:
             row=row[0]
@@ -208,7 +197,7 @@ field:{}\nfilter:'{}'\nmu:{}\nnu:{}\n".format(err_ra, err_dec, row_guess, col_gu
         mu,nu:
             SDSS great circle coords in degrees
         """
-       
+
         row,col,are_scalar=get_array_args(row,col,"row","col")
         color=self._get_color(color, row.size)
 
@@ -246,7 +235,7 @@ field:{}\nfilter:'{}'\nmu:{}\nnu:{}\n".format(err_ra, err_dec, row_guess, col_gu
         cccol = trans['cccol'][w,fnum]
         # ricut is a misnomer
         color0 = trans['ricut'][w,fnum]
-      
+
         rowm=zeros(row.size,dtype='f4')
         colm=zeros(row.size,dtype='f4')
         wl,=where(color < color0)

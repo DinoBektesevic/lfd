@@ -4,14 +4,14 @@
 
     Description:
         A set of functions for dealing with SDSS files, including reading files,
-        finding file lists, getting run metadata, converting SDSS id numbers 
+        finding file lists, getting run metadata, converting SDSS id numbers
         to strings, etc.
 
-    Some Useful Functions. 
+    Some Useful Functions.
 
         read(ftype, **keys)
             Read an SDSS file given the input file type and id info
-            Id info can be 
+            Id info can be
                 run=, rerun=, camcol=...
             or
                 photoid=
@@ -42,7 +42,7 @@
             specifications to values.  Used to generate file locations.
 
         Routines for converting SDSS id numbers to strings:
-            These functions return scalars for scalar input, otherwise lists. 
+            These functions return scalars for scalar input, otherwise lists.
 
             run2string(runs)
                 Convert input run to a string padded to 6 zeros.
@@ -83,15 +83,15 @@ import numpy
 from numpy import where
 
 
-from esutil.ostools import path_join
-from esutil.numpy_util import where1
-from esutil import io
-from esutil import ostools
-from esutil import sqlite_util
+from .esutil.ostools import path_join
+from .esutil.numpy_util import where1
+from .esutil import io
+from .esutil import ostools
+from .esutil import sqlite_util
 
 from .util import FILTERNUM, FILTERCHARS
-import util
-import yanny
+from . import util
+from . import yanny
 
 
 def get_sdsspy_dir():
@@ -124,7 +124,7 @@ def read(ftype, run=None, camcol=None, field=None, id=None, **keys):
 
 
     Inputs:
-        ftype: 
+        ftype:
             A file type, such as 'psField', 'fpAtlas', 'calibObj.gal'.  See
             $PREFIX/share/sdssFileTypes.par for a list of types.
 
@@ -177,7 +177,7 @@ def read(ftype, run=None, camcol=None, field=None, id=None, **keys):
             Which extension to read.  Some files, like psField files, are
             multi-extension.
 
-        verbose:  
+        verbose: 
             Print the names of files being read.
     Other Keywords:
         These will probably be specific to a given file type. As an example:
@@ -185,7 +185,6 @@ def read(ftype, run=None, camcol=None, field=None, id=None, **keys):
             on the id
 
     """
-
     flist = file_list(ftype, run, camcol, field, id=id, **keys)
 
     if len(flist) == 0:
@@ -235,17 +234,17 @@ def filename(ftype, run=None, camcol=None, field=None, **keys):
 
 
     Inputs:
-        ftype: 
+        ftype:
             A file type, such as 'psField', 'fpAtlas', 'calibObj.gal'.  See
-            $PREFIX/share/sdssFileTypes.par for a list of types.  
-            
+            $PREFIX/share/sdssFileTypes.par for a list of types.
+
             The ftype is case-insensitive.
 
     Keyword Inputs:
 
         NOTE: run,camcol,field can also be globs such as '*'
 
-        run: 
+        run:
             SDSS run id, needed for most files.
         camcol:
             SDSS camera column id
@@ -296,14 +295,14 @@ def filedir(ftype, run=None, camcol=None, **keys):
 
 
     Inputs:
-        ftype: 
+        ftype:
             A file type, such as 'psField', 'fpAtlas', 'calibObj.gal'.  See
-            $PREFIX/share/sdssFileTypes.par for a list of types.  
-            
+            $PREFIX/share/sdssFileTypes.par for a list of types.
+
             The ftype is case-insensitive.
 
     Keyword Inputs:
-        run: 
+        run:
             SDSS run id, needed for most files.
         camcol:
             SDSS camera column id
@@ -319,7 +318,7 @@ def filedir(ftype, run=None, camcol=None, **keys):
 
     fs=FileSpec()
     return fs.dir(ftype, run, camcol, **keys)
-    
+
 def filespec(ftype):
     """
     Module:
@@ -355,7 +354,7 @@ def _read_yanny(fname, **keys):
     verbose = keys.get('verbose',False)
     if verbose:
         stderr.write("Reading file: '%s'\n" % fname)
-        
+
     if 'runList' in fname or 'sdssFileTypes' in fname:
         return yanny.readone(fname)
     elif 'sdssMaskbits' in fname:
@@ -371,7 +370,7 @@ def _read_psfield(fname, **keys):
     to read multiple files extension 6 then just use the main read() function.
 
     """
-    
+
     filter = keys.get('filter', None)
     if filter is None:
         ext = keys.get('ext', None)
@@ -439,20 +438,22 @@ class FileSpec:
             self._filetypes = yanny.readone(f)
 
             self._ftypes_lower = self._filetypes['ftype'].copy()
-            for i in xrange(self._ftypes_lower.size):
+            for i in range(self._ftypes_lower.size):
                 self._ftypes_lower[i] = self._ftypes_lower[i].lower()
+
     def reload(self):
         self.load(reload=True)
 
     def filespec(self, ftype):
-        w,=numpy.where(self._ftypes_lower == ftype.lower())
+
+        w,=numpy.where(self._ftypes_lower == ftype.lower().encode())
         if w.size == 0:
             raise ValueError("File type '%s' is unknown" % ftype)
 
-        fs = {'ftype': str(self._filetypes['ftype'][w][0]),
-              'dir':   str(self._filetypes['dir'][w][0]),
-              'name':  str(self._filetypes['name'][w][0]),
-              'ext':   int(self._filetypes['ext'][w][0])}
+        fs = {'ftype': str( self._filetypes['ftype'][w][0].decode()),
+              'dir'  : str( self._filetypes['dir'][w][0].decode()  ),
+              'name' : str( self._filetypes['name'][w][0].decode() ),
+              'ext'  : int( self._filetypes['ext'][w][0]           )}
         return fs
 
     def dir_pattern(self, ftype):
@@ -545,7 +546,7 @@ def file_list(ftype, run=None, camcol=None, field=None, **keys):
         if ftype is None:
             raise ValueError('send filetype and some id info or the full pattern on glob= keyword')
 
-        
+
         run_is_sequence, camcol_is_sequence, field_is_sequence =_check_id_sequences(run,camcol,field)
 
         if run_is_sequence:
@@ -690,10 +691,10 @@ def _check_id_sequences(run,camcol,field):
     if nseq > 1:
         raise ValueError("only one of run/camcol/field can be a sequence")
 
-    return run_is_sequence, camcol_is_sequence, field_is_sequence 
+    return run_is_sequence, camcol_is_sequence, field_is_sequence
 
 def is_sequence(var):
-    if isinstance(var, (str, unicode)):
+    if isinstance(var, (str)):
         return False
 
     try:
@@ -708,7 +709,7 @@ def find_rerun(run):
     w,=numpy.where(rl['run'] == run)
     if w.size == 0:
         raise ValueError("Run %s not found in runList.par" % run)
-    return rl['rerun'][w[0]]
+    return rl['rerun'][w[0]].decode()
 
 # convert sdss numbers to strings in file names and such
 def stripe2string(stripes):
@@ -742,7 +743,7 @@ def camcol2string(camcols):
     Range checking is applied.
     """
     return tostring(camcols,1,6)
-    
+
 def field2string(fields):
     """
     fs = field2string(field)
@@ -796,11 +797,10 @@ def filter2string(filter):
     return filter_dict[filter]
 
 def tostring(val, nmin=None, nmax=None):
-    
     if not numpy.isscalar(val):
         return [tostring(v,nmin,nmax) for v in val]
 
-    if isinstance(val, (str,unicode)):
+    if isinstance(val, str):
         return val
 
     if nmin is not None:
@@ -852,6 +852,7 @@ def expand_sdssvars(string_in, **keys):
         if run is None:
             raise ValueError("run keyword must be sent: '%s'" % string)
         string = string.replace('$RUNNUM', tostring(run))
+
     if string.find('$RUNSTR') != -1:
         run=keys.get('run', None)
         if run is None:

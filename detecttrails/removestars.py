@@ -1,10 +1,13 @@
-import numpy as np
-import csv
 import os
-import fitsio
-from sdss import astrom
-from sdss import files
+import csv
 import math
+
+import numpy as np
+import fitsio
+
+from .sdss import astrom
+from .sdss import files
+
 
 def CSV_read(path_to_CAS):
     """     ***DEPRECATED***
@@ -14,7 +17,7 @@ def CSV_read(path_to_CAS):
     Returned list is arranged as
         {[ra:, dec:, u:, g:, r:, i:, z:],
             ...}.
-    """  
+    """
     labels=['ra', 'de', 'u', 'g', 'r', 'i', 'z']
     read = csv.DictReader(open(path_to_CAS), labels,
                           delimiter=',', quotechar='"')
@@ -33,7 +36,7 @@ def remove_stars_CSV(img, _run, _camcol, _filter, _field):
                                           camcol=_camcol, field=_field))
     Coord = Coord[1:]
     conv = astrom.Astrom(run=_run, camcol=_camcol)
-           
+
     for star in Coord:
         try:
             if (float(star[_filter])<23):
@@ -63,12 +66,12 @@ def photoObj_read(path_to_photoOBJ):
     petro90  -http://www.sdss3.org/dr10/algorithms/magnitudes.php#mag_petro.
               http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/RERUN/RUN/CAMCOL/photoObj.html
               Specifically this is the radius, in arcsec, from the center of
-              the object that contains 90% of its Petrosian flux.  
+              the object that contains 90% of its Petrosian flux.
               Each entry is a dictionary {u:, g:, r:, i:, z:}
 
     Each entry in the list represents a different object that was dete-
     cted by the frames pipeline.
-    
+
     containing row, col in pix coordinates, psf magnitudes per band
     and radii (arcsec) containing 90% of Petrosian flux.
     Returned list is arranged as
@@ -78,7 +81,7 @@ def photoObj_read(path_to_photoOBJ):
     init params.
    -----------------
     Keywords:
-    
+
         path_to_photoOBJ:
             string type system path to a photoObj*.fits file
     """
@@ -103,7 +106,7 @@ def photoObj_read(path_to_photoOBJ):
     psfMagf = list()
     for i in range (0, len(rows)):
         #names are current object data structures, singular to mark 1 object
-        row = rows[i] 
+        row = rows[i]
         rowf.append({'u':math.ceil(row[0]), 'g':math.ceil(row[1]),
                      'r':math.ceil(row[2]), 'i':math.ceil(row[3]),
                      'z':math.ceil(row[4])})
@@ -119,7 +122,7 @@ def photoObj_read(path_to_photoOBJ):
         petro90f.append({'u':math.ceil(petro90[0]), 'g':math.ceil(petro90[1]),
                          'r':math.ceil(petro90[2]), 'i':math.ceil(petro90[3]),
                          'z':math.ceil(petro90[4])})
-            
+
     return rowf, colf, psfMagf, petro90f, objctype, types, nObserve, nDetect
 
 
@@ -132,11 +135,11 @@ def fill(array, tuple_val):
     if np.shape(array)[-1] != len(tuple_val):
         raise ValueError("Tuple len is not the same as array element len")
 
-    for i in xrange(len(array)):
-        for j in xrange(len(array[i])):
+    for i in range(len(array)):
+        for j in range(len(array[i])):
             array[i,j] = tuple_val
     return array
-        
+
 
 def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
                 maxxy, pixscale, magcount, maxmagdiff):
@@ -155,7 +158,7 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
     frames pipeline and are written as such in the photoObj fits files.
     Aditionally to determining size of the blocked out square, function tries to
     discriminate actual sources from false ones.
-    
+
     Squares will only be drawn:
         - if there is a valid psfMag value.
         - for those psfMag values that are under a certain user-set cap.
@@ -169,7 +172,7 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
     Idea is that psfMag values that contain only "opposite" extreme values
     (very bright/very dim) are  most likely a false detection, they exist in
     one of the filters but not in any others. Such objects are not removed.
-    
+
     init params.
     -----------------
     Keywords:
@@ -213,7 +216,7 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
 
         if psfMag[i] and psfMag[i][_filter] < filter_caps[_filter]:
             diffs = []
-            a = [val for val in psfMag[i].itervalues()]
+            a = [val for key, val in psfMag[i].items()]
             for j in range(len(a)):
                 for k in range(j+1, len(a)):
                     diffs.append(a[j]-a[k])
@@ -227,5 +230,5 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
                     dxy = defaultxy
                 if nObserve[i] == nDetect[i]:
                     img[x-dxy:x+dxy, y-dxy:y+dxy].fill(0.0)
-    
-    return img       
+
+    return img

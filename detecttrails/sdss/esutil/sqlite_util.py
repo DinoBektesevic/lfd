@@ -102,7 +102,7 @@ import shutil
 import sys
 from sys import stdout
 
-import ostools
+from . import ostools
 
 try:
     import sqlite3 as sqlite
@@ -429,7 +429,7 @@ class SqliteConnection(sqlite.Connection):
             elif isinstance(val, _string_types):
                 typecode = 'S%i' % len(val)
             else:
-                print "Got type:",type(val)
+                print("Got type:",type(val))
                 raise ValueError("Only support int/long, float, str/unicode")
 
             dt.append( (name,typecode) )

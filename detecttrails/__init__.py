@@ -5,7 +5,7 @@ Modules:
     sdss          --isn't explicitly imported
     detect_trails --DetectTrails class is explicitly imported
     process_field --isn't explicitly imported
-    
+
 
   Classes:
 -------------
@@ -13,7 +13,7 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
 
     Defines a convenience class that holds various execution
     parameter and processes SDSS fields selected by various
-    init parameters        
+    init parameters
     I.e.
         foo = DetectTrails(run=2888)
         foo = DetectTrails(run=2888, camcol=1)
@@ -23,7 +23,7 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
     It is also possible to change detection/execution parameters
     of class object foo:
         foo.params_bright["debug"] = True
-        foo.params_removestars["filter_caps"]["i"] = 20 
+        foo.params_removestars["filter_caps"]["i"] = 20
     See Exec params for full list of execution/detection parameters and
     their explanation.
 
@@ -38,18 +38,18 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
                      crpix2 crval1 crval2 cd1_1 cd1_2 \\nonewline
                      cd2_1 cd2_2 x1 x2 y1 y2 \\n
                  Set to "results.txt" by default
-                 
+
         errors: file that stores execution errors as txt file.
                 Errors are formatted as:
                     run,camcol,field,filter
                     TRACEBACK (3 stacks deep)
                     Error message of 1st stack.
-                    
+
         kwargs: filled in by run camcol filter field parameters.
 
         Following parameters influence detection sensitivity.
         They are listed here with their default values.
-        
+
         params_bright = {
             "dilateKernel": np.ones((4,4), np.uint8)
                 Kernel that dilates the image before processing.
@@ -103,11 +103,11 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
                 9) equhoughDIM - nlinesInSet hough lines drawn on 7
                10) boxhoughDIM - nlinesInSet hough lines drawn on 8
 
-                Errors are printed to standard out but still silenced. 
+                Errors are printed to standard out but still silenced.
                 Images are saved to pathBright and pathDim paths defined
                 in global processfield vars.
             }
-        
+
         params_dim = {
             "minFlux": 0.02
                 for bright processing, all negative values are set to
@@ -117,7 +117,7 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
                 is added to all remaining pixels with brightness value
                 above 0. This increases brightness and contrast.
             "erodeKernel": np.ones((3,3), np.uint8)
-                image is eroded to destroy noise. 
+                image is eroded to destroy noise.
             "dilateKernel": np.ones((9,9), np.uint8)
                 image is dilated to restore image features.
             "countoursMode": cv2.RETR_LIST
@@ -146,13 +146,13 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
                 covered area on the image is 120x120px.
             "filter_caps": {'u': 22, 'g': 22,'r': 22, 'i':22,'z': 22},
                 stars on the image that are dimmer than filter caps
-                will not be removed. 
+                will not be removed.
             "magcount": 3,
                 maximal allowed number of filters in which magnitude
                 difference is larger than maxmagdiff
             "maxmagdiff": 3,
                 max allowed diff. in magnitude between two filters
-            }          
+            }
 
     To get a better understanding of detection parameters
     contoursMode/Method, minAreaRectMinLen and lwTresh see doc of
@@ -167,7 +167,6 @@ DetectTrails(run= , camcol={1-6}, field={all], filter={ugriz})
 --------------
 process_field(results, errors, run, camcol, filter, field,
               params_bright, params_dim)
-  
 
   Dependencies:
 -------------
@@ -182,11 +181,10 @@ process_field(results, errors, run, camcol, filter, field,
 import sys as _sys
 
 #try:
-from detecttrails import DetectTrails
-import processfield as _processfield
-import removestars as _removestars
-import sdss as _sdss
+from   .detecttrails import DetectTrails
+#import .processfield as _processfield
+#import .removestars as _removestars
+#import .sdss as _sdss
 #except:
 #    _sys.stderr.write("DetectTrails not imported.\n")
-    
 #del removestars, processfield, sdss, detecttrails
