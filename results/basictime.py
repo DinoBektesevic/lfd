@@ -5,8 +5,8 @@ __all__ = ["BasicTime", "LineTime"]
 class BasicTime(object):
     def __init__(self, t, t_format="tai"):
         if t is None:
-            self.tai = None
-            self.mjd = None
+            self._tai = None
+            self._mjd = None
         elif t_format.lower()=="tai":
             self._init_tai(t)
         elif t_format.lower()=="mjd":
@@ -15,16 +15,32 @@ class BasicTime(object):
             raise ValueError("Unrecognized time format")
 
     def _init_tai(self, t):
-        self.tai = t
-        self.mjd = t/(24.0*3600.0)
+        self._tai = t
+        self._mjd = t/(24.0*3600.0)
 
     def _init_mjd(self, t):
-        self.mjd = t
-        self.tai = t*(24.0*3600.0)
+        self._mjd = t
+        self._tai = t*(24.0*3600.0)
 
     @property
     def iso(self):
-        return Time(self.mjd, format="mjd").iso
+        return Time(self._mjd, format="mjd").iso
+
+    @property
+    def tai(self):
+        return self._tai
+
+    @tai.setter
+    def tai(self, val):
+        self._init_tai(val)
+
+    @property
+    def mjd(self):
+        return self._mjd
+
+    @mjd.setter
+    def mjd(self, val):
+        self._init_mjd(val)
 
     def __repr__(self):
         m = self.__class__.__module__

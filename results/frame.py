@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, composite
 from .basictime import BasicTime
 from results import Base
 
-__all__ = ["Base"]
+__all__ = ["Frame"]
 
 class Frame(Base):
     __tablename__ = "frames"

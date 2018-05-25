@@ -131,6 +131,21 @@ class Event(Base):
         self.p1.useCoordsys(coordsys)
         self.p2.useCoordsys(coordsys)
 
+    def set_lt(self, lt):
+        self.lt.st.tai = lt.st.tai
+        self._line_start_time = lt.st.tai
+
+        self.lt.et.tai = lt.et.tai
+        self._line_end_time = lt.et.tai
+
+    def set_st(self, bt):
+        self.lt.st.tai = bt.tai
+        self._line_start_time = bt.tai
+
+    def set_et(self, bt):
+        self.lt.et.tai = bt.tai
+        self._line_end_time = bt.tai
+
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
