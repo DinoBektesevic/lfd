@@ -1,5 +1,7 @@
 from astropy.time import Time
 
+__all__ = ["BasicTime", "LineTime"]
+
 class BasicTime(object):
     def __init__(self, t, t_format="tai"):
         if t is None:

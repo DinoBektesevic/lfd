@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship, composite
 from .basictime import BasicTime
 from results import Base
 
+__all__ = ["Base"]
+
 class Frame(Base):
     __tablename__ = "frames"
     #id = sql.Column(sql.Integer, primary_key=True)

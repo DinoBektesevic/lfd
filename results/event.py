@@ -8,7 +8,7 @@ from .basictime import LineTime
 #from results import Session
 from results import Base
 
-
+__all__ = ["Event"]
 
 class Event(Base):
     __tablename__ = "events"

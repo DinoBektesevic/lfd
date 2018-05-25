@@ -1,16 +1,6 @@
 from . import ccd_dimensions as ccd
 
-#W_CAMCOL = 2048
-#W_CAMCOL_SPACING = 1743.820956
-
-#H_FILTER = 2048
-#H_FILTER_SPACING = 660.4435401
-
-#MAX_W_CCDARRAY = 21008 #unrounded: 21007.10478
-#MAX_H_CCDARRAY = 12882 #unrounded: 12881.77416
-
-#ARCMIN2PIX = 0.0066015625
-#MM2ARCMIN = 3.63535503
+__all__ = ["convert_ccd2frame", "convert_frame2ccd"]
 
 class CoordinateConversionError(ArithmeticError):
     def __init__(self, incoords, outcoords, msg=None, *args):

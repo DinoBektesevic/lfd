@@ -1,5 +1,7 @@
 from .coord_conversion import convert_ccd2frame, convert_frame2ccd
 
+__all__ = ["Point"]
+
 class Point(object):
     def __init__(self, x, y, camcol=None, filter=None,
                  coordsys="frame"):

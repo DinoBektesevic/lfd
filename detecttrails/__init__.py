@@ -178,13 +178,4 @@ process_field(results, errors, run, camcol, filter, field,
      photoObj-run-camcol-field.fits
 """
 
-import sys as _sys
-
-#try:
-from   .detecttrails import DetectTrails
-#import .processfield as _processfield
-#import .removestars as _removestars
-#import .sdss as _sdss
-#except:
-#    _sys.stderr.write("DetectTrails not imported.\n")
-#del removestars, processfield, sdss, detecttrails
+from .detecttrails import DetectTrails
