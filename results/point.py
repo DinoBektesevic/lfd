@@ -1,4 +1,4 @@
-from coord_conversion import convert_ccd2frame, convert_frame2ccd
+from .coord_conversion import convert_ccd2frame, convert_frame2ccd
 
 class Point(object):
     def __init__(self, x, y, camcol=None, filter=None,

@@ -1,4 +1,4 @@
-import ccd_dimensions as ccd
+from . import ccd_dimensions as ccd
 
 #W_CAMCOL = 2048
 #W_CAMCOL_SPACING = 1743.820956
@@ -75,7 +75,7 @@ def convert_ccd2frame(x, y):
 
 
 def convert_frame2ccd(x, y, camcol, filter):
-    if isinstance(filter, unicode):
+    if isinstance(filter, str):
         filter = str(filter)
     if isinstance(filter, str) and filter in "riuzg":
         filter = get_filter_int(filter)

@@ -3,13 +3,14 @@ from sqlalchemy import create_engine, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, composite
 
-from point import Point
-from basictime import BasicTime, LineTime
+from .point import Point
+from .basictime import BasicTime, LineTime
 
 ########################################
 
-engine = create_engine('sqlite:///:memory:', echo=True)
+engine = create_engine('sqlite:///:memory:', echo=False)
 Base = declarative_base()
+
 
 
 class Frame(Base):
@@ -125,7 +126,7 @@ class Event(Base):
     p2 = composite(Point, _x2, _y2, _camcol, _filter)
 
     def __init__(self, x1, y1, x2, y2, frame, start_t=None, end_t=None):
-        self._run    = frame.run   
+        self._run    = frame.run
         self._camcol = frame.camcol
         self._filter = frame.filter
         self._field  = frame.field
@@ -150,31 +151,31 @@ class Event(Base):
         self.frame.run = val
 
     @property
-    def camcol(self, val):
+    def camcol(self):
         return self.frame.camcol
 
     @camcol.setter
     def camcol(self, val):
         self._camcol = val
-        self.frame.camcol = val 
+        self.frame.camcol = val
 
     @property
-    def filter(self, val):
+    def filter(self):
         return self.frame.camcol
 
     @filter.setter
     def filter(self, val):
         self._filter = val
-        self.frame._filter = val 
+        self.frame._filter = val
 
     @property
-    def field (self, val):
+    def field (self):
         return self.frame.field
 
     @field.setter
     def field (self, val):
         self._field = val
-        self.frame.field = val 
+        self.frame.field = val
 
     @property
     def x1(self):
@@ -226,6 +227,8 @@ class Event(Base):
         return "<{0}.{1}({4}, {2}, {3}, {5})>".format(m, n, p1, p2,
                                                             f, lt)
 
+
+Base.metadata.create_all(engine)
 
 Base.metadata.create_all(engine)
 
