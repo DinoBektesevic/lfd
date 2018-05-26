@@ -1,16 +1,12 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-from Tkinter import *
-from ttk import *
-from Tkinter import Button, Label
-
+from tkinter import *
+from tkinter.ttk import *
 
 class TopRight(Frame):
     def __init__(self, parent):
         Frame.__init__(self, width=300)
         self.pack(side=TOP, fill=BOTH)
         #self.grid_propagate(False)
-        
+
         self.parent = parent
         self.data = parent.root.data
 
@@ -19,7 +15,7 @@ class TopRight(Frame):
             widget.destroy()
 
         curres = self.data.getImageData()
-        
+
         if curres is not None:
             r = 1
 
@@ -33,7 +29,7 @@ class TopRight(Frame):
                         color = "red"
                     else:
                         color = "DarkOliveGreen3"
-                        
+
                 Label(self, text=i, relief=RIDGE, width=10, bd=1,
                       bg="light steel blue").grid(
                           row=r,column=0, padx=(50, 0))
@@ -44,7 +40,7 @@ class TopRight(Frame):
 
             #spacer between topright and botright
             Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
-            
+
         else:
             Label(self, bg="red2", font=("Helvetica", 20),
                   text="NO IMAGE DATA\nFOUND").grid(row=0,

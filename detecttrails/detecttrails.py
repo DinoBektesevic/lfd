@@ -6,19 +6,19 @@ import fitsio
 
 import cv2
 from cv2 import RETR_LIST, RETR_EXTERNAL, RETR_CCOMP, RETR_TREE
-from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE,
-                 CHAIN_APPROX_TC89_L1, CHAIN_APPROX_TC89_KCOS)
+from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_L1,
+                 CHAIN_APPROX_TC89_KCOS)
 
 from .removestars import remove_stars
-from .processfield import process_field_bright, process_field_dim
+from .processfield import process_field_bright, process_field_dim, setup_debug
 from .sdss import files
 
 
-def process_field(results, errors, run, camcol, filter, field,
-                  params_bright, params_dim, params_removestars):
+def process_field(results, errors, run, camcol, filter, field, params_bright,
+                  params_dim, params_removestars):
     """
-    Function that calls the correct order of actions needed to detect
-    trails per frame. Writes  "results.txt" and "errors.txt".
+    Function that calls the correct order of actions needed to detect trails per
+    frame. Writes  "results.txt" and "errors.txt".
     Please use the class!
 
     Order of operations:
@@ -33,6 +33,9 @@ def process_field(results, errors, run, camcol, filter, field,
          errors)
     """
     try:
+        if params_dim["debug"] or params_bright["debug"]:
+            setup_debug()
+            
         origPathName = files.filename('frame', run=run, camcol=camcol,
                                       field=field, filter=filter)
 
@@ -127,8 +130,9 @@ class DetectTrails:
     """
 
     def __init__(self, **kwargs):
-        self.results = open('results.txt', 'a')
-        self.errors = open('errors.txt', 'a')
+        savepth = os.environ["SAVE_PATH"]
+        self.results = os.path.join(savepth, 'results.txt')
+        self.errors  = os.path.join(savepth, 'errors.txt')
         self.kwargs=kwargs
         self.params_bright = {
             "lwTresh": 5,
@@ -254,84 +258,69 @@ class DetectTrails:
         various inputs. Not using this function will void majority of
         error and exception handling.
         """
+        with open(self.results, "a") as results, \
+             open(self.errors, "a") as errors:
 
-        if self._pick == "camcol-filter":
-            runs = self._getRuns()
-            for _run in runs:
-                self._run=_run
+            if self._pick == "camcol-filter":
+                runs = self._getRuns()
+                for _run in runs:
+                    self._run=_run
+                    startfield, endfield = self._runInfo()
+                    for _field in range(startfield, endfield, 1):
+                        process_field(results, errors, _run, self._camcol,
+                                      self._filter, _field, self.params_bright,
+                                      self.params_dim, self.params_removestars)
+                self._run=0
+
+
+            if self._pick == 'run':
                 startfield, endfield = self._runInfo()
-                for _field in range(startfield, endfield, 1):
-                    process_field(self.results, self.errors,
-                                  _run, self._camcol, self._filter, _field,
-                                  self.params_bright, self.params_dim,
-                                  self.params_removestars)
-                    #print files.filename('frame', run=_run, camcol=self._camcol, filter=self._filter, field=_field)
-            self._run=0
+                filters = ('u', 'g', 'r', 'i', 'z')
+                camcols = (1, 2, 3, 4, 5, 6)
+                for _camcol in camcols:
+                    for _filter in filters:
+                        for _field in range (startfield, endfield, 1):
+                            process_field(results, errors, self._run, _camcol,
+                                          _filter, _field, self.params_bright,
+                                          self.params_dim, self.params_removestars)
 
-
-        if self._pick == 'run':
-            startfield, endfield = self._runInfo()
-            filters = ('u', 'g', 'r', 'i', 'z')
-            camcols = (1, 2, 3, 4, 5, 6)
-            for _camcol in camcols:
-                for _filter in filters:
+            if self._pick == 'run-filter':
+                startfield, endfield = self._runInfo()
+                camcols = (1, 2, 3, 4, 5, 6)
+                for _camcol in camcols:
                     for _field in range (startfield, endfield, 1):
-                        process_field(self.results, self.errors, self._run,
-                                      _camcol, _filter, _field,
-                                      self.params_bright, self.params_dim,
-                                      self.params_removestars)
-                        #print files.filename('frame', run=self._run, camcol=_camcol, filter=_filter, field=_field)
+                        process_field(results, errors, self._run, _camcol,
+                                      self._filter, _field, self.params_bright,
+                                      self.params_dim, self.params_removestars)
 
-        if self._pick == 'run-filter':
-            startfield, endfield = self._runInfo()
-            camcols = (1, 2, 3, 4, 5, 6)
-            for _camcol in camcols:
+            if self._pick == 'run-camcol':
+                startfield, endfield = self._runInfo()
+                filters = ('u', 'g', 'r', 'i', 'z')
+                for _filter in filters:
+                    for _field in range (startfield, endfield, 50):
+                        process_field(results, errors, self._run, self._camcol,
+                                      _filter, _field, self.params_bright,
+                                      self.params_dim, self.params_removestars)
+
+
+            if self._pick == 'run-camcol-filter':
+                startfield, endfield = self._runInfo()
                 for _field in range (startfield, endfield, 1):
-                    process_field(self.results, self.errors, self._run,
-                                  _camcol, self._filter, _field,
-                                  self.params_bright, self.params_dim,
-                                  self.params_removestars)
-                    #print files.filename('frame', run=self._run, camcol=_camcol, filter=self._filter, field=_field)
+                    process_field(results, errors, self._run, self._camcol,
+                                  self._filter, _field, self.params_bright,
+                                  self.params_dim, self.params_removestars)
+
+            if self._pick == 'camcol-frame':
+                filters = ('u', 'g', 'r', 'i', 'z')
+                for _filter in filters:
+                    process_field(results, errors, self._run, self._camcol,
+                                  _filter, self._field, self.params_bright,
+                                  self.params_dim, self.params_removestars)
 
 
-        if self._pick == 'run-camcol':
-            startfield, endfield = self._runInfo()
-            filters = ('u', 'g', 'r', 'i', 'z')
-            for _filter in filters:
-                for _field in range (startfield, endfield, 50):
-                    process_field(self.results, self.errors, self._run,
-                                  self._camcol, _filter, _field,
-                                  self.params_bright, self.params_dim,
-                                  self.params_removestars)
-                    #print files.filename('frame', self._run, self._camcol, filter=_filter, field=_field)
-
-
-        if self._pick == 'run-camcol-filter':
-            startfield, endfield = self._runInfo()
-            for _field in range (startfield, endfield, 1):
-                process_field(self.results, self.errors, self._run,
-                              self._camcol, self._filter, _field,
-                              self.params_bright, self.params_dim,
-                              self.params_removestars)
-                #print files.filename('frame', self._run, self._camcol, filter=self._filter, field=_field)
-
-        if self._pick == 'camcol-frame':
-            filters = ('u', 'g', 'r', 'i', 'z')
-            for _filter in filters:
-                process_field(self.results, self.errors, self._run,
-                              self._camcol, _filter, self._field,
-                              self.params_bright, self.params_dim,
-                              self.params_removestars)
-                #print files.filename('frame', self._run, self._camcol, filter=filter, field=self._field)
-
-
-        if self._pick == 'field':
-            process_field(self.results, self.errors, self._run,
-                          self._camcol, self._filter, self._field,
-                          self.params_bright, self.params_dim, 
-                          self.params_removestars)
-            #print files.filename('frame', self._run, self._camcol, filter=self._filter, field=self._field)
-
-#        self.results.close()
+            if self._pick == 'field':
+                process_field(results, errors, self._run, self._camcol,
+                              self._filter, self._field, self.params_bright,
+                              self.params_dim, self.params_removestars)
 
 

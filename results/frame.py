@@ -2,7 +2,8 @@ import sqlalchemy as sql
 from sqlalchemy.orm import relationship, composite
 
 from .basictime import BasicTime
-from results import Base
+#from LFDS3.results import Base
+from . import Base
 
 __all__ = ["Frame"]
 

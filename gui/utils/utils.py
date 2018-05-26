@@ -1,8 +1,9 @@
-from Tkinter import *
-from ttk import *
-
 import os
-from results import Results
+
+from tkinter import *
+from tkinter.ttk import *
+
+from lfd.results import Event
 
 def center(toplevel):
     toplevel.update_idletasks()

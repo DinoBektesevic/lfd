@@ -1,9 +1,8 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-from Tkinter import *
-from ttk import *
-from Tkinter import Button, Label
-from gui.utils import utils
+from tkinter import *
+from tkinter.ttk import *
+from tkinter import Button, Label
+
+from lfd.gui import utils
 
 
 class BottomRight(Frame):
@@ -12,16 +11,16 @@ class BottomRight(Frame):
         self.pack(side=TOP, fill=BOTH, expand=1)
         self.parent = parent
         self.data = parent.root.data
-        
+
         self.falsebtn = Button(self, text="FALSE", bg="tomato2",
                                command=self.false)
         self.falsebtn.pack(side=TOP, pady=4)
-        
+
         self.truebtn = Button(self, text="TRUE",
                               bg="DarkOliveGreen3", command=self.true)
         self.truebtn.pack(side=TOP, pady=4)
 
-        
+
         self.imgselector = Button(self, text="Select images",
                                   command=self.selectimages)
         self.imgselector.pack(side=BOTTOM, pady=4)
@@ -38,7 +37,7 @@ class BottomRight(Frame):
         self.prevbtn = Button(self, text="Previous",
                               command=self.previmg)
         self.prevbtn.pack(side=LEFT)
-        
+
         self.searchbtn = Button(self, text="Find", command=self.search)
         self.searchbtn.pack(side=LEFT, padx=50)
 
@@ -81,7 +80,7 @@ class BottomRight(Frame):
 
         run, camcol, filter, field = StringVar(), StringVar(), \
                                      StringVar(), StringVar()
-        
+
         Entry(top, textvariable=run).grid(row=0, column=1)
         Entry(top, textvariable=camcol).grid(row=1, column=1)
         Entry(top, textvariable=filter).grid(row=2, column=1)
@@ -93,7 +92,7 @@ class BottomRight(Frame):
         Button(top, text="Search", width=10, command = lambda:
                self._find(run, camcol, filter, field)
         ).grid(row=4, column=1, columnspan=2)
-        
+
 
     def _find(self, run, camcol, filter, field):
         run = int(run.get())

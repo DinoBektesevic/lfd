@@ -1,8 +1,10 @@
-from Tkinter import *
-from ttk import *
+import os
+
+from tkinter import *
+from tkinter.ttk import *
 
 from PIL import Image, ImageTk
-import os
+
 
 class LeftFrame(Frame):
     def __init__(self, parent):
@@ -10,7 +12,7 @@ class LeftFrame(Frame):
         self.pack(side=LEFT, fill=BOTH, expand=1)
         self.root = parent
         self.data = parent.data
-        
+
         self.canvas = Canvas(self, width=800, height=600)
         self.canvas.bind("<Button-1>", self.lmb)
         self.canvas.bind("<Button-3>", self.rmb)
@@ -25,7 +27,6 @@ class LeftFrame(Frame):
             self.img = ImageTk.PhotoImage(tmpimg)
             self.canvas.create_image(0, 0, image=self.img, anchor=NW)#self.canvas.winfo_height(),
 #                                     anchor=SW, image=self.img)
-            
             curimgdata = self.data.getImageData()
             if curimgdata is not None:
                 self.drawline(curimgdata)

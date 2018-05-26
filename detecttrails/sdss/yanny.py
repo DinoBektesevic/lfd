@@ -83,7 +83,7 @@ def readone(fname, names=None, indices=None, getpars=False, defchar=255,
         getpars=True it is (firststruct,pars)
 
         See docs for yanny.read for more info.
- 
+
     """
 
     y = Yanny(fname, defchar=defchar, verbose=verbose)

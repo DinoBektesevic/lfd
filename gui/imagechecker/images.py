@@ -1,7 +1,8 @@
 import os
-from results import Results
-from gui.utils import expandpath
-from detecttrails.sdss import files
+
+from lfd.results import Event
+from lfd.gui.utils import expandpath
+from lfd.detecttrails.sdss import files
 
 class Images(object):
     def __init__(self, parent, respath=None, imgpath=None):
@@ -12,7 +13,7 @@ class Images(object):
         self.images = None
         self.parent = parent
         self.cache = []
-        
+
         self.setResults(respath)
         self.setImages(imgpath)
 

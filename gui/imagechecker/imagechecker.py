@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 from .leftframe import LeftFrame
 from .rightframe import RightFrame
-from gui.utils import utils
+from LFDS3.gui import utils
 from .images import Images
 
-import ttk
-from Tkinter import *
+from tkinter import *
 from ttk import *
-from Tkinter import Label
+from tkinter import Label
 import tkFileDialog
-        
+
 
 class ImageChecker(Tk):
     def __init__(self):
@@ -20,18 +19,18 @@ class ImageChecker(Tk):
 
         self.respath = "~/Desktop"
         self.imgpath = "~/Desktop"
-              
+
         self.data = Images(self)
-        
+
         self.leftframe = LeftFrame(self)
         self.rightframe = RightFrame(self)
 
-        
+
         self.bind('<Left>', self.rightframe.bottomright.previmg)
         self.bind('<Right>', self.rightframe.bottomright.nextimg)
         self.bind("<Up>", self.rightframe.bottomright.true)
         self.bind("<Down>", self.rightframe.bottomright.false)
-        
+
         self.initGUI()
 
     def initGUI(self):

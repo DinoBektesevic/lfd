@@ -6,7 +6,7 @@ from .point import Point
 from .basictime import LineTime
 
 #from results import Session
-from results import Base
+from . import Base
 
 __all__ = ["Event"]
 
