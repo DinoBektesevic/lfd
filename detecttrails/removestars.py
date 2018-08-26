@@ -142,7 +142,7 @@ def fill(array, tuple_val):
 
 
 def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
-                maxxy, pixscale, magcount, maxmagdiff):
+                 maxxy, pixscale, magcount, maxmagdiff, debug):
     """
     Function that removes all stars found in coordinate file
     from a given image.

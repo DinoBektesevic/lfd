@@ -1,10 +1,12 @@
 import os
-from detecttrails.sdss import files
-import numpy as np
-from results import Results
-import writer
 
-from gui.utils import expandpath
+import numpy as np
+
+from lfd.detecttrails.sdss import files
+from lfd.results import Event
+from . import writer
+
+from lfd.gui.utils import expandpath
 
 class Jobs:
     """
@@ -265,8 +267,8 @@ class Jobs:
         self._findKwargs()
 
         if not self.runs:
-            print "There are no runs to create jobs from. Creating jobs"+\
-                  " for all runs in runlist.par file."
+            print("There are no runs to create jobs from. Creating jobs"+\
+                  " for all runs in runlist.par file.")
             runlst = self._runlstAll()
             writer.writeDqs(self, runlst)
 

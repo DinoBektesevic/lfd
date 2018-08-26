@@ -44,13 +44,13 @@ Edit them directly, i.e. the save path for results is given by:
 	  >>> jobs.create()
 	  There are no runs to create jobs from.
           Creating jobs for all runs in runlist.par file.
-	  
-          Creating: 
-	       765 jobs with 1 runs per job 
-	      Queue:     standard 
-	      Wallclock: 24:00:00 
-	      Cputime:   48:00:00 
-	      Ppn:       3 
+
+          Creating:
+	       765 jobs with 1 runs per job
+	      Queue:     standard
+	      Wallclock: 24:00:00
+	      Cputime:   48:00:00
+	      Ppn:       3
 	      Path:      /home/user/Desktop/.../jobs
 
     User will be notified about all important parameters that were set.
@@ -65,28 +65,28 @@ Edit them directly, i.e. the save path for results is given by:
 
 2)  Specifying certain runs by hand is possible by sending a list of
     runs of interes:
-	
+
 	    >>> runs = [125, 99, 2888, 1447]
 	    >>> jobs = cj.Jobs(2, runs=runs)
 	    >>> jobs.create()
-	    Creating: 
-	         2 jobs with 2 runs per job 
-	        Queue:     standard 
-            Wallclock: 24:00:00 
+	    Creating:
+	         2 jobs with 2 runs per job
+	        Queue:     standard
+            Wallclock: 24:00:00
             Cputime:   48:00:00
             Ppn:       3
             Path:      /home/user/Desktop/.../jobs
-	
+
     In both examples so far what is actually being run is:
 
         python -c "import detecttrails as dt;
                    dt.DetectTrails(run=2888).process()"
 
     It is possible to edit the command that is going to be executed.
-    Specifying aditional keyword arguments to Jobs class helps you 
+    Specifying aditional keyword arguments to Jobs class helps you
     utilize DetectTrails class run options. Sent kwargs are applied
     globaly across every job. It's not possible to specify separate
-    kwargs for each job. 
+    kwargs for each job.
 
         >>> runs = [125, 99, 2888, 1447]
         >>> jobs = cj.Jobs(2, runs=runs, camcol=1)
@@ -94,19 +94,19 @@ Edit them directly, i.e. the save path for results is given by:
 
     would create 2 jobs with 2 runs per job as the above example. But
     the actuall call to DetectTrails class would now look like:
-     
+
         python -c "import detect_trails as dt;
                    dt.DetectTrails(run=125,camcol=1).process()"
-     
+
     Which would process only the camcol 1 of run 125. Actual written
     job#.dqs file is not as readable/friendly as above examples.
     Another example:
-	     
+
         >>> jobs = cj.Jobs(2, runs=runs, camcol=1, filter="i")
 
     would execute 2 jobs with following 2 calls to DetectTrails class:
 
-        python -c "import detect_trails as dt; 
+        python -c "import detect_trails as dt;
                  dt.DetectTrails(run=125,camcol=1,filter=i).process()"
 
     See help on DetectTrails class for a list of all options.
@@ -158,7 +158,7 @@ Edit them directly, i.e. the save path for results is given by:
      1) the outter-most quotation as single '' marks
      2) everything past "-c" flag in double quotation marks ""
      3) further quotation marks should be escaped single quotations.
-     4) A EXPLICIT newline character should ALWAYS be at the end.    
+     4) A EXPLICIT newline character should ALWAYS be at the end.
 
     Same applies when executing a custom command for all runs:
 
@@ -168,7 +168,7 @@ Edit them directly, i.e. the save path for results is given by:
                            'x.params_bright[\'debug\'] = True;'    +\\
                            'x.process()"  \n'
         >>> jobs.create()
-    
+
     would produce jobs for all runs as in 1) usage case, where each
     job would execute the following command(s):
 
@@ -179,40 +179,39 @@ Edit them directly, i.e. the save path for results is given by:
 
     To see the list of all changable execution parameters of
     DetectTrails class see help(detecttrails).
-    
+
 3) By sending in Results object. Former approach covers most basics
    about how to get the most out of DetectTrails class on QSUB.
    However it's still impossible to create a job per frames. Sollution
-   for this problem is to instantiate a Results object, which is a 
+   for this problem is to instantiate a Results object, which is a
    container of  Result objects, and send it to Jobs class. Read docs
-   of Results to see how to instatiate that object. 
-   
+   of Results to see how to instatiate that object.
+
         >>> import results as res
         >>> r = res.Results(folderpath="/home/user/Desktop/res1/res")
         >>> jobs = cj.Jobs(5, runs=r)
         >>> jobs.create()
-        Creating: 
-            6 jobs with 1372 runs per job 
-        Queue:     standard 
-        Wallclock: 24:00:00 
-        Cputime:   48:00:00 
-        Ppn:       3 
+        Creating:
+            6 jobs with 1372 runs per job
+        Queue:     standard
+        Wallclock: 24:00:00
+        Cputime:   48:00:00
+        Ppn:       3
         Path:      /home/user/Desktop/bitbucket/refactor/createjobs/jobs
-   
+
    This time it's not runs you're executing but frames, therefore you
    can let a larger number of them per job. Average times of runs are
-   around 6h while average processing a frame is 0.2s. I.e. command 
+   around 6h while average processing a frame is 0.2s. I.e. command
    that will get executed now is:
 
-	python -c "import detect_trails as dt; 
+	python -c "import detect_trails as dt;
                dt.DetectTrails(run=125,camcol=1,filter=i,
                                field=69).process()"
-	
 """
 
 import sys as _sys
 
-from createjobs import Jobs
+from lfd.createjobs.createjobs import Jobs
 
 #try:
 #    from createjobs import Jobs

@@ -1,20 +1,20 @@
-from Tkinter import *
-import tkFileDialog
-import tkMessageBox
-from ttk import *
-
-import createjobs as cj
 import threading
-import Queue
+import queue
 import time
-from gui.utils import utils
+
+from tkinter import *
+from tkinter.ttk import *
+from tkinter import filedialog, messagebox
+
+import lfd.createjobs as cj
+from lfd.gui.utils import utils
 
 class MidFrame(Frame):
     def __init__(self, parent, row=1, col=0):
         Frame.__init__(self, parent)
         self.parent = parent
         self.grid(row=row, column=col)
-                
+
         title = Label(self, text="Run(s) options",
                       font=("Helvetica", 16), justify="center")
         title.grid(row=row, column=col, columnspan=2)
@@ -23,31 +23,31 @@ class MidFrame(Frame):
 
         runsl = Label(self, text="Runs: ")
         runsl.grid(row=row+1, column=col, pady=5, sticky=W)
-        
+
         self.tmpruns = StringVar(self)
         self.tmpruns.set("All")
-        
+
         runsom = OptionMenu(self, self.tmpruns, "All", "Single",
                             "List", "Results", "Errors",
                             command=self.selectRuns)
-        runsom.grid(row=row+1, column=col+1, pady=5, sticky=W+E) 
+        runsom.grid(row=row+1, column=col+1, pady=5, sticky=W+E)
 
     def selectRuns(self,selection):
         if selection == "All":
             self.runs = None
             return
-            
+
         top = Toplevel(self.parent)
         top.title(selection)
         top.geometry(utils.centerWindow(self.parent, 250,200))
-        
+
         if selection == "Single":
             a = Label(top, text="Input a single run:", justify="left")
             a.grid(row=0, column=0, pady=10, padx=10)
-            
+
             tempruns = Entry(top)
             tempruns.grid(row=1, column=0, pady=10, padx=10)
-            
+
             c = Button(top, text="Ok",
                        command=lambda parent=top, runs=tempruns:
                            self.runFromSingle(parent, runs))
@@ -57,7 +57,7 @@ class MidFrame(Frame):
             a = Label(top, text="Input a list of runs.\n"+ \
                       "Separate each run with a coma.", justify="left")
             a.grid(row=0, column=0, pady=10, padx=5)
-            
+
             tempruns = Text(top, height=4, width=30, pady=10, padx=10)
             tempruns.grid(row=1, column=0, pady=10, padx=10)
 
@@ -65,15 +65,15 @@ class MidFrame(Frame):
                        command=lambda parent=top, runs=tempruns:
                            self.runsFromList(parent, runs))
             b.grid(row=2, column=0, pady=10)
-            
+
         elif selection == "Results":
             self.respath = "~/Desktop"
-            
+
             tmprespath = StringVar()
             tmprespath.set(self.respath)
             tmprespath.trace("w", lambda a, b, c, path=tmprespath:
                              self.setResPath(path))
-            
+
             a = Label(top, text="Is this the correct path:",
                       justify="left")
             a.grid(row=0, column=0, pady=10, padx=10, columnspan=2)
@@ -92,40 +92,39 @@ class MidFrame(Frame):
 
     def setResPath(self, *tmp):
         self.respath = tmp[-1].get()
-        
+
     def readRes(self, parent):
         self.readResults()
         parent.destroy()
-        
+
     def runFromSingle(self, parent, runs):
         try:
             self.jobs.runs =  [ int( runs.get() ) ]
         except ValueError:
-            tkMessageBox.showerror("Input Error", "You have inputed "+\
-                                   "runs in an incorrect format!")
+            messagebox.showerror("Input Error", "You have inputed "+\
+                                 "runs in an incorrect format!")
         parent.destroy()
-        
+
     def runsFromList(self, parent, runs):
         stringruns = runs.get(1.0, END).split(",")
         try:
             intruns = map(int, stringruns)
         except ValueError:
-            tkMessageBox.showerror("Input Error", "You have inputed "+\
-                                   "runs in an incorrect format!")
+            messagebox.showerror("Input Error", "You have inputed "+\
+                                 "runs in an incorrect format!")
         self.jobs.runs = intruns
         parent.destroy()
 
-        
     def getresfolder(self, parent, update):
-        respath = tkFileDialog.askdirectory(parent=parent,
-                   title="Please select results folder...",
-                   initialdir=self.respath)
+        respath = filedialog.askdirectory(parent=parent,
+                                          title="Please select results folder.",
+                                          initialdir=self.respath)
         if not respath:
             pass
             #raise ValueError("Invalid results path.")
         else:
             update.set(respath)
-        
+
     def readResults(self):
         """
         Results module can take its time reading in results. To amortize
@@ -137,7 +136,7 @@ class MidFrame(Frame):
         res.
         """
         respath = self.respath
-        queue = Queue.Queue()
+        queue = queue.Queue()
 
         popup = Toplevel(self.parent)
         startx = self.parent.winfo_rootx()
@@ -148,12 +147,12 @@ class MidFrame(Frame):
                           "Depending on number of results "+
                           "this could take up to a minute.").pack(
                           fill=BOTH, expand=1)
-        
+
         loadingbar = Progressbar(popup, orient='horizontal',
                                      length=400, mode='indeterminate')
         loadingbar.pack(fill=BOTH, expand=1)
         loadingbar.start(10)
-        
+
         t1=threading.Thread(target=utils.read_results,
                             args=(queue, respath))
 

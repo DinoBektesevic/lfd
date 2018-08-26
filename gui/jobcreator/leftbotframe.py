@@ -1,9 +1,11 @@
-from Tkinter import *
-from ttk import *
-import tkFileDialog, tkMessageBox
-
-from gui.utils import expandpath
+from tkinter import *
+from tkinter.ttk import *
 import os
+
+from tkinter import filedialog, messagebox
+
+from lfd.gui.utils import expandpath
+
 
 class BotFrame(Frame):
     def __init__(self, parent, row=2, col=0):
@@ -59,9 +61,9 @@ class BotFrame(Frame):
         self.updateSavePath(newpath)        
         
     def getSavePath(self):
-        newpath = tkFileDialog.askdirectory(parent=self,
-                   title="Please select save destination...",
-                   initialdir=self.job.save_path)
+        newpath = filedialog.askdirectory(parent=self,
+                                          title="Please select save destination.",
+                                          initialdir=self.job.save_path)
         self.tmpsavepath.set(newpath)
         self.updateSavePath(newpath, showerr=True)
 
@@ -72,7 +74,7 @@ class BotFrame(Frame):
         else:
             self.job.save_path="/"
             if showerr:
-                tkMessageBox.showerror("Input Error",
+                messagebox.showerror("Input Error",
                                        "Input path does not " + \
                                        "exist! \n" + path)
     
@@ -82,9 +84,9 @@ class BotFrame(Frame):
         
     def getTemplatePath(self):
         initdir = os.path.dirname(self.job.template_path)
-        newpath = tkFileDialog.askopenfilename(parent=self,
-                   title="Please select a template...",
-                   initialdir=initdir)
+        newpath = filedialog.askopenfilename(parent=self,
+                                             title="Please select a template.",
+                                             initialdir=initdir)
         self.templpath.set(newpath)
         self.updateTemplatePath(newpath, showerr = True)
 
@@ -100,7 +102,7 @@ class BotFrame(Frame):
             self.job.template_path = tmppath[1]
         else:
             if showerr:
-                tkMessageBox.showerror("Input Error",
+                messagebox.showerror("Input Error",
                                        "Input path does not exist " +\
                                        "or is a folder! \n" + path)
             activetmpl.config(state=NORMAL)
@@ -117,8 +119,8 @@ class BotFrame(Frame):
         self.savetmpbtn.config(state=DISABLED)
         self.activetmpl.config(state=DISABLED)
         
-        filename = tkFileDialog.asksaveasfilename(
-            initialdir=self.job.template_path, confirmoverwrite=True)
+        filename = filedialog.asksaveasfilename(initialdir=self.job.template_path,
+                                                confirmoverwrite=True)
         f = open(filename, "w")
         for line in self.activetmpl.get(1.0, END):
             f.write(line)

@@ -31,10 +31,10 @@ class TopRight(Frame):
                         color = "DarkOliveGreen3"
 
                 Label(self, text=i, relief=RIDGE, width=10, bd=1,
-                      bg="light steel blue").grid(
+                      background="light steel blue").grid(
                           row=r,column=0, padx=(50, 0))
                 Label(self, text=getattr(curres, i), width=15,  bd=1,
-                      relief=RIDGE, bg=color).grid(
+                      relief=RIDGE, background=color).grid(
                           row=r,column=1, padx=(0, 80))
                 r+=1
 
@@ -42,7 +42,7 @@ class TopRight(Frame):
             Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
 
         else:
-            Label(self, bg="red2", font=("Helvetica", 20),
+            Label(self, background="red2", font=("Helvetica", 20),
                   text="NO IMAGE DATA\nFOUND").grid(row=0,
                                                     columnspan=2,
                                                     padx=50, pady=(50,0))

@@ -3,155 +3,81 @@ from sqlalchemy.orm import relationship, composite
 
 from .frame import Frame
 from .point import Point
-from .basictime import LineTime
+from .basictime import BasicTime, LineTime
 
-#from results import Session
 from . import Base
 
 __all__ = ["Event"]
 
+
 class Event(Base):
     __tablename__ = "events"
-
     id = sql.Column(sql.Integer, primary_key=True)
 
-    #composite foreign keys are hard
     _run    = sql.Column(sql.Integer)
     _camcol = sql.Column(sql.Integer)
-    _filter = sql.Column(sql.String)
+    _filter = sql.Column(sql.String(length=1))
     _field  = sql.Column(sql.Integer)
 
-    frame   = relationship("Frame", back_populates="events")
-    __table_args__ = (sql.ForeignKeyConstraint([_run, _camcol, _filter, _field],
-                                               [Frame.run, Frame.camcol,
-                                                Frame.filter, Frame.field],
-                                               onupdate="CASCADE",
-                                               ondelete="SET NULL"), {})
+    x1 = sql.Column(sql.Integer, nullable=False)
+    y1 = sql.Column(sql.Integer, nullable=False)
+    x2 = sql.Column(sql.Integer, nullable=False)
+    y2 = sql.Column(sql.Integer, nullable=False)
 
-    _x1 = sql.Column(sql.Integer)
-    _y1 = sql.Column(sql.Integer)
-    _x2 = sql.Column(sql.Integer)
-    _y2 = sql.Column(sql.Integer)
-    _line_start_time = sql.Column(sql.Float)
-    _line_end_time   = sql.Column(sql.Float)
+    start_t = sql.Column(BasicTime)
+    end_t   = sql.Column(BasicTime)
 
-    lt = composite(LineTime, _line_start_time, _line_end_time)
-    p1 = composite(Point, _x1, _y1, _camcol, _filter)
-    p2 = composite(Point, _x2, _y2, _camcol, _filter)
+    lt = composite(LineTime, start_t, end_t)
+    p1 = composite(Point, x1, y1, _camcol, _filter)
+    p2 = composite(Point, x2, y2, _camcol, _filter)
+
+    #http://docs.sqlalchemy.org/en/latest/orm/relationship_persistence.html
+    __table_args__ = (
+        sql.ForeignKeyConstraint(['_run', '_camcol', "_filter", "_field"],
+                                 ['frames.run', 'frames.camcol', "frames.filter",
+                                  "frames.field"], onupdate = "CASCADE"),{}
+	  )
+
+    frame = relationship("Frame", back_populates="events")
 
     def __init__(self, x1, y1, x2, y2, frame, start_t=None, end_t=None):
-        self._run    = frame.run
-        self._camcol = frame.camcol
-        self._filter = frame.filter
-        self._field  = frame.field
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
 
-        self._x1 = x1
-        self._y1 = y1
-        self._x2 = x2
-        self._y2 = y2
+        self.line_start_time = start_t
+        self.line_end_time   = end_t
 
-#        self.frame_id = frame.id
+        self.frame = frame
 
-        self._line_start_time = start_t
-        self._line_end_time = end_t
-
-    @property
-    def run(self):
-        return self.frame.run
-
-    @run.setter
-    def run(self, val):
-        self._run = val
-        self.frame.run = val
-
-    @property
-    def camcol(self):
-        return self.frame.camcol
-
-    @camcol.setter
-    def camcol(self, val):
-        self._camcol = val
-        self.frame.camcol = val
-
-    @property
-    def filter(self):
-        return self.frame.camcol
-
-    @filter.setter
-    def filter(self, val):
-        self._filter = val
-        self.frame._filter = val
-
-    @property
-    def field (self):
-        return self.frame.field
-
-    @field.setter
-    def field (self, val):
-        self._field = val
-        self.frame.field = val
-
-    @property
-    def x1(self):
-        return self.p1.x
-
-    @x1.setter
-    def x1(self, val):
-        self.p1.x = val
-        self._x1 = self.p1._fx
-
-    @property
-    def y1(self):
-        return self.p1.y
-
-    @x1.setter
-    def y1(self, val):
-        self.p1.y = val
-        self._y1 = self.p1._fy
-
-    @property
-    def x2(self):
-        return self.p2.x
-
-    @x2.setter
-    def x2(self, val):
-        self.p2.x = val
-        self._x2 = self.p2._fx
-
-    @property
-    def y2(self):
-        return self.p2.y
-
-    @y2.setter
-    def y2(self, val):
-        self.p2.y = val
-        self._y2 = self.p2._fy
+    def __repr__(self):
+        m = self.__class__.__module__
+        n = self.__class__.__name__
+        f = repr(self.frame).split("results.")[-1][:-1]
+        p1 = repr(self.p1).split("point.")[-1][:-1]
+        p2 = repr(self.p2).split("point.")[-1][:-1]
+        st = self.start_t.iso if self.start_t is not None else None
+        et = self.end_t.iso if self.end_t is not None else None
+        return "<{0}.{1}({4}, {2}, {3}, {5})>".format(m, n, p1, p2, f, st, et)
 
     def useCoordSys(self, coordsys):
         self.p1.useCoordsys(coordsys)
         self.p2.useCoordsys(coordsys)
 
-    def set_lt(self, lt):
-        self.lt.st.tai = lt.st.tai
-        self._line_start_time = lt.st.tai
+    @property
+    def run(self):
+        return self._run
 
-        self.lt.et.tai = lt.et.tai
-        self._line_end_time = lt.et.tai
+    @property
+    def camcol(self):
+        return self._camcol
 
-    def set_st(self, bt):
-        self.lt.st.tai = bt.tai
-        self._line_start_time = bt.tai
+    @property
+    def filter(self):
+        return self._filter
 
-    def set_et(self, bt):
-        self.lt.et.tai = bt.tai
-        self._line_end_time = bt.tai
+    @property
+    def field(self):
+        return self._field
 
-    def __repr__(self):
-        m = self.__class__.__module__
-        n = self.__class__.__name__
-        lt = repr(self.lt).split("basictime.")[-1][:-1]
-        f = repr(self.frame).split("results.")[-1][:-1]
-        p1 = repr(self.p1).split("point.")[-1][:-1]
-        p2 = repr(self.p2).split("point.")[-1][:-1]
-        return "<{0}.{1}({4}, {2}, {3}, {5})>".format(m, n, p1, p2,
-                                                            f, lt)

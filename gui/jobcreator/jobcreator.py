@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 from .leftframe import LeftFrame
 from .rightframe import RightFrame
-from gui.utils import utils
+from lfd.gui.utils import utils
 
-import ttk
-from Tkinter import *
-from ttk import *
+from tkinter import *
+from tkinter.ttk import *
 
-import createjobs as cj
-
+import lfd.createjobs as cj
 
 class JobCreator(Tk):
     def __init__(self):
@@ -20,9 +18,8 @@ class JobCreator(Tk):
 
         self.leftFrame = LeftFrame(self)
         self.rightFrame = RightFrame(self)
-        
+
         self.title("Job Creator")
-        
 
 def run():
     app = JobCreator()

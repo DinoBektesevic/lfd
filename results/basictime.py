@@ -1,72 +1,24 @@
+import sqlalchemy as sql
+from sqlalchemy.types import TypeDecorator
+
 from astropy.time import Time
+
 
 __all__ = ["BasicTime", "LineTime"]
 
-class BasicTime(object):
-    def __init__(self, t, t_format="tai"):
-        if t is None:
-            self._tai = None
-            self._mjd = None
-        elif t_format.lower()=="tai":
-            self._init_tai(t)
-        elif t_format.lower()=="mjd":
-            self._init_mjd(t)
-        else:
-            raise ValueError("Unrecognized time format")
 
-    def _init_tai(self, t):
-        self._tai = t
-        self._mjd = t/(24.0*3600.0)
+class BasicTime(TypeDecorator):
+    impl = sql.types.Float
 
-    def _init_mjd(self, t):
-        self._mjd = t
-        self._tai = t*(24.0*3600.0)
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.mjd*24.0*3600.0
+        return None
 
-    @property
-    def iso(self):
-        return Time(self._mjd, format="mjd").iso
-
-    @property
-    def tai(self):
-        return self._tai
-
-    @tai.setter
-    def tai(self, val):
-        self._init_tai(val)
-
-    @property
-    def mjd(self):
-        return self._mjd
-
-    @mjd.setter
-    def mjd(self, val):
-        self._init_mjd(val)
-
-    def __repr__(self):
-        m = self.__class__.__module__
-        n = self.__class__.__name__
-        return "<{0}.{1}(t={2})>".format(m, n, self.tai)
-
-    def __eq__(self, other):
-        if self.mjd == other.mjd:
-            return True
-        return False
-
-    def __lt__(self, other):
-        if self.mjd < other.mjd:
-            return True
-        return False
-
-    def __gt__(self, other):
-        return not self.__lt__(other)
-
-    def __le__(self, other):
-        if self.__lt__(other) or self.__eq__(other):
-            return True
-        return False
-
-    def __ge__(self, other):
-        return not self.__le__(other)
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return Time(value/(24.0*3600.0), format="mjd")
+        return None
 
 
 class LineTime(object):
@@ -78,6 +30,7 @@ class LineTime(object):
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
-        return "<{0}.{1}(start={2}, end={3})>".format(m, n, self.st.tai,
-                                                      self.et.tai)
+        st = self.st.iso if self.st is not None else None
+        et = self.et.iso if self.et is not None else None
+        return "<{0}.{1}(start={2}, end={3})>".format(m, n, st, et)
 

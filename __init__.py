@@ -6,19 +6,30 @@ import os as _os
 # DEBUG_PATH - folder where images and other debugging files are stored,
 #              not mandatory
 BOSS = "/home/dino/Desktop/boss"
-SAVE_PATH  = _os.path.abspath(_os.curdir)
 DEBUG_PATH = _os.path.abspath(_os.curdir)
 
 # Set these paths on your own responsibility
 PHOTO_REDUX   = _os.path.join(BOSS, "photo/redux")
 BOSS_PHOTOOBJ = _os.path.join(BOSS, "photoObj")
 
-def setup():
-    _os.environ["SAVE_PATH"]  = SAVE_PATH
+def setup(bosspath=BOSS, debugpath=DEBUG_PATH, photoobjpath=BOSS_PHOTOOBJ,
+          photoreduxpath=PHOTO_REDUX):
+    global BOSS, DEBUG_PATH, PHOTO_REDUX, BOSS_PHOTOOBJ
+
     _os.environ["DEBUG_PATH"] = DEBUG_PATH
     _os.environ["BOSS"] = BOSS
     _os.environ["BOSS_PHOTOOBJ"] = BOSS_PHOTOOBJ
+    _os.environ["PHOTO_REDUX"] = photoreduxpath
+
+    BOSS = bosspath
+    DEBUG_PATH = debugpath
+    BOSS_PHOTOOBJ = photoobjpath
+    PHOTO_REDUX = photoreduxpath
 
 
 from .detecttrails import *
+from .results import *
+#import createjobs
+#import gui
 
+#detecttrails: savepath, debugpath, 

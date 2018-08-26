@@ -1,13 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from Tkinter import *
-from ttk import *
-import tkMessageBox
+from tkinter import *
+from tkinter.ttk import *
+from tkinter import messagebox
 
 from .lefttopframe import TopFrame
 from .leftmidframe import MidFrame
 from .leftbotframe import BotFrame
-import createjobs as cj
+
+import lfd.createjobs as cj
 
 class LeftFrame(Frame):
     def __init__(self, parent):
@@ -28,9 +29,9 @@ class LeftFrame(Frame):
         try:
             n = int(self.topFrame.numjobs.get())
         except ValueError as e:
-            tkMessageBox.showerror("Incorrect Format", e)
+            messagebox.showerror("Incorrect Format", e)
         if n==0:
-            tkMessageBox.showerror("Input Error", "Number of jobs "+\
+            messagebox.showerror("Input Error", "Number of jobs "+\
                                    "can't be 0")
         else:
             return n
@@ -40,7 +41,7 @@ class LeftFrame(Frame):
         cmnd = command[:-1]
         cmnd = cmnd.replace("\n", ";")
         cmnd = cmnd.replace(";;", ";")
-        print self.job.command[:38] + cmnd + '"\n '
+#        print(self.job.command[:38] + cmnd + '"\n ')
         return self.job.command[:38] + cmnd + '"\n '
 
     def createjobs(self):
@@ -52,13 +53,13 @@ class LeftFrame(Frame):
         self.root.job.command = self.setcommand()
 
         #runs = self.midFrame.runs
-        
+
         #savepath = self.botFrame.savepath
         #templatepath = self.botFrame.templatepath
-                
+
         #jobs = cj.Jobs(n, queue=queue, path=savepath,
         #               wallclock=wallclock, cputime=cputime, ppn=ppn,
         #               command=cmnd, runs=runs,
         #               template_path=templatepath)
         self.root.job.create()
-#        del jobs        
+#        del jobs

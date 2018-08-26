@@ -1,7 +1,5 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-from Tkinter import *
-from ttk import *
+from tkinter import *
+from tkinter.ttk import *
 
 
 class RightFrame(Frame):

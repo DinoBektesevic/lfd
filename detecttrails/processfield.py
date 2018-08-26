@@ -208,7 +208,7 @@ def _fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
 
     return detection, box_img
 
-def _dictify_hough(shape,houghVals):
+def _dictify_hough(shape, houghVals):
     """
     Function converts from hough line tuples (rho, theta) into scaled pixel
     coordinates on the image. Returned value is a space separated string:
@@ -227,10 +227,9 @@ def _dictify_hough(shape,houghVals):
     return {"x1":x1, "y1":y1, "x2":x2, "y2":y2}
 
 
-def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
-                         contoursMode, contoursMethod,
-                         minAreaRectMinLen, houghMethod, nlinesInSet,
-                         lineSetTresh, dro, debug):
+def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
+                         contoursMethod, minAreaRectMinLen, houghMethod,
+                         nlinesInSet, lineSetTresh, dro, debug):
     """
     Function detects bright trails in images.
     Please use RemoveStars class as some pre-processing takes place.
@@ -310,10 +309,10 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel,
         return (False, None)
 
 
-def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh,
-                      erodeKernel, dilateKernel, contoursMode,
-                      contoursMethod, minAreaRectMinLen, houghMethod,
-                      nlinesInSet, dro, lineSetTresh, debug):
+def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
+                      dilateKernel, contoursMode, contoursMethod,
+                      minAreaRectMinLen, houghMethod, nlinesInSet,
+                      dro, lineSetTresh, debug):
     """
     Function detects dim trails in images.
     Please use RemoveStars class as some pre-processing takes place.

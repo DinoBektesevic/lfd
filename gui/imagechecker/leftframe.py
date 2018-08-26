@@ -25,14 +25,15 @@ class LeftFrame(Frame):
             self.canvas.delete("all")
             tmpimg = Image.open(curimg)
             self.img = ImageTk.PhotoImage(tmpimg)
-            self.canvas.create_image(0, 0, image=self.img, anchor=NW)#self.canvas.winfo_height(),
-#                                     anchor=SW, image=self.img)
+            self.canvas.create_image(0, 0, image=self.img, anchor=NW)
+            #self.canvas.winfo_height(), anchor=SW, image=self.img)
             curimgdata = self.data.getImageData()
             if curimgdata is not None:
                 self.drawline(curimgdata)
         else:
-            tmpimg = Image.open(os.path.join(os.getcwd(),
-                                     "gui/imagechecker/noimage.png"))
+            import lfd.gui
+            tmpimg = Image.open(os.path.join(lfd.gui.__path__[0],
+                                             "imagechecker/noimage.png"))
             self.img = ImageTk.PhotoImage(tmpimg)
             self.canvas.create_image(0, 0, image=self.img, anchor=NW)
 
@@ -61,18 +62,17 @@ class LeftFrame(Frame):
         #use these to check if db is actually updated:
         #self.canvas.delete(self.drawnline)
         #self.drawline(self.data.getImageData())
-        
+
     def drawline(self, curimg):
         x1, y0 = curimg.x1, curimg.y1
         x2, y2 = curimg.x2, curimg.y2
         y1 = 2*y0-y2
-        
+
         sx1, sy1 = x1/2.56, y1/2.5628227194492257
         sx2, sy2 = x2/2.56, y2/2.5628227194492257
-        
+
         #m = float(sy2-sy1)/float(sx2-sx1)
         #b = sy1 - m*sx1
 
         self.drawnline = self.canvas.create_line(sx1, sy1, sx2, sy2,
                                                  fill="red", width=1)
-        

@@ -33,19 +33,22 @@ def process_field(results, errors, run, camcol, filter, field, params_bright,
          errors)
     """
     try:
-        if params_dim["debug"] or params_bright["debug"]:
-            setup_debug()
-            
         origPathName = files.filename('frame', run=run, camcol=camcol,
                                       field=field, filter=filter)
 
-        img = fitsio.read(origPathName)#unpackedfits)
+        img = fitsio.read(origPathName)
+        h   = fitsio.read_header(origPathName)
 
-        h = fitsio.read_header(origPathName)#unpackedfits)
-        printit = (str(run)+" "+str(camcol)+" "+filter+" "+str(field)+" "
-                   +str(h['TAI'])+" "+str(h['CRPIX1'])+" "+str(h['CRPIX2'])+" "
-                   +str(h['CRVAL1'])+" "+str(h['CRVAL2'])+" "+str(h['CD1_1'])+" "
-                   +str(h['CD1_2'])+" "+str(h['CD2_1'])+" "+str(h['CD2_2'])+" ")
+        printit = (
+            "{} {} {} {} {} {} {} {} {} {} {} {} {} "
+            ).format(run, camcol, filter, field, h['TAI'],    h['CRPIX1'],
+                     h['CRPIX2'], h['CRVAL1'],   h['CRVAL2'], h['CD1_1'],
+                     h['CD1_2'],  h['CD2_1'],    h['CD2_2'])
+
+#        printit = (str(run)+" "+str(camcol)+" "+filter+" "+str(field)+" "
+#                   +str(h['TAI'])+" "+str(h['CRPIX1'])+" "+str(h['CRPIX2'])+" "
+#                   +str(h['CRVAL1'])+" "+str(h['CRVAL2'])+" "+str(h['CD1_1'])+" "
+#                   +str(h['CD1_2'])+" "+str(h['CD2_1'])+" "+str(h['CD2_2'])+" ")
 
         img = remove_stars(img, run, camcol, filter, field,
                              **params_removestars)
@@ -54,7 +57,7 @@ def process_field(results, errors, run, camcol, filter, field, params_bright,
         #it seems CV2 and FITSIO set different pix coords
         img = cv2.flip(img, 0)
 
-        detection,res = process_field_bright(img,**params_bright)
+        detection, res = process_field_bright(img, **params_bright)
 
         if detection:
                 results.write(printit+str(res["x1"])+" "+str(res["y1"])+" "+
@@ -127,10 +130,14 @@ class DetectTrails:
         params_removestars:
             optional detection parameters for tuning star removal. See
             detecttrails module help for full list.
+        debug:
+            optional parameter for verbose output and step-by-step image
+            output to visualize the processing. Make sure there is a "DEBUGPATH"
+            environmental variable set otherwise error will be reported.
     """
 
     def __init__(self, **kwargs):
-        savepth = os.environ["SAVE_PATH"]
+        savepth = (kwargs["savepath"] if "savepath" in kwargs else ".")
         self.results = os.path.join(savepth, 'results.txt')
         self.errors  = os.path.join(savepth, 'errors.txt')
         self.kwargs=kwargs
@@ -167,11 +174,27 @@ class DetectTrails:
             "pixscale": 0.396,
             "defaultxy": 20,
             "maxxy": 60,
-            "filter_caps": {'u': 22.0, 'g': 22.2,'r': 22.2, 'i':21.3,
-                            'z': 20.5},
+            "filter_caps": {'u': 22.0, 'g': 22.2,'r': 22.2, 'i':21.3, 'z': 20.5},
             "magcount": 3,
-            "maxmagdiff": 3
+            "maxmagdiff": 3,
+            "debug": False
             }
+
+        if "params_bright" in kwargs:
+            self.params_bright = kwargs["params_bright"]
+        if "params_dim" in kwargs:
+            self.params_bright = kwargs["params_dim"]
+        if "params_removestars" in kwargs:
+            self.params_bright = kwargs["params_removestars"]
+        if "debug" in kwargs:
+            self.debug = kwargs.pop("debug")
+            self.params_bright["debug"] = self.debug
+            self.params_dim["debug"] = self.debug
+            self.params_removestars = self.debug
+        if any([self.params_removestars,self.params_bright["debug"],
+                self.params_dim["debug"]]):
+            setup_debug()
+
         self._load()
 
     def _runInfo(self):

@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 from .leftframe import LeftFrame
 from .rightframe import RightFrame
-from LFDS3.gui import utils
+from lfd.gui import utils
 from .images import Images
 
 from tkinter import *
-from ttk import *
+from tkinter import ttk
+
 from tkinter import Label
-import tkFileDialog
+from tkinter import filedialog
 
 
 class ImageChecker(Tk):
@@ -39,22 +40,22 @@ class ImageChecker(Tk):
         self.update()
 
     def initImageData(self):
-        path = tkFileDialog.askdirectory(parent=self,
-                            title="Please select results folder...",
-                            initialdir=self.respath)
+        path = filedialog.askdirectory(parent=self,
+                                       title="Please select results folder...",
+                                       initialdir=self.respath)
         self.data.setResults(path)
 
     def initImages(self):
-        path = tkFileDialog.askdirectory(parent=self,
-                            title="Please select image folder...",
-                            initialdir=self.imgpath)
+        path = filedialog.askdirectory(parent=self,
+                                       title="Please select image folder...",
+                                       initialdir=self.imgpath)
         self.data.setImages(path)
 
     def update(self):
         self.leftframe.update()
         self.rightframe.update()
- 
-        
+
+
 def run():
     app = ImageChecker()
     app.mainloop()
