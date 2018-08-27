@@ -1,13 +1,13 @@
+from functools import wraps
+
 from .coord_conversion import convert_ccd2frame, convert_frame2ccd
+
+from sqlalchemy.ext.mutable import MutableComposite
 
 __all__ = ["Point"]
 
-class Point(object):
-    def __init__(self, x, y, camcol=None, filter=None,
-                 coordsys="frame"):
-
-        x = float(x)
-        y = float(y)
+class Point(MutableComposite):
+    def __init__(self, x, y, camcol=None, filter=None, coordsys="frame"):
         self.coordsys = coordsys.lower()
 
         if (self.coordsys == "frame" and None not in [x, y, camcol, filter]):
@@ -20,15 +20,14 @@ class Point(object):
                             "and filter with 'frame' coordinate system.")
 
     def __initFrame(self, x, y, camcol, filter):
-        tmp = convert_frame2ccd(x, y, camcol, filter)
-
-        self._cx = tmp[0]
-        self._cy = tmp[1]
-
         self._fx = x
         self._fy = y
         self._camcol = camcol
         self._filter = filter
+
+        tmp = convert_frame2ccd(x, y, camcol, filter)
+        self._cx = tmp[0]
+        self._cy = tmp[1]
 
     def __initCCD(self, x, y):
         self._cx = x
@@ -41,12 +40,24 @@ class Point(object):
         self._filter = tmp[3]
 
     def __composite_values__(self):
-        return self.x, self.y
+        return self._fx, self._fy
+
+    def __setattr__(self, key, value):
+        "Intercept set events"
+
+        # set the attribute
+        object.__setattr__(self, key, value)
+
+        # alert all parents to the change
+        if key in ("_fx", "_fy"):
+            print("key", key)
+            self.changed()
 
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
         return "<{0}.{1}(x={2}, y={3})>".format(m, n, self.x, self.y)
+
 
     @property
     def x(self):
@@ -96,6 +107,7 @@ class Point(object):
     def useCoordsys(self, coordsys):
         if coordsys.lower() in ["frame", "ccd"]:
             self.coordsys = coordsys.lower()
+
 
     def move(self, *args, **kwargs):
         if len(args) == 2:

@@ -19,17 +19,17 @@ class Event(Base):
     _filter = sql.Column(sql.String(length=1))
     _field  = sql.Column(sql.Integer)
 
-    x1 = sql.Column(sql.Integer, nullable=False)
-    y1 = sql.Column(sql.Integer, nullable=False)
-    x2 = sql.Column(sql.Integer, nullable=False)
-    y2 = sql.Column(sql.Integer, nullable=False)
+    _x1 = sql.Column(sql.Integer, nullable=False)
+    _y1 = sql.Column(sql.Integer, nullable=False)
+    _x2 = sql.Column(sql.Integer, nullable=False)
+    _y2 = sql.Column(sql.Integer, nullable=False)
 
     start_t = sql.Column(BasicTime)
     end_t   = sql.Column(BasicTime)
 
     lt = composite(LineTime, start_t, end_t)
-    p1 = composite(Point, x1, y1, _camcol, _filter)
-    p2 = composite(Point, x2, y2, _camcol, _filter)
+    p1 = composite(Point, _x1, _y1, _camcol, _filter)
+    p2 = composite(Point, _x2, _y2, _camcol, _filter)
 
     #http://docs.sqlalchemy.org/en/latest/orm/relationship_persistence.html
     __table_args__ = (
@@ -41,10 +41,10 @@ class Event(Base):
     frame = relationship("Frame", back_populates="events")
 
     def __init__(self, x1, y1, x2, y2, frame, start_t=None, end_t=None):
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
+        self._x1 = x1
+        self._y1 = y1
+        self._x2 = x2
+        self._y2 = y2
 
         self.line_start_time = start_t
         self.line_end_time   = end_t
@@ -80,4 +80,41 @@ class Event(Base):
     @property
     def field(self):
         return self._field
+
+
+    @property
+    def x1(self):
+        return self.p1.x
+
+    @x1.setter
+    def x1(self, val):
+        self.p1.x = val
+        self._x1 = self.p1._fx
+
+    @property
+    def y1(self):
+        return self.p1.y
+
+    @x1.setter
+    def y1(self, val):
+        self.p1.y = val
+        self._y1 = self.p1._fy
+
+    @property
+    def x2(self):
+        return self.p2.x
+
+    @x2.setter
+    def x2(self, val):
+        self.p2.x = val
+        self._x2 = self.p2._fx
+
+    @property
+    def y2(self):
+        return self.p2.y
+
+    @y2.setter
+    def y2(self, val):
+        self.p2.y = val
+        self._y2 = self.p2._fy
 
