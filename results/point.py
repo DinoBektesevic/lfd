@@ -1,8 +1,6 @@
-from functools import wraps
+from sqlalchemy.ext.mutable import MutableComposite
 
 from .coord_conversion import convert_ccd2frame, convert_frame2ccd
-
-from sqlalchemy.ext.mutable import MutableComposite
 
 __all__ = ["Point"]
 
@@ -17,7 +15,7 @@ class Point(MutableComposite):
         else:
             raise TypeError("Send x, y coordinates with 'ccd' " + \
                             "coordinate system or send x, y, camcol " + \
-                            "and filter with 'frame' coordinate system.")
+                            "and filter with 'frame' coordinate system. Received", x, y, camcol, filter, coordsys, "instead")
 
     def __initFrame(self, x, y, camcol, filter):
         self._fx = x
@@ -49,8 +47,8 @@ class Point(MutableComposite):
         object.__setattr__(self, key, value)
 
         # alert all parents to the change
-        if key in ("_fx", "_fy"):
-            print("key", key)
+        if key in ("x", "y"):
+            print("alert going out")
             self.changed()
 
     def __repr__(self):
@@ -104,7 +102,7 @@ class Point(MutableComposite):
                                  "only in 'frame' coordinate system.")
 
 
-    def useCoordsys(self, coordsys):
+    def useCoordSys(self, coordsys):
         if coordsys.lower() in ["frame", "ccd"]:
             self.coordsys = coordsys.lower()
 

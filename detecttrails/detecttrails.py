@@ -16,8 +16,7 @@ from .sdss import files
 
 def process_field(results, errors, run, camcol, filter, field, params_bright,
                   params_dim, params_removestars):
-    """
-    Function that calls the correct order of actions needed to detect trails per
+    """Function that calls the correct order of actions needed to detect trails per
     frame. Writes  "results.txt" and "errors.txt".
     Please use the class!
 
@@ -148,7 +147,7 @@ class DetectTrails:
             "contoursMode": RETR_LIST, #CV_RETR_EXTERNAL
             "contoursMethod": CHAIN_APPROX_NONE, #CV_CHAIN_APPROX_SIMPLE
             "minAreaRectMinLen": 1, ##HAS A BIG IMPACT ON FOUND COUNTOURS!
-            "houghMethod": 1, #CV_HOUGH_STANDARD
+            "houghMethod": 20, #CV_HOUGH_STANDARD
             "nlinesInSet": 3,
             "lineSetTresh": 0.15,
             "dro": 25,
@@ -164,7 +163,7 @@ class DetectTrails:
             "contoursMode": RETR_LIST, #CV_RETR_EXTERNAL
             "contoursMethod": CHAIN_APPROX_NONE, #CV_CHAIN_APPROX_SIMPLE
             "minAreaRectMinLen": 1,
-            "houghMethod": 1, #CV_HOUGH_STANDARD
+            "houghMethod": 20, #CV_HOUGH_STANDARD
             "nlinesInSet": 3,
             "lineSetTresh": 0.15,
             "dro": 20,

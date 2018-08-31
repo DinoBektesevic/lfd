@@ -9,7 +9,7 @@ def setup_debug():
         global pathBright
         global pathDim
         pathBright = os.environ["DEBUG_PATH"]
-        pathDim = pathBright
+        pathDim = os.environ["DEBUG_PATH"]
     except:
         pass
 
