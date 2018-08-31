@@ -73,7 +73,6 @@ class Event(Base):
     cx2 = sql.Column(sql.Float, nullable=False)
     cy2 = sql.Column(sql.Float, nullable=False)
 
-
     start_t = sql.Column(BasicTime)
     end_t   = sql.Column(BasicTime)
 
