@@ -68,6 +68,12 @@ class Event(Base):
     x2 = sql.Column(sql.Float, nullable=False)
     y2 = sql.Column(sql.Float, nullable=False)
 
+    cx1 = sql.Column(sql.Float, nullable=False)
+    cy1 = sql.Column(sql.Float, nullable=False)
+    cx2 = sql.Column(sql.Float, nullable=False)
+    cy2 = sql.Column(sql.Float, nullable=False)
+
+
     start_t = sql.Column(BasicTime)
     end_t   = sql.Column(BasicTime)
 
@@ -86,16 +92,27 @@ class Event(Base):
 
     def __init__(self, x1, y1, x2, y2, frame, start_t=None, end_t=None,
                  coordsys="frame"):
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-
-        self.line_start_time = start_t
-        self.line_end_time   = end_t
 
         self.frame = frame
         self.coordsys = coordsys
+
+        tmp1 = Point(x1, y1, frame.camcol, frame.filter, coordsys)
+        tmp2 = Point(x2, y2, frame.camcol, frame.filter, coordsys)
+
+        self.x1 = tmp1._fx
+        self.y1 = tmp1._fy
+
+        self.x2 = tmp2._fx
+        self.y2 = tmp2._fy
+
+        self.cx1 = tmp1._cx
+        self.cy1 = tmp1._cy
+
+        self.cx2 = tmp2._cx
+        self.cy2 = tmp2._cy
+
+        self.line_start_time = start_t
+        self.line_end_time   = end_t
 
     def __repr__(self):
         m = self.__class__.__module__
@@ -170,28 +187,28 @@ class Event(Base):
     def __setconv(self, x, y, which):
         cordsys = getattr(self, which+".coordsys")
 
-#    @hybrid_property
-#    def cx1(self):
-#        return self.__getconv(self.x1, self.y1, 0)
-#
-#    @hybrid_property
-#    def cy1(self):
-#        return self.__getconv(self.x1, self.y1, 1)
-#
-#    @hybrid_property
-#    def cx2(self):
-#        return self.__getconv(self.x1, self.y2, 0)
-#
-#    @hybrid_property
-#    def cy2(self):
-#        return self.__getconv(self.x1, self.y2, 1)
-#
-#    @cx1.setter
-#    def cx1(self, val):
-#        if self.p1.coordsys == "ccd":
-#            self.p1.x = val
-#        else:
-#            self.p1.useCoordSys("ccd")
-#            self.p1.x = val
-#            self.p1.useCoordSys("frame")
-#
+    @hybrid_property
+    def cx1(self):
+        return self.__getconv(self.x1, self.y1, 0)
+
+    @hybrid_property
+    def cy1(self):
+        return self.__getconv(self.x1, self.y1, 1)
+
+    @hybrid_property
+    def cx2(self):
+        return self.__getconv(self.x1, self.y2, 0)
+
+    @hybrid_property
+    def cy2(self):
+        return self.__getconv(self.x1, self.y2, 1)
+
+    @cx1.setter
+    def cx1(self, val):
+        if self.p1.coordsys == "ccd":
+            self.p1.x = val
+        else:
+            self.p1.useCoordSys("ccd")
+            self.p1.x = val
+            self.p1.useCoordSys("frame")
+
