@@ -13,11 +13,13 @@ class Point(MutableComposite):
         elif self.coordsys == "ccd":
             self.__initCCD(x, y)
         else:
-            raise TypeError("Send x, y coordinates with 'ccd' " + \
-                            "coordinate system or send x, y, camcol " + \
-                            "and filter with 'frame' coordinate system. Received", x, y, camcol, filter, coordsys, "instead")
+            errmsg = "Expected (x,y, coordsys='ccd') or"
+            errmsg += "(x, y, camcol, filter). Got ({0}, {1}, {2}, {3}, {4})"
+            errmsg += "instead."
+            raise TypeError(errmsg.format(x, y, camcol, filter, coordsys))
 
     def __initFrame(self, x, y, camcol, filter):
+        print("in initFrame")
         self._fx = x
         self._fy = y
         self._camcol = camcol
@@ -28,6 +30,7 @@ class Point(MutableComposite):
         self._cy = tmp[1]
 
     def __initCCD(self, x, y):
+        print("in initCCD")
         self._cx = x
         self._cy = y
 
@@ -81,9 +84,9 @@ class Point(MutableComposite):
     @y.setter
     def y(self, value):
         if self.coordsys == "frame":
-            self.__initFrame(self._fx, value, self._camcol, self._filter)
+            self._initFrame(self._fx, value, self._camcol, self._filter)
         else:
-            self.__initCCD(self._cx, value)
+            self._initCCD(self._cx, value)
 
     @property
     def camcol(self):
@@ -107,7 +110,7 @@ class Point(MutableComposite):
             self.coordsys = coordsys.lower()
 
 
-    def move(self, *args, **kwargs):
+    def move(self, *args, coordsys=None, alert=True):
         if len(args) == 2:
             x, y = args
         elif len(args) == 1:
@@ -115,7 +118,13 @@ class Point(MutableComposite):
         else:
             x, y = kwargs["x"], kwargs["y"]
 
-        if self.coordsys == "frame":
+        if coordsys is None:
+            coordsys = self.coordsys
+        if coordsys == "frame":
             self.__initFrame(x, y, self._camcol, self._filter)
         else:
             self.__initCCD(x, y)
+
+        if alert:
+            self.changed()
+
