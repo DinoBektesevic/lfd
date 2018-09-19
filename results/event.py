@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from .frame import Frame
 from .point import Point, Line
 from .basictime import BasicTime, LineTime
-from .coord_conversion import convert_frame2ccd
+from .coord_conversion import convert_frame2ccd, convert_ccd2frame
 from .utils import session_scope
 
 from . import Base
@@ -77,9 +77,9 @@ class Event(Base):
     end_t   = sql.Column(BasicTime)
 
     lt = composite(LineTime, start_t, end_t)
-    p1 = Point(x1, y1)#, _camcol, _filter, cx=cx1, cy=cy1)
-    p2 = Point(x2, y2)#, _camcol, _filter, cx=cx2, cy=cy2)
-#    l = Line(x1, y1, x2, y2, _camcol, _filter, cx1, cy1, cx2, cy2)
+    p1 = composite(Point, x1, y1, cx1, cy1, _camcol, _filter)
+    p2 = composite(Point, x2, y2, cx2, cy2, _camcol, _filter)
+#    l = composite(Line, x1, y1, x2, y2, cx1, cy1, cx2, cy2, _camcol, _filter)
 
     #http://docs.sqlalchemy.org/en/latest/orm/relationship_persistence.html#mutable-primary-keys-update-cascades
     __table_args__ = (
@@ -93,27 +93,18 @@ class Event(Base):
     def __init__(self, x1, y1, x2, y2, frame, start_t=None, end_t=None,
                  coordsys="frame"):
 
-        self.frame = frame
         self.coordsys = coordsys
-
-        p1 = Point(x1, y1, frame.camcol, frame.filter)
-        p2 = Point(x2, y2, frame.camcol, frame.filter)
-
-        self.x1  = p1.x
-        self.y1  = p1.y
-        self.cx1 = p1.cx
-        self.cy1 = p1.cy
-
-        self.x2  = p2.x 
-        self.y2  = p2.y 
-        self.cx2 = p2.cx
-        self.cy2 = p2.cy
-
-        self.p1 = p1
-        self.p2 = p2
+        self.p1 = Point(x1, y1, camcol=frame.camcol, filter=frame.filter)
+        self.p2 = Point(x2, y2, camcol=frame.camcol, filter=frame.filter)
 
         self.line_start_time = start_t
         self.line_end_time   = end_t
+
+        self.frame = frame
+
+    def __setattr__(self, key, val):
+        if key == "x1":
+            self.p1.x = val
 
     def __repr__(self):
         m = self.__class__.__module__
@@ -128,32 +119,6 @@ class Event(Base):
     def useCoordSys(self, coordsys):
         self.p1.useCoordSys(coordsys)
         self.p2.useCoordSys(coordsys)
-
-
-#    @validates("x1")
-#    def validate_x1(self, key, value):
-#        if all((self.x1, self.y1)) and self.p1 is not None:
-#            self.p1.move(value, self.y1, alert=False)
-#            self.cx1 = self.p1._cx
-#        return value
-#
-#    @validates("y1")
-#    def validate_y1(self, key, value):
-#        if all((self.x1, self.y1)) and self.p1 is not None:
-#                self.p1._fy = value
-#        return value
-#
-#    @validates("x2")
-#    def validate_x2(self, key, value):
-#        if all((self.x2, self.y2)) and self.p2 is not None:
-#            self.p2._fx = value
-#        return value
-#
-#    @validates("y2")
-#    def validate_y2(self, key, value):
-#        if all((self.x2, self.y2)) and self.p2 is not None:
-#            self.p2._fy = value
-#        return value
 
     @classmethod
     def query(cls, condition=None):
@@ -189,6 +154,7 @@ class Event(Base):
     def __setconv(self, x, y, which):
         cordsys = getattr(self, which+".coordsys")
 
+
 #   @hybrid_property
 #   def cx1(self):
 #       return self._cx1
@@ -197,7 +163,7 @@ class Event(Base):
 #   def cx1(self, val):
 #       if all((self.x1, self.y1)) and self.p1 is not None:
 #           self.p1.move(val, self._cy1, coordsys="ccd", alert=False)
-#       self._cx1 = val        
+#       self._cx1 = val
 #
 #   @hybrid_property
 #   def cy1(self):
