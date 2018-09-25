@@ -11,10 +11,14 @@ __all__ = ["Point"]
 class Point(MutableComposite):
     """Provides a more comfortable interface for handling coordinates and coord
     transformations. Capable of moving and setting of new coordinate values in
-    any frame while maintaning consistency across all coordinates. Will produce
-    a warning in an inconsistent situations to warn the user that, logically, the
-    performed operations do not make sense, but will not enforce consistency.
-    See Notes in lfd.results.event.Event object for more information. 
+    any frame while maintaning consistency across all coordinates.
+    Will produce a warning in an inconsistent situations to warn the user that,
+    logically, the performed operations do not make sense, but will not enforce
+    consistency. See Notes in results.event.Event object for more information.
+
+
+
+
     """
     def __init__(self, x=None, y=None,  cx=None, cy=None,
                  camcol=None, filter=None, coordsys="frame"):

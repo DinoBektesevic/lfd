@@ -264,7 +264,7 @@ class Event(Base):
         return a query object, not the query result.
 
         If condition is supplied it is interpreted as a common string SQL. It's
-        sufficient to use he names of mapped classes and their attributes as
+        sufficient to use the names of mapped classes and their attributes as
         they will automatically be replaced by the correct table and column
         names.
 
