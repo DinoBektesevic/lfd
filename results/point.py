@@ -1,31 +1,51 @@
 #from sqlalchemy import Column
-from sqlalchemy.ext.mutable import MutableComposite
+import warnings
+warnings.simplefilter('always', SyntaxWarning)
 
+from sqlalchemy.ext.mutable import MutableComposite
 
 from .coord_conversion import convert_ccd2frame, convert_frame2ccd
 
-__all__ = ["Point", "Line"]
+__all__ = ["Point"]
 
 class Point(MutableComposite):
-    def __init__(self, x, y,  cx=None, cy=None,
+    """Provides a more comfortable interface for handling coordinates and coord
+    transformations. Capable of moving and setting of new coordinate values in
+    any frame while maintaning consistency across all coordinates. Will produce
+    a warning in an inconsistent situations to warn the user that, logically, the
+    performed operations do not make sense, but will not enforce consistency.
+    See Notes in lfd.results.event.Event object for more information. 
+    """
+    def __init__(self, x=None, y=None,  cx=None, cy=None,
                  camcol=None, filter=None, coordsys="frame"):
 
         self.coordsys = coordsys.lower()
+
+        if coordsys == "ccd" and all([x, y]):
+            cx, cy = x, y
+            x, y = None, None
 
         if all([x, y, camcol, filter, cx, cy]):
             self.__initAll(x, y, cx, cy, camcol, filter)
         elif self.coordsys == "ccd" and all((cx, cy)):
             self.__initCCD(cx, cy)
         elif self.coordsys == "frame" and all([x, y, camcol, filter]):
-            self.__initFrame(x, y, camcol, filter)
+            self._initFrame(x, y, camcol, filter)
         else:
             errmsg = "Expected (x,y, coordsys='ccd') or "
             errmsg += "(x, y, camcol, filter). Got ({0}, {1}, {2}, {3}, {4}) "
             errmsg += "instead."
             raise TypeError(errmsg.format(x, y, camcol, filter, coordsys))
 
-    def __initAll(self, x, y, cx, cy, camcol, filter):
-        print("in init all")
+    def __initAll(self, x, y, cx, cy, camcol, filter, check=True):
+        # check for consistency when defaulting to immediate __initAll
+        if check:
+            tmpcx, tmpcy = convert_frame2ccd(x, y, camcol, filter)
+            if tmpcx != cx or tmpcy != cy:
+                msg = ("Instantiation inconsistency: Supplied coordinates do not "
+                       "match. Received (x={0}, y={1}, cx={2}, cy={3}) but "
+                       "calculated (x={4}, y={5}, cx={6}, cy={7}).")
+                raise ValueError(msg.format(x, y, cx, cy, x, y, tmpcx, tmpcy))
         self._x = x
         self._y = y
         self._cx = cx
@@ -34,93 +54,53 @@ class Point(MutableComposite):
         self._camcol = camcol
         self._filter = filter
 
-    def __initFrame(self, x, y, camcol, filter):
+        self.changed()
+
+    def _initFrame(self, x, y, camcol, filter):
         cx, cy = convert_frame2ccd(x, y, camcol, filter)
-        print("in init frame", cx, cy)
-        self.__initAll(x, y, cx, cy, camcol, filter)
+        self.__initAll(x, y, cx, cy, camcol, filter, check=False)
 
     def __initCCD(self, cx, cy):
-        print("initting ccd", cx, cy)
         x, y, camcol, filter = convert_ccd2frame(cx, cy)
-        self.__initAll(x, y, cx, cy, camcol, filter)
+        self.__initAll(x, y, cx, cy, camcol, filter, check=False)
 
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
-        return "<{0}.{1}(x={2}, y={3})>".format(m, n, self.x, self.y)
+        retrstr = "<{0}.{1}(x={2}, y={3}, cx={4}, cy={5})>"
+        return retrstr.format(m, n, self.x, self.y, self.cx, self.cy)
+
+    def __str__(self):
+        return "Point(x={0}, y={1})".format(self.x, self.y)
 
     def __composite_values__(self):
-        return self._x, self._y, self._cx, self._cy
+        return self.x, self.y, self.cx, self.cy
 
-    def __setattr__(self, key, val):
-        "Intercept set events"
-#
-#        key = key.lower()
-#        selfdict = dir(self)
-#        if key == "x" and "x" in selfdict:
-#            self.move(x=val)
-#        elif key == "y" and "y" in selfdict:
-#            self.move(y=val)
-#        elif key == "cx" and "cx" in selfdict:
-#            self.move(cx=val)
-#        elif key == "cy" and "cy" in selfdict:
-#            self.move(cy=val)
-#        else:
-#            # default to generic setter
-        object.__setattr__(self, key, val)
-
-        # alert all parents to the change
-        if key in (["x", "y", "cx", "cy"]):
-            print("issuing change")
-            self.changed()
-
+    def _check_sensibility(self, attr):
+        msg = "Attribute {0} should only be accessed when coordsys={1}"
+        if attr in (["x", "y", "camcol", "filter"]) and self.coordsys == "ccd":
+            warnings.warn(msg.format(attr, "frame"), SyntaxWarning)
+        if attr in (["cx", "cy"]) and self.coordsys == "frame":
+            warnings.warn(msg.format(attr, "ccd"), SyntaxWarning)
 
     @property
     def camcol(self):
-        if self.coordsys == "frame":
-            return self._camcol
-        else:
-            raise AttributeError("Atribute 'camcol' is availible "+\
-                                 "only in 'frame' coordinate system.")
+        self._check_sensibility("camcol")
+        return self._camcol
 
     @property
     def filter(self):
-        if self.coordsys == "frame":
-            return self._filter
-        else:
-            raise AttributeError("Atribute 'filter' is availible "+\
-                                 "only in 'frame' coordinate system.")
+        self._check_sensibility("filter")
+        return self._filter
 
     def useCoordSys(self, coordsys):
         if coordsys.lower() in ["frame", "ccd"]:
             self.coordsys = coordsys.lower()
 
-    def move(self, *args, **kwargs):#, alert=True):
+    def move(self, *args, **kwargs):
         print("", args)
         print("           ", kwargs)
         print(dir(self))
-
-#        if coordsys is None:
-#            coordsys = self.coordsys
-#        else:
-#            coordsys = coordsys.lower()
-#
-#        if coordsys == "frame":
-#            if len(args) == 2:
-#                x, y = args
-#            elif len(args) == 1:
-#                x, y = args[0]
-#        elif coordsys == "ccd":
-#            if len(args) == 2:
-#                cx, cy = args
-#            elif len(args) == 1:
-#                cx, cy = args[0]
-#        else:
-#            x = kwargs.pop("x", self.x)
-#            y = kwargs.pop("y", self.y)
-#            cx = kwargs.pop("cx", self.cx)
-#            cy = kwargs.pop("cy", self.cy)
-
 
         x = kwargs.pop("x", self.x)
         y = kwargs.pop("y", self.y)
@@ -128,11 +108,9 @@ class Point(MutableComposite):
         cy = kwargs.pop("cy", self.cy)
         coordsys = kwargs.pop("coordsyy", self.coordsys)
 
-
         if coordsys == "frame":
-            self.__initFrame(x, y, self._camcol, self._filter)
+            self._initFrame(x, y, self._camcol, self._filter)
         else:
-#            print("initting ccd")
             self.__initCCD(cx, cy)
 
     @property
@@ -141,7 +119,7 @@ class Point(MutableComposite):
 
     @x.setter
     def x(self, val):
-        self.__initFrame(val, self._y, self._camcol, self._filter)
+        self._initFrame(val, self._y, self._camcol, self._filter)
 
     @property
     def y(self):
@@ -149,7 +127,7 @@ class Point(MutableComposite):
 
     @y.setter
     def y(self, val):
-        self.__initFrame(self._x, val, self._camcol, self._filter)
+        self._initFrame(self._x, val, self._camcol, self._filter)
 
     @property
     def cx(self):
@@ -167,50 +145,3 @@ class Point(MutableComposite):
     def cy(self, val):
         self.__initCCD(self.cx, val)
 
-class Line(MutableComposite):
-    def __init__(self, x1, y1, x2, y2, cx1=None, cy1=None, cx2=None, cy2=None,
-                 camcol=None, filter=None, coordsys="frame"):
-
-#        try: print(cx)
-#        except: pass
-        self.p1 = Point(x1, y1, camcol, filter, cx1, cy1, coordsys)
-        self.p2 = Point(x2, y2, camcol, filter, cx2, cy2, coordsys)
-
-
-    def __composite_values__(self):
-        return self.p1.x, self.p1.y, self.p2.x, self.p2.y, \
-            self.p1.cx, self.p1.cy, self.p2.cx, self.p2.cy
-
-    def __setattr__(self, key, value):
-        "Intercept set events"
-
-        if key == "x1":
-            self.p1.move(value, self.p1.y, "frame")
-        elif key == "y1":
-            self.p1.move(self.p1.x, value, "frame")
-        elif key == "cx1":
-            self.p1.move(value, self.p1.cy, "ccd")
-        elif key == "cy1":
-            self.p1.move(self.p1.cx, value, "ccd")
-        elif key == "x2":
-            self.p2.move(value, self.p2.y, "frame")
-        elif key == "y2":
-            self.p2.move(self.p2.x, value, "frame")
-        elif key == "cx2":
-            self.p2.move(value, self.p2.cy, "ccd")
-        elif key == "cy2":
-            self.p2.move(self.p2.cx, value, "ccd")
-        else:
-            object.__setattr__(self, key, value)
-
-#        print("alert going out")
-        self.changed()
-
-    def __getattr__(self, key):
-        if key in ("x1", "y1", "cx1", "cy1"):
-            return getattr(self.p1, key[:-1])
-        elif key in ("x2", "y2", "cx2", "cy2"):
-            return getattr(self.p2, key[:-1])
-        else:
-            errmsg = "Object {0} has no attribute {1}"
-            raise AttributeError(errmsg.format(self, key))

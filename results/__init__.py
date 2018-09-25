@@ -7,26 +7,26 @@ It is written using SQLAlchemy, a Python SQL toolkit and a ORM. Because of this
 before beginning to work with the module it is neccessary to create, or connect
 to, a database. See `connect2db` function from this module or the `setup_db`
 from lfd library root to see how. The underlaying database will, or has to,
-have the following schema: 
+have the following schema:
 
 ------------------------------------------------------------
-|  events:                         |  frames:              |  
+|  events:                         |  frames:              |
 ------------------------------------------------------------
-|   * id       (autoincrement)     | * run     PrimaryKey  | 
-| -------------------------------- | * camcol  PrimaryKey  | 
-| |           frame              | | * filter  PrimaryKey  | 
-| | * _run     ForeignKey(frames)| | * field   PrimaryKey  |  
-| | * _camcol  ForeignKey(frames)| | * crpix1  Float       |  
-| | * _filter  ForeignKey(frames)| | * crpix2  Float       |  
-| | * _field   ForeignKey(frames)| | * crval1  Float       |  
-| -------------------------------- | * crval2  Float       |  
-| |         Point p1             | | * cd11    Float       |          
-| | * _x1      Float             | | * cd12    Float       |  
-| | * _y1      Float             | | * cd21    Float       |  
-| -------------------------------- | * cd22    Float       |  
+|   * id       (autoincrement)     | * run     PrimaryKey  |
+| -------------------------------- | * camcol  PrimaryKey  |
+| |           frame              | | * filter  PrimaryKey  |
+| | * _run     ForeignKey(frames)| | * field   PrimaryKey  |
+| | * _camcol  ForeignKey(frames)| | * crpix1  Float       |
+| | * _filter  ForeignKey(frames)| | * crpix2  Float       |
+| | * _field   ForeignKey(frames)| | * crval1  Float       |
+| -------------------------------- | * crval2  Float       |
+| |         Point p1             | | * cd11    Float       |
+| | * _x1, _cx1   Float          | | * cd12    Float       |
+| | * _y1, _cy1   Float          | | * cd21    Float       |
+| -------------------------------- | * cd22    Float       |
 | |         Point p2             | | * t       BasicTime   |
-| | * _x2      Float             | | ------------          |
-| | * _y2      Float             | | |  events  |          |
+| | * _x2, _cx2   Float          | | ------------          |
+| | * _y2, _cy2   Float          | | |  events  |          |
 | -------------------------------- | ------------          |
 | |         LineTime lt          | |                       |
 | | * start_t  Float             | |                       |
@@ -65,7 +65,8 @@ Events into a singular object is still required.
   Usage
 -------------
 This is not a tutorial on the full usage of SqlAlchemy, DB's or on how to write
-queries that return your desired data.
+queries that return your desired data. This is a tutorial showcasing common
+best practices recommended when using this package.
 
 The tables and metadata will be registered on import.
 >>> from lfd import results
@@ -181,7 +182,7 @@ EX2:
 >>> e
 <lfd.results.event.Event .... object>
 
-* Inconsistency: The "shortcut" query on the mapped objects themselves returns 
+* Inconsistency: The "shortcut" query on the mapped objects themselves returns
                  a query object. Each Query object will carry with itself their
                  own Session object, each of which will have their Connection
                  object factory. This makes it possible to get the data in an
@@ -199,7 +200,15 @@ import sqlalchemy
 
 __query_aliases = {
     "Event" : "events",
-    "Frame" : "frames"
+    "Frame" : "frames",
+    "x1"    : "_x1"   ,
+    "y1"    : "_y1"   ,
+    "x2"    : "_x2"   ,
+    "y2"    : "_y2"   ,
+    "cx1"   : "_cx1"  ,
+    "cy1"   : "_cy1"  ,
+    "cx2"   : "_cx2"  ,
+    "cy2"   : "_cy2"  
 }
 
 Base = _declarative_base()

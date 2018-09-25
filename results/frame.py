@@ -13,12 +13,11 @@ __all__ = ["Frame"]
 
 
 class Frame(Base):
-    """Class Frame maps table 'frames'. Corresponds to an SDSS frame.
+    """Class Frame maps table 'frames'. Corresponds to an SDSS frame. A frame
+    is uniquely defined by the set (run, camcol, filter, field). For in-depth
+    datamodel: https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html
 
-    For in-depth explanation see:
-    https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html
-
-      Attributes 
+      Attributes
     ----------------
     run    - run id (Integer, composite PrimaryKey)
     camcol - camcol id (Integer, composite PrimaryKey)
@@ -35,6 +34,18 @@ class Frame(Base):
     t      - time of start of frame exposure
     events - list of all event(s) registered on this frame, a one to many
              relationship to events
+
+      Usage
+    ----------------
+    Almost everything is not nullable so supply everything:
+        foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1, crval2,
+                    cd11, cd21, cd22, t)
+    i.e.
+        foo = Frame(2888, 1, 'i', 139, 741, 1024, 119.2131, 23.3212, 1, 1, 1,
+                    4575925956.49)
+    Time can be given as Astropy Time Object, SDSS TAI format or any of the
+    formats supported by Astropy Time object. In the DB itself it is always
+    forced to the SDSS TAI time format.
     """
 
     __tablename__ = "frames"
@@ -61,6 +72,15 @@ class Frame(Base):
 
     def __init__(self, run, camcol, filter, field, crpix1, crpix2, crval1, crval2,
                  cd11, cd12, cd21, cd22, t, **kwargs):
+        """Supply everything:
+            foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1,
+                        crval2, cd11, cd21, cd22, t)
+        i.e.:
+            foo = Frame(2888, 1, 'i', 139, 741, 1024, 119.211, 23.321, 1, 1, 1,
+                        4575925956.49)
+    Time can be given as Astropy Time Object, SDSS TAI format or any of the
+    formats supported by Astropy Time object.
+    """
         self.run    = run
         self.camcol = camcol
         self.filter = filter
@@ -90,21 +110,30 @@ class Frame(Base):
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
+        t = repr(self.t).split("results.")[-1][:-1]
         return "<{0}.{1}(run={2}, camcol={3}, filter={4}, frame={5}, "\
             "t={6})>".format(m, n, self.run, self.camcol, self.filter,
-                             self.field, self.t.iso)
+                             self.field, t)
+
+    def __str__(self):
+        return "Frame(run={0}, camcol={1}, filter={2}, field={3}, {4})".format(
+            self.run, self.camcol, self.filter, self.field, self.t.iso)
 
     @classmethod
     def query(cls, condition=None):
-        """Returns a Query object that joins frame with events. If condition is
-        a valid string SQL expression the results will be filtered on it.
+        """Class method that used to query the Frame ('frames') table. Returns
+        a Query object. Appropriate for interactive work as Session remains open
+        for the lifetime of the Query. See results package help to see details.
+
+        If condition is supplied it is interpreted as an SQL string query. It's
+        suffiecient to use mapped class names and their attributes as the
+        translation to table and column names will be automaticall performed.
 
           Examples
         ------------
-        >>> Frame.query("Frame.run > 2")
-        >>> Frame.query("Event.x1 > 2)
-        To get the results, not a Query object:
-        >>> Frame.query("Event.x1 > 2").all()        
+        Frame.query("Frame.run > 2").first()
+        Frame.query("field == 1 and filter == 'i'").all()
+        Frame.query("Event.y1 > 2).all()
         """
         if condition is None:
             with session_scope() as s:

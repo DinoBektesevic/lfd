@@ -91,6 +91,8 @@ def create_test_sample():
                      crval1=1, crval2=1, cd11=1, cd12=1, cd21=1, cd22=1,
                      t=4412911074.78)
     )
+#    session.add_all(tmp)
+#    session.commit()
 
     #################################################
     tmp2 = list()
@@ -106,3 +108,4 @@ def create_test_sample():
     # Add frames
     session.add_all(tmp2)
     session.commit()
+    session.close()
