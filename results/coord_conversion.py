@@ -1,7 +1,8 @@
 from . import ccd_dimensions as ccd
 
 
-__all__ = ["convert_ccd2frame", "convert_frame2ccd"]
+__all__ = ["convert_ccd2frame", "convert_frame2ccd",
+           "CoordinateConversionError"]
 
 
 
@@ -46,8 +47,10 @@ class CoordinateConversionError(ArithmeticError):
         self.outcoords = outcoords
 
         if args:
+            self.message += "("
             for arg in args:
-                self.message += arg
+                self.message += str(arg) + ", "
+            self.message = self.message[:-1] + ")"
 
         ArithmeticError.__init__(self, self.message)
 
