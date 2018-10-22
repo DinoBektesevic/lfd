@@ -3,6 +3,18 @@ from tkinter.ttk import *
 
 
 class TopFrame(Frame):
+    """Part of the LeftFrame of the GUI.
+    Contains fields to select the:
+    - number of jobs
+    - queue type
+    - wallclock limits
+    - CPU time limits
+    - processors per node limit (ppn)
+    - command editor
+
+    Requires a parent Frame that has access to Job object so that the settings
+    can propagate to it.
+    """
     def __init__(self, parent, row=0, col=0):
         Frame.__init__(self, parent)
         self.grid(row=row, column=col, pady=10)
@@ -14,8 +26,9 @@ class TopFrame(Frame):
 
         self.job = self.parent.root.job
 
-
-#######NUMBER OF JOBS SELECToR
+        #######################################################################
+        #                    NUMBER OF JOBS SELECTOR
+        #######################################################################
         numjobsl = Label(self, text="Num. Jobs: ")
         numjobsl.grid(row=row+1, column=col, pady=5, sticky=W)
 
@@ -23,8 +36,9 @@ class TopFrame(Frame):
         self.numjobs.insert(0, self.job.n)
         self.numjobs.grid(row=row+1, column=col+1, pady=5, sticky=W+E)
 
-
-#######QUEUE TYPE SELECTOR
+        #######################################################################
+        #                    QUEUE TYPE SELECTOR
+        #######################################################################
         queuel = Label(self, text="Queue: ")
         queuel.grid(row=row+2, column=col, pady=5, sticky=W)
 
@@ -35,7 +49,9 @@ class TopFrame(Frame):
                                 "serial", "parallel", "xlarge")
         queuedm.grid(row=row+2, column=col+1, pady=5, sticky=W+E)
 
-#######WALLCLOCK SELECTOR
+        #######################################################################
+        #                    WALLCLOCK SELECTOR
+        #######################################################################
         wallclockl= Label(self, text="Wallclock: ")
         wallclockl.grid(row=row+3, column=col, pady=3, sticky=W)
 
@@ -44,7 +60,9 @@ class TopFrame(Frame):
         self.wallclock.grid(row=col+3, column=col+1, pady=3,
                             sticky=W+E)
 
-#######CPUTIME SELECTOR
+        #######################################################################
+        #                    CPUTIME SELECTOR
+        #######################################################################
         cputimel= Label(self, text="Cputime: ")
         cputimel.grid(row=row+4, column=col, pady=3, sticky=W)
 
@@ -52,7 +70,9 @@ class TopFrame(Frame):
         self.cputime.insert(0, self.job.cputime)
         self.cputime.grid(row=row+4, column=col+1, pady=3, sticky=W+E)
 
-#######PPN SELECTOR
+        #######################################################################
+        #                    PPN SELECTOR
+        #######################################################################
         ppnl= Label(self, text="Processors per node: ")
         ppnl.grid(row=row+5, column=col, pady=5, sticky=W)
 
@@ -63,11 +83,13 @@ class TopFrame(Frame):
         queuedm = OptionMenu(self, self.ppn, *queueoptions)
         queuedm.grid(row=row+5, column=col+1, pady=5, sticky=W+E)
 
-#######COMMAND SELECTOR
+        #######################################################################
+        #                    COMMAND SELECTOR
+        #######################################################################
         commandl= Label(self, text="Command: python -c \n \"import "+
                         "detecttrails as dt;")
         commandl.grid(row=row+6, column=col, pady=5, sticky=W)
-        
+
         self.command = Text(self, height=6, width=35)
         self.command.insert(END, self.job.command[38:-2])
         self.command.grid(row=row+6, column=col+1, pady=5, sticky=W+E)

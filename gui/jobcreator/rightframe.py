@@ -1,14 +1,19 @@
+import os
+
 from tkinter import *
 from tkinter.ttk import *
 
+from lfd import createjobs
 
 class RightFrame(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent, relief=RAISED, borderwidth=1)
         self.pack(side=RIGHT, fill=BOTH, expand=1)
+        
+        generictmpltpath = os.path.split(createjobs.__file__)[0]
+        generictmpltpath = os.path.join(generictmpltpath, "generic")
+        template = open(generictmpltpath)
 
-        template = open("/home/dino/Desktop/bitbucket/refactor/"+
-                        "createjobs/generic")
         self.templatetext = template.read()
 
         self.activetmpl = Text(self)

@@ -3,7 +3,7 @@ import os
 from tkinter import *
 from tkinter.ttk import *
 
-from lfd.results import Event
+import lfd.results as results
 
 def center(toplevel):
     toplevel.update_idletasks()
@@ -29,6 +29,7 @@ def read_results(queue, respath):
     Tk app from it. This kernel function reads Results for ImageData
     and puts them in a queue, which can be accessed from Tk.
     """
+    results.connect2db(uri=)
     a = Results(respath)
     a.session.commit()
     queue.put(a)

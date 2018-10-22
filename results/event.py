@@ -228,7 +228,7 @@ class Event(Base):
         self.p2 = p2
 
         # the same is not true for frame - it's a relationship and won't fill in
-        # object attributes untill commited to DB. So, we fill then in manually 
+        # object attributes untill commited to DB. So, we fill then in manually
         self.frame = frame
         self._run = frame.run
         self._camcol = frame.camcol
@@ -307,21 +307,18 @@ class Event(Base):
 
         # check the vertical border x=W_CAMCOL, then y = m*W_CAMCOL+b
         tmp = m*W_CAMCOL + b
-        print("W_CAMCOL", tmp)
         if tmp >= 0 and tmp <= W_CAMCOL:
             newx.append(W_CAMCOL)
             newy.append(tmp)
 
         # check the horizontal border y=0, then x = -b/m
         tmp = -b/m
-        print("y=0", tmp)
         if tmp >= 0 and tmp <= W_CAMCOL:
             newx.append(tmp)
             newy.append(0)
 
         # check the horizontal border y=H_FILTER, then x = (H_FILTER-b)/m
         tmp = (H_FILTER-b)/m
-        print("H_FILTER", tmp)
         if tmp >= 0 and tmp <= W_CAMCOL:
             newx.append(tmp)
             newy.append(H_FILTER)
@@ -334,7 +331,7 @@ class Event(Base):
         reference frame CCD border and the linear feature.
 
         A negatively sloped 45° linear feature passes diagonally across the
-        first CCDin the array (1, 'r'), cutting through both its corners. Such
+        first CCD in the array (1, 'r'), cutting through both its corners. Such
         feature could be defined by P1(-1000, -1000) and P2(10000, 10000). Snap
         will determine the two border points P1(0,0) and P2(2048, 2048).
         """
@@ -344,7 +341,7 @@ class Event(Base):
         b = -m*self.x1 + self.y1
 
         newx, newy = self._findPointsOnSides(m, b)
- 
+
         # The pints (0,0) and (2048, 2048) are special cases since they belong
         # to both borders so returned results are duplicated.
         if (len(newx) == 2 and len(newy) == 2) or \
@@ -384,7 +381,7 @@ class Event(Base):
             with session_scope() as s:
                 return s.query(cls).join("frame")
 
-        # the condition is essentially consistent of two 
+        # the condition is essentially consistent of two
         for key, val in query_aliases.items():
             if key[:1] in (["x", "y", "c"]):
                 condition = condition.replace("."+key, "."+val)
@@ -453,7 +450,7 @@ class Event(Base):
     def cx1(self, val):
         self.p1._initCCD(val, self.cy1)
         self.__check_sensibility("cx1")
-        
+
     @hybrid_property
     def cy1(self):
         return self._cy1

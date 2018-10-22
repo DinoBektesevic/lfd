@@ -8,6 +8,8 @@ import fitsio
 from .sdss import astrom
 from .sdss import files
 
+__all__ = ["read_photoObj", "remove_stars"]
+
 
 def CSV_read(path_to_CAS):
     """     ***DEPRECATED***
@@ -50,7 +52,7 @@ def remove_stars_CSV(img, _run, _camcol, _filter, _field):
     return img
 
 
-def photoObj_read(path_to_photoOBJ):
+def read_photoObj(path_to_photoOBJ):
     """
     Function that reads photoObj headers and returns following lists:
         row, col, psfMag, petro90, objctype, types, nObserve, nDetect
@@ -207,7 +209,7 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
     """
 
     rows, cols, psfMag, petro90, objctype, types, nObserve, nDetect = \
-        photoObj_read(files.filename("photoObj", run=_run, camcol=_camcol,
+        read_photoObj(files.filename("photoObj", run=_run, camcol=_camcol,
                                     field=_field))
 
     for i in range(len(rows)):

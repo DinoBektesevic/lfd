@@ -31,12 +31,12 @@ def writeDqs(job, runlst):
         newjob = open(newjobpath, "w")
         temp = open(job.template_path).read()
 
-        if job.pick.lower() in ["results", "fromresults"]:
-            temp = temp.replace("JOBNAME", str(runlst[i][0].run)
-                                +"-"+str(runlst[i][-1].run))
+        if job.pick.lower() == "Results":
+            jobname = "{0}-{1}".format(runlst[i][0].run, runlst[i][-1].run)
         else:
-            temp = temp.replace("JOBNAME", str(runlst[i][0])
-                                +"-"+str(runlst[i][-1]))
+            jobname = "{0}-{1}".format(runlst[i][0], runlst[i][-1])
+
+        temp = temp.replace("JOBNAME", jobname)
         temp = temp.replace("QUEUE", job.queue)
         temp = temp.replace("WALLCLOCK", job.wallclock)
         temp = temp.replace("PPN", job.ppn)
@@ -47,30 +47,25 @@ def writeDqs(job, runlst):
         footer = temp.split("COMMAND")[1]
 
         for x in runlst[i]:
-
-            if job.pick.lower() in ["run", "runs", "fromruns"]:
-                header+=job.command.replace("$", "run="+str(x))
-
-            if job.pick.lower() in ["runfilter", "filterrun", "fromrunfilter"]:
-                header+=job.command.replace("$", "run="+str(x) +
-                                               ", filter='"+str(job.filter)+"'")
-
-            if job.pick.lower() in ["results", "fromresults"]:
-                header+=job.command.replace("$", "run="+str(x.run) +
-                                                ",camcol="+str(x.camcol) +
-                                                ",filter='"+str(x.filter) +
-                                                "',field="+str(x.field)
-                                            )
-
-            if job.pick.lower() in ["runcamcol", "runcamcol", "fromruncamcol"]:
-                header+=job.command.replace("$", "run="+str(x) +
-                                                ",camcol=" +str(job.camcol))
-
-            if job.pick.lower() in ["runfiltercamcol", "runcamcolfilter",
-                                "fromruncamcolfilter", "fromrunfiltercamcol"]:
-                header+=job.command.replace("$", "run="+str(x) +
-                                                ",camcol=" +str(job.camcol) +
-                                                ",filter='"+str(job.filter)+"'")
+            if job.pick.lower() == "run":
+                command = "run={}".format(x)
+            elif job.pick.lower() == "runfilter":
+                command = "run={0}, filter='{1}'".format(x, job.filter)
+            elif job.pick.lower() == "runcamcol":
+                command = "run={0}, camcol={2}".format(x,  job.camcol)
+            elif job.pick.lower() == "runfiltercamcol":
+                command = "run={0}, filter='{1}', camcol={2}"
+                command = command.format(x, job.filter, job.camcol)
+            elif job.pick.lower() == "results":
+                command = "run={0}, filter='{1}', camcol={2}, field={3}"
+                command = command.format(x.run, x.filter, x.camcol, x.field)
+            else:
+                raise ValueError(
+                    ("Type of command format is not known, expected pick=run|"
+                     "runcamcol|runfilter|runcamcolfilter|results, "
+                     "but got {}".format(job.pick.lower()))
+                )
+            header += job.command.replace("$", command)
 
             if job.pernode:
                 node=get_node_with_files(job, run)
@@ -79,8 +74,6 @@ def writeDqs(job, runlst):
             else:
                  header = header.replace("NODEFLAG", "1")
                  header = header.replace("FERMINODE", "fermi-node01")
-
         newjob.writelines(header+footer)
-
     newjob.close()
 

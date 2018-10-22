@@ -3,10 +3,22 @@ import os
 import numpy as np
 
 from lfd.detecttrails.sdss import files
-from lfd.results import Event
 from . import writer
+from lfd.results import Event, Frame
 
-from lfd.gui.utils import expandpath
+__all__ = ["Jobs"]
+
+#from lfd.gui.utils import expandpath
+
+def expandpath(path):
+    if path is not None and path != "":
+        if path[0] == "~":
+            path = os.path.expanduser(path)
+        if os.path.exists(path):
+            path = os.path.abspath(path)
+            return (True, path)
+    return (False, None)
+
 
 class Jobs:
     """
@@ -15,16 +27,15 @@ class Jobs:
     init parameters
     -----------------
     Keywords:
-
-        n:
- 	    number of jobs you want to start.
+        n: number of jobs you want to start.
 
     Optional:
-
-        path:
+        save_path:
 	        path to directory where you want your jobs to be stored.
-            A default path is currently set, and most likely is not
-            applicable to other enviroments.
+            A default path is currently set to ~/Desktop/createjobs
+        res_path:
+            path to a directory on cluster master where results will
+            be copied once the job is finished.
         template_path:
             path to the desired template. Template should contain all
             necessary parameters described bellow. Template parameters
@@ -42,14 +53,8 @@ class Jobs:
             set jobs maximum time allowed to be running on a CPU in
             hours.
             default: 48:00:00
-        pernode:
-                        **DEPRECATED**
-            if this option is set to True, will read a lst_lnk file
-            and try to execute each job on the node its files are
-            located on. If pernode is False, QSUB determines which
-            nodes to execute on.
         ppn:
-            maximum allowed processors per node. 
+            maximum allowed processors per node.
             Default: 3
         command:
              command that runs detecttrails process function. Default:
@@ -57,24 +62,23 @@ class Jobs:
              "dt.DetectTrails($).process()"
              where "$" gets expanded depending on kwargs.
         **kwargs:
-            it's possible create jobs with commands different than just
-            processing the whole runs. I.e. it's possible to create
-            jobs that will process all runs, but just their 1st camcol
-            and/or "i" filter. The idea is the same as behind
-            DetectTrails class, see it for more info, or see this
-            module's help. Currently supports: camcol and filter.
-            Sent in camcol will be applied to all runs in the "runs"
-            kwarg. The only true way of generating jobs per frames is
-            to send in Results instance as runs:
+            it's possible create jobs with commands different than
+            just processing the whole runs. F.e. it's possible to
+            create jobs that will process all runs, all runs but
+            just their 1st camcol and/or a filter. The only true way
+            of generating jobs per frames is to send in a list of Event
+            or Frame instances. See results package help for those
+            objects. See this module's help for examples of different
+            possible combinations - the usage is the same as with DetectTrails.
         runs:
             if runs are not specified, all sdss runs found in
               runlist.par file will be used.
             if runs is a list of runs only those runs will be sorted
               into jobs
-            if runs is a Results class instance, only those frames
+            if runs is a list of Event or Frame instances, only those frames
               will be sorted into jobs.
 
-    In "path" a folder "jobs" will be created, if it doesn't exist
+    In "save_path" a folder "jobs" will be created, if it doesn't exist
     already. In "jobs" folder, files "job#.dqs" will be stored.
 
     Template is located inside this package in "createjobs"  folder
@@ -107,9 +111,9 @@ class Jobs:
 
 
     def __init__(self, n, runs=None, queue="standard", wallclock="24:00:00",
-                 ppn="3", cputime="48:00:00", pernode = False,
-                 template_path = None, save_path=None, res_path="run_results",
-                 command = 'python -c "import detecttrails as dt;' +\
+                 ppn="3", cputime="48:00:00", pernode=False,
+                 template_path=None, save_path=None, res_path="run_results",
+                 command = 'python3 -c "import detecttrails as dt;' +\
                                     ' dt.DetectTrails($).process()"\n',
                  **kwargs):
 
@@ -133,6 +137,7 @@ class Jobs:
         else:
             tmpdir = os.path.join(tmppath, "jobs")
             os.makedirs(tmpdir)
+
         self.save_path = tmpdir
 
         self.queue = queue
@@ -142,7 +147,8 @@ class Jobs:
         if template_path is not None:
             tmppath = expandpath(template_path)
         else:
-            tmppath = os.path.join(cjpath, "generic")
+            tmppath = os.path.split(__file__)[0]
+            tmppath = os.path.join(tmppath, "generic")
             tmppath = (True, tmppath)
 
         if  os.path.isfile(tmppath[1]):
@@ -186,12 +192,6 @@ class Jobs:
         will start 2 jobs (job0.dqs, job1.dqs), where job0.dqs will
         call DetectTrails.process on 3 runs: 2888, 2889, 2890.
         """
-#ERROR ERROR ERROR ERROR
-# user can input larger number of jobs (self.n) than number of runs
-# which means that nruns will be rounded down to 0 and throw
-# an error that step argument must be bigger than zero!
-#        print runs
-#        print self.n
         if len(runs) % self.n == 0:
             nruns = int(len(runs)/self.n)
             runlst = [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
@@ -199,11 +199,6 @@ class Jobs:
             nruns = int(len(runs)/self.n)+1
             runlst = [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
         return runlst
-
-
-    def makeRunlstResults(self, results):
-        allres = results.get()
-        return self.makeRunlst(allres)
 
     def _createBatch(self, runlst):
         """
@@ -222,14 +217,14 @@ class Jobs:
     def _findKwargs(self):
         """
         Works out what kwargs, if any were sent. If camcol and/or
-        filter was sent it adds them as instance attributes. 
+        filter was sent it adds them as instance attributes.
         It always adds a "pick" instance attribute that describes
         the parameters sent. pick attribute is used by  writeDqs from
         writer module expand command attribute to appropriate string.
 
         METHOD DOESN'T GET CALLED UNTILL CREATE FUNCTION!
         this avoids potential problems, i.e. if the user sets runs
-        attribute after initialization. 
+        attribute after initialization.
         """
         kwargs = self.kwargs
 
@@ -248,14 +243,14 @@ class Jobs:
             else:
                 self.pick = 'RunFilter'
 
-        if all(
-                ["camcol" not in kwargs,
-                "filter" not in kwargs,
-                not isinstance(self.runs, Results)]
-               ):
+        # this will be true even when runs is a list of results, but in that
+        # case pick will be re-picked in the following if. Effectively this
+        # means that "run" is the default pick.
+        if all(["camcol" not in kwargs, "filter" not in kwargs]):
             self.pick="Run"
 
-        if isinstance(self.runs, Results):
+        if isinstance(self.runs, list) and (isinstance(self.runs[0], Event) or
+                                            isinstance(self.runs[0], Frame)):
             self.pick="Results"
 
     def create(self):
@@ -272,16 +267,11 @@ class Jobs:
             runlst = self._runlstAll()
             writer.writeDqs(self, runlst)
 
-        elif isinstance(self.runs, Results):
-            runlst =  self.makeRunlstResults(self.runs)
-            writer.writeDqs(self, runlst)
-
         elif self.runs:
             runlst = self.makeRunlst(self.runs)
             writer.writeDqs(self, runlst)
         else:
             raise ValueError("Unrecognized format for runs.")
-
 
         print("Creating: \n "\
               "    {} jobs with {} runs per job \n"\
@@ -294,7 +284,6 @@ class Jobs:
                                          self.cputime, self.ppn,
                                          self.save_path)
              )
-
         self._createBatch(runlst)
 
 

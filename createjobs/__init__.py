@@ -3,11 +3,12 @@ createjobs module is used to create .dqs files necessary to run a job
 on QSUB system. Importing this module will only import Jobs class.
 Main idea was to create a class that can take care of writing a
 large job requests on users behalf without the need to always edit
-the template to change parameters.
+the template to change parameters. This package was written for the
+Fermi cluster at the Astronomical Observatory Belgrade but is easily
+adaptable for any QSUB system.
 
 Main pillar for the creating is Jobs class. In the background it uses
-writer module that's hidden from the user to write the parameters to
-a template.
+writer module to write the user-specified parameters to a template.
 
 
     Template
@@ -29,9 +30,10 @@ Parameters are uppercase single words, i.e: JOBNAME, QUEUE, NODEFLAG
     #PBS -l nodes=NODEFLAG:ppn=PPN
     #PBS -l walltime=WALLCLOCK,cput=CPUTIME
 
-All enviroment paths in the template are NOT changable throught this class. 
-Edit them directly, i.e. the save path for results is given by: 
+All enviroment paths in the template are NOT changable throught this class.
+Edit those directly, i.e. the save path for results is given by:
     cp *.txt /home/fermi/$user/run_results/$JOB_ID/
+and save the result as a new template.
 
     Usage cases
 ----------------------
@@ -79,8 +81,8 @@ Edit them directly, i.e. the save path for results is given by:
 
     In both examples so far what is actually being run is:
 
-        python -c "import detecttrails as dt;
-                   dt.DetectTrails(run=2888).process()"
+        python3 -c "import detecttrails as dt;
+                    dt.DetectTrails(run=2888).process()"
 
     It is possible to edit the command that is going to be executed.
     Specifying aditional keyword arguments to Jobs class helps you
@@ -92,11 +94,11 @@ Edit them directly, i.e. the save path for results is given by:
         >>> jobs = cj.Jobs(2, runs=runs, camcol=1)
         >>> jobs.create()
 
-    would create 2 jobs with 2 runs per job as the above example. But
-    the actuall call to DetectTrails class would now look like:
+    would create 2 jobs with 2 runs per job as the above example. The
+    invocation of the DetectTrails class would now look like:
 
-        python -c "import detect_trails as dt;
-                   dt.DetectTrails(run=125,camcol=1).process()"
+        python3 -c "import detect_trails as dt;
+                    dt.DetectTrails(run=125,camcol=1).process()"
 
     Which would process only the camcol 1 of run 125. Actual written
     job#.dqs file is not as readable/friendly as above examples.
@@ -106,8 +108,8 @@ Edit them directly, i.e. the save path for results is given by:
 
     would execute 2 jobs with following 2 calls to DetectTrails class:
 
-        python -c "import detect_trails as dt;
-                 dt.DetectTrails(run=125,camcol=1,filter=i).process()"
+        python3 -c "import detect_trails as dt;
+                    dt.DetectTrails(run=125,camcol=1,filter=i).process()"
 
     See help on DetectTrails class for a list of all options.
 
@@ -115,8 +117,8 @@ Edit them directly, i.e. the save path for results is given by:
     the default execution command to supply additional execution
     parameters. By default keyword argument command is set to:
 
-        python -c "import detecttrails as dt;
-                   dt.DetectTrails($).process()"
+        python3 -c "import detecttrails as dt;
+                    dt.DetectTrails($).process()"
 
     Where "$" sign gets automatically expanded by the writer module.
     There should also ALWAYS be a "$" character present in a command.
@@ -124,18 +126,18 @@ Edit them directly, i.e. the save path for results is given by:
     sort of as **kwargs usually do. Example:
 
         >>> jobs = cj.Jobs(2, runs=runs, camcol=1, filter="i")
-        >>> jobs.command = 'python -c "import detecttrails as dt;' +\\
-                           'x = dt.DetectTrails($);'               +\\
-                           'x.params_bright[\'debug\'] = True;'    +\\
+        >>> jobs.command = 'python3 -c "import detecttrails as dt;' +\\
+                           'x = dt.DetectTrails($);'                +\\
+                           'x.params_bright[\'debug\'] = True;'     +\\
                            'x.process()"\n'
         >>> jobs.create()
 
    which will get written as:
 
-       python -c "import detecttrails as dt;
-                  x = dt.DetectTrails(run=125,camcol=1,filter=i);
-                  x.params_bright['debug'] = True;
-                  x.process()"
+       python3 -c "import detecttrails as dt;
+                   x = dt.DetectTrails(run=125,camcol=1,filter=i);
+                   x.params_bright['debug'] = True;
+                   x.process()"
 
     Again, the actual written command in the job#.dqs file would not
     look as user friendly as here. In the above example notice that
@@ -158,12 +160,12 @@ Edit them directly, i.e. the save path for results is given by:
      1) the outter-most quotation as single '' marks
      2) everything past "-c" flag in double quotation marks ""
      3) further quotation marks should be escaped single quotations.
-     4) A EXPLICIT newline character should ALWAYS be at the end.
+     4) A EXPLICIT newline character should ALWAYS be present at the end.
 
     Same applies when executing a custom command for all runs:
 
         >>> jobs = cj.Jobs(500)
-        >>> jobs.command = 'python -c "import detecttrails as dt;' +\\
+        >>> jobs.command = 'python3 -c "import detecttrails as dt;' +\\
                            'x = dt.DetectTrails($);'               +\\
                            'x.params_bright[\'debug\'] = True;'    +\\
                            'x.process()"  \n'
@@ -172,7 +174,7 @@ Edit them directly, i.e. the save path for results is given by:
     would produce jobs for all runs as in 1) usage case, where each
     job would execute the following command(s):
 
-	    python -c "import detecttrails as dt;
+	    python3 -c "import detecttrails as dt;
 	               x = dt.DetectTrails(run=273);
 	               x.params_bright['debug'] = True;
                    x.process()"
@@ -180,12 +182,11 @@ Edit them directly, i.e. the save path for results is given by:
     To see the list of all changable execution parameters of
     DetectTrails class see help(detecttrails).
 
-3) By sending in Results object. Former approach covers most basics
-   about how to get the most out of DetectTrails class on QSUB.
-   However it's still impossible to create a job per frames. Sollution
-   for this problem is to instantiate a Results object, which is a
-   container of  Result objects, and send it to Jobs class. Read docs
-   of Results to see how to instatiate that object.
+3) Former approach covers most basics about how to get the most out of
+   DetectTrails class on QSUB. However, described approaches still do
+   not let you create jobs per frames. Sollution for this problem is to
+   send in a list of Event or Frame objects. Read docs of results package
+   to see how to instatiate those objects.
 
         >>> import results as res
         >>> r = res.Results(folderpath="/home/user/Desktop/res1/res")
@@ -200,23 +201,12 @@ Edit them directly, i.e. the save path for results is given by:
         Path:      /home/user/Desktop/bitbucket/refactor/createjobs/jobs
 
    This time it's not runs you're executing but frames, therefore you
-   can let a larger number of them per job. Average times of runs are
-   around 6h while average processing a frame is 0.2s. I.e. command
-   that will get executed now is:
+   can let a larger number of them per job; i.e. the invocation of
+   DetectTrails now looks like: 
 
-	python -c "import detect_trails as dt;
-               dt.DetectTrails(run=125,camcol=1,filter=i,
+	python3 -c "import detect_trails as dt;
+               dt.DetectTrails(run=125,camcol=1,filter='i',
                                field=69).process()"
 """
 
-import sys as _sys
-
 from lfd.createjobs.createjobs import Jobs
-
-#try:
-#    from createjobs import Jobs
-#    from createjobs import writer as _writer
-#except:
-#    _sys.stderr.write("Jobs class was not loaded\n.")
-
-#del writer, createjobs

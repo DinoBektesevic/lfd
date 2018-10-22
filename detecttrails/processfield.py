@@ -2,9 +2,16 @@ import cv2
 import numpy as np
 import os as os
 
+__all__ = ["process_field_bright", "process_field_dim"]
+
 pathBright = None
 pathDim = None
+
 def setup_debug():
+    """Sets up the environmental variables - paths to where the debug output is
+    saved too. Invoked when 'debug' key is set to True for any of the detection
+    steps. Generally there would be no need to call this function otherwise.
+    """
     try:
         global pathBright
         global pathDim
@@ -13,7 +20,7 @@ def setup_debug():
     except:
         pass
 
-def _check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
+def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
     """
     See: detecttrails docstring for more clarifications. Intended for comparing
     line angles of hough lines fited on minAreaRect and processed image (equHough).
@@ -111,7 +118,7 @@ def _check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
 
 
 
-def _draw_lines(hough, image, nlines, name, path=pathDim,
+def draw_lines(hough, image, nlines, name, path=pathDim,
                 compression=0, color=(255,0,0)):
     """
     For debuging purposes, draw hough lines on a given image and save as png.
@@ -157,7 +164,7 @@ def _draw_lines(hough, image, nlines, name, path=pathDim,
     cv2.imwrite(os.path.join(path, name+".png"), draw_im,
                 [cv2.IMWRITE_PNG_COMPRESSION, compression])
 
-def _fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
+def fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
                      lwTresh, debug):
     """
     Function fits minimal area rectangles to the image. If no rectangles can be
@@ -208,7 +215,7 @@ def _fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
 
     return detection, box_img
 
-def _dictify_hough(shape, houghVals):
+def dictify_hough(shape, houghVals):
     """
     Function converts from hough line tuples (rho, theta) into scaled pixel
     coordinates on the image. Returned value is a space separated string:
@@ -253,9 +260,9 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
         3)  histogram equalization
         4)  dilate to expand features
         5)  fit minimal area rectangles. Function aborts if no
-            minAreaRect are found, see: _fit_minAreaRect help
+            minAreaRect are found, see: fit_minAreaRect help
         6)  fit Hough lines on image and on found rectangles
-        7)  compare lines, see: _check_theta help
+        7)  compare lines, see: check_theta help
         8) if evaluation passed write the results into file and return
            True, else returns False.
     """
@@ -279,7 +286,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
             print("BRIGHT: saving dilated image.")
 
 
-    detection, box_img = _fit_minAreaRect(equ, contoursMode, contoursMethod,
+    detection, box_img = fit_minAreaRect(equ, contoursMode, contoursMethod,
                                           minAreaRectMinLen, lwTresh,
                                           debug)
 
@@ -293,17 +300,17 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
         boxhough = cv2.HoughLines(box_img, houghMethod, np.pi/180, 1)
 
         if debug:
-            _draw_lines(equhough, equ, nlinesInSet, "5equhoughBRIGHT",
+            draw_lines(equhough, equ, nlinesInSet, "5equhoughBRIGHT",
                         path=pathBright)
-            _draw_lines(boxhough, box_img,  nlinesInSet, "4boxhoughBRIGHT",
+            draw_lines(boxhough, box_img,  nlinesInSet, "4boxhoughBRIGHT",
                         path=pathBright)
             print("BRIGHT!")
 
-        if _check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
+        if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
                         lineSetTresh, debug):
             return (False, None)
         else:
-            return (True, _dictify_hough(equ.shape, equhough[0][0]))
+            return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
         if debug: print("BRIGHT: no boxes found")
         return (False, None)
@@ -338,9 +345,9 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
         5)  erode to kill noise
         6)  dilate to expand features that survived
         7)  fit minimal area rectangles. Function aborts if no
-            minAreaRect are found, see: _fit_minAreaRect help
+            minAreaRect are found, see: fit_minAreaRect help
         8)  fit Hough lines on image and on found rectangles
-        9)  compare lines, see: help(_check_theta)
+        9)  compare lines, see: help(check_theta)
         10) if evaluation passed write the results into file and return
             True, else returns False.
     """
@@ -369,7 +376,7 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
         cv2.imwrite(os.path.join(pathDim, '8openedDIM.png'), equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
-    detection, box_img = _fit_minAreaRect(equ, contoursMode,
+    detection, box_img = fit_minAreaRect(equ, contoursMode,
                                           contoursMethod,
                                           minAreaRectMinLen, lwTresh,
                                           debug)
@@ -383,18 +390,18 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
         boxhough = cv2.HoughLines(box_img, houghMethod, np.pi/180, 1)
 
         if debug:
-            _draw_lines(equhough, equ, nlinesInSet, "10equhoughDIM",
+            draw_lines(equhough, equ, nlinesInSet, "10equhoughDIM",
                         compression=4)
-            _draw_lines(boxhough, box_img, nlinesInSet, "11boxhoughDIM",
+            draw_lines(boxhough, box_img, nlinesInSet, "11boxhoughDIM",
                         compression=4, color=(0,0,255))
             print("DIM")
 
 
-        if _check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
+        if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
                         lineSetTresh, debug):
             return (False, None)
         else:
-            return (True, _dictify_hough(equ.shape, equhough[0][0]))
+            return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
         if debug: print("DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!")
         return (False, None)

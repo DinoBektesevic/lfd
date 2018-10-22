@@ -9,10 +9,11 @@ from cv2 import RETR_LIST, RETR_EXTERNAL, RETR_CCOMP, RETR_TREE
 from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_L1,
                  CHAIN_APPROX_TC89_KCOS)
 
-from .removestars import remove_stars
-from .processfield import process_field_bright, process_field_dim, setup_debug
+from .removestars import * #remove_stars
+from .processfield import * #process_field_bright, process_field_dim, setup_debug
 from .sdss import files
 
+__all__ = ["DetectTrails", "process_field"]
 
 def process_field(results, errors, run, camcol, filter, field, params_bright,
                   params_dim, params_removestars):

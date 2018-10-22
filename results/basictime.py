@@ -26,8 +26,8 @@ def timestr(self):
 
 # overwrite the default __repr__ and __str__ functions of Astropy Time to
 # force a consistent __repr__ and __str__ format across result package
-Time.__repr__ = timerepr
-Time.__str__ = timestr
+#Time.__repr__ = timerepr
+#Time.__str__ = timestr
 
 
 class BasicTime(TypeDecorator):
@@ -44,7 +44,10 @@ class BasicTime(TypeDecorator):
         for storage.
         """
         if value is not None:
-            return value.mjd*24.0*3600.0
+            if isinstance(value, Time):
+                return value.mjd*24.0*3600.0
+            else:
+                return value
         return None
 
     def process_result_value(self, value, dialect):
@@ -55,6 +58,7 @@ class BasicTime(TypeDecorator):
         if value is not None:
             return Time(value/(24.0*3600.0), format="mjd")
         return None
+
 
 
 

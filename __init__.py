@@ -1,20 +1,20 @@
 """
 Linear Feature Detector (LFD) library is a collection of packages that enable
 users to detect and analyze linear features on SDSS images. LFD was designed to
-be run interactively or at scale on a cluster that uses a PBS scheduler/workload
-manager. Appart form the linear feature detection algorithm, in the detecttrails
+run interactively or at scale on a cluster that uses a PBS scheduler/workload
+manager. Appart from the linear feature detection algorithm, the detecttrails
 package, the library contains additional packages that createjobs package that
-helps with creating and managing PBS jobs, a results package for the analysis of
-the results, a GUI interface that can facilitate job creation and visual
-inspection of the results, a package for on-scale execution error management and
-a series of common case plotting tools is provided. 
+helps with creating and managing PBS jobs, results package for result analysis,
+a GUI interface that can facilitate job creation and visual inspection of the
+results, a package for on-scale execution error management and a series of
+common case plotting tools are provided.
 
-Some of the LFD packages require that additional data is exists and is availible.
-For example, the module containing the SDSS data requires that the data exists
-localy and that it follows the SDSS organizatonal conventions. These paths can
-be set manually prior to using detecttrails or they can be set up post-import
-by invoking the setup function in the module itself or the setup_<package>
-function from LFD library.
+Some of the LFD packages require that additional data is exists and is
+availible. For example, the module containing the SDSS data requires that the
+data exists localy and that it follows the SDSS organisational conventions.
+These paths ca be set manually prior to using detecttrails or they can be set
+up post-import by invoking the setup function in the module itself or the
+setup_<package> function from LFD library.
 For more details on prerequisites see that package help.
 
   Dependencies
@@ -25,12 +25,14 @@ For more details on prerequisites see that package help.
 * numpy
 * SqlAlchemy
 * Astropy
+
+Erin Sheldon's SDSS utilities come bundled with the provided code.
 """
+import os as _os
+from .createjobs import *
 
-from . import detecttrails
-from . import results
-
-def setup_detecttrails(bosspath = detecttrails.BOSS,
+def setup_detecttrails(bosspath = _os.path.join(_os.path.expanduser("~"),
+                                                "Desktop/boss"),
                        photoobjpath = None,
                        photoreduxpath = None,
                        debugpath = None):
@@ -53,28 +55,26 @@ def setup_detecttrails(bosspath = detecttrails.BOSS,
         See detecttrails help to see how to turn on debug mode, not used by
         default.
     """
+    from . import detecttrails
     detecttrails.setup(bosspath, debugpath, photoobjpath, photoreduxpath)
 
 
-def setup_db(URI="sqlite:///", dbpath="~", name="foo.db", echo=True):
+def setup_db(URI="sqlite:///", dbpath="~", name="foo.db", echo=False):
     """Either connects to an existing DB (that has to be mappable by results
     package) or creates a new empty DB with the required tables.
 
       Parameters
     --------------
-    URI : an SqlAlchemy URI used to connect to a DB. By default 'sqlite:///' is
-        used.
-    dbpath : location of a directory with an existing DB, or a directory where a
-        new DB will be saved. Set to users home folder by default.
+    URI : an URI to the DB. By default 'sqlite:///$USER_HOME/food.db' is  used.
+    dbpath : location of a directory with an existing DB, or a directory where
+        a new DB will be saved. Set to users home folder by default.
     name : the name of the existing, or newly created, DB. Default: 'foo.db'
     echo : verbosity of the DB. True by default.
     """
     from os import path
+    from . import results
+
     dbpath = path.expanduser(dbpath)
     db_uri = path.join(URI+dbpath, name)
     results.connect2db(uri=db_uri, echo=echo)
-
-    
-#import createjobs
-#import gui
 

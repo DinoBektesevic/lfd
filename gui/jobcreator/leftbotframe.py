@@ -12,7 +12,7 @@ class BotFrame(Frame):
         Frame.__init__(self, parent)
         self.grid(row=row, column=col, pady=10)
         self.parent = parent
-        
+
         title = Label(self, text="Enviroment options",
                       font=("Helverica", 16), justify="center")
         title.grid(row=row, column=col, columnspan=2)
@@ -22,12 +22,12 @@ class BotFrame(Frame):
 ############# SAVEPATH
         self.tmpsavepath = StringVar()
         self.tmpsavepath.set(self.job.save_path)
-        self.tmpsavepath.trace("w", self.setSavePath)   
-        
+        self.tmpsavepath.trace("w", self.setSavePath)
+
         a = Button(self, text="Select Save Folder", width=15,
                    command = self.getSavePath)
         a.grid(row=row+1, column=col, pady=5, sticky=W)
-        
+
         b = Entry(self, textvariable=self.tmpsavepath, width=25)
         b.grid(row=row+1, column=col+1, pady=5, sticky=W+E)
 
@@ -58,8 +58,8 @@ class BotFrame(Frame):
 
     def setSavePath(self, *args):
         newpath = self.tmpsavepath.get()
-        self.updateSavePath(newpath)        
-        
+        self.updateSavePath(newpath)
+
     def getSavePath(self):
         newpath = filedialog.askdirectory(parent=self,
                                           title="Please select save destination.",
@@ -77,11 +77,11 @@ class BotFrame(Frame):
                 messagebox.showerror("Input Error",
                                        "Input path does not " + \
                                        "exist! \n" + path)
-    
+
     def setTemplatePath(self, *args):
         newpath = self.templpath.get()
         self.updateTemplatePath(newpath)
-        
+
     def getTemplatePath(self):
         initdir = os.path.dirname(self.job.template_path)
         newpath = filedialog.askopenfilename(parent=self,
@@ -93,7 +93,7 @@ class BotFrame(Frame):
     def updateTemplatePath(self, path, showerr=False):
         tmppath = expandpath(path)
         activetmpl = self.parent.root.rightFrame.activetmpl
-        
+
         if tmppath[0] and os.path.isfile(tmppath[1]):
             activetmpl.config(state=NORMAL)
             activetmpl.delete(1.0, END)
@@ -107,18 +107,18 @@ class BotFrame(Frame):
                                        "or is a folder! \n" + path)
             activetmpl.config(state=NORMAL)
             activetmpl.delete(1.0, END)
-            activetmpl.config(state=DISABLED)       
+            activetmpl.config(state=DISABLED)
 
-            
+
     def edittemplate(self):
         self.savetmpbtn.config(state=NORMAL)
         self.activetmpl = self.parent.root.rightFrame.activetmpl
         self.activetmpl.config(state=NORMAL)
-        
+
     def savetmpl(self):
         self.savetmpbtn.config(state=DISABLED)
         self.activetmpl.config(state=DISABLED)
-        
+
         filename = filedialog.asksaveasfilename(initialdir=self.job.template_path,
                                                 confirmoverwrite=True)
         f = open(filename, "w")
@@ -127,5 +127,4 @@ class BotFrame(Frame):
         f.close()
 
         self.templpath.set(filename)
-        
 

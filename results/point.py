@@ -1,4 +1,3 @@
-#from sqlalchemy import Column
 import warnings
 warnings.simplefilter('always', SyntaxWarning)
 
@@ -76,7 +75,7 @@ class Point(MutableComposite):
     remember a reference to the frame they're defined in. In the latter case
     it is possible to have 'frame' coordinates with numerically determined
     values even when they are not within a CCD bounary, while in the former it
-    is not because no reference frame has been set. This can be a bit confusing:
+    is not because no reference frame has been set. This can be bit confusing:
 
     >>>  p = res.Point(3790, 5415, coordsys="ccd")
     <lfd.results.point.Point(x=None, y=None, cx=3790, cy=5415)>
