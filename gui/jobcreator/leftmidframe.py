@@ -28,7 +28,12 @@ class MidFrame(Frame):
                       justify="center")
         title.grid(row=row, column=col, columnspan=2)
 
-        self.job = self.parent.root.job
+        # this is the same job from root, so that settings can be changed
+        self.job = self.parent.job
+        self.runs = None
+
+        # the respath and uri will only be used if the source of runs are
+        # results - otherwise mostly ignored. 
         self.respath = "~/Desktop"
         self.uri = "sqlite:///"
 
@@ -65,6 +70,8 @@ class MidFrame(Frame):
             # we return early for this case to avoid spawning the toplevel
             return
 
+        # otherwise we spawn another window which will hold the boxes where
+        # user will fill in run or runs or pick the results DB
         top = Toplevel(self.parent)
         top.title(selection)
         top.geometry(utils.centerWindow(self.parent, 250,200))
@@ -127,6 +134,22 @@ class MidFrame(Frame):
                        self.readRes(parent))
             f.grid(row=5, column=1)
 
+    def runFromSingle(self, parent, runs):
+        """Callback function for the case when a 'Single' run source is chosen.
+            Params
+        -------------------
+        parent - the parent window that contains the widget that registers this
+            callback. This window will be destroyed at the end of this func.
+        runs - an Entry or a Text widget from which the value will be read out
+            as.
+        """
+        try:
+            self.job.runs =  [ int( runs.get() ) ]
+        except ValueError:
+            messagebox.showerror("Input Error", "You have inputed "+\
+                                 "runs in an incorrect format!")
+        parent.destroy()
+
     def setResPath(self, *tmp):
         self.respath = tmp[-1].get()
 
@@ -135,14 +158,6 @@ class MidFrame(Frame):
 
     def readRes(self, parent):
         self.readResults()
-        parent.destroy()
-
-    def runFromSingle(self, parent, runs):
-        try:
-            self.job.runs =  [ int( runs.get() ) ]
-        except ValueError:
-            messagebox.showerror("Input Error", "You have inputed "+\
-                                 "runs in an incorrect format!")
         parent.destroy()
 
     def runsFromList(self, parent, runs):

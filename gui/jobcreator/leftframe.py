@@ -11,12 +11,26 @@ from .leftbotframe import BotFrame
 import lfd.createjobs as cj
 
 class LeftFrame(Frame):
+    """LeftFrame of the jobcreator gui. This frame contains all the things
+    configurable by the user. It contains 3 subframes: top, mid and bot.
+    Top - glob. exec. settings for the jobs (f.e. wallclock, cputime, ppn...)
+    Mid - invocation settings (f.e. from all runs, lists, results...)
+    Bot - glob. env. settings (f.e. template, save paths, copy paths...)
+
+    Has to inherit from the root frame because job access is required.
+
+    Will spawn additional windows promting user for settings for any
+    particularily complex configurations.
+    """
     def __init__(self, parent):
         Frame.__init__(self, parent, relief=RAISED, borderwidth=1)
         self.pack(side=LEFT, fill=BOTH, expand=1)
 
+        # carry the root frame and the root job so that configurations can be
+        # accessed and changed from any frame later on
         self.root = parent
         self.job = parent.job
+
         self.topFrame = TopFrame(self)
         self.midFrame = MidFrame(self)
         self.botFrame = BotFrame(self)
@@ -25,32 +39,13 @@ class LeftFrame(Frame):
         a.grid(row=10, column=0, columnspan=2)
 
 
-    def setn(self):
-        try:
-            n = int(self.topFrame.numjobs.get())
-        except ValueError as e:
-            messagebox.showerror("Incorrect Format", e)
-        if n==0:
-            messagebox.showerror("Input Error", "Number of jobs "+\
-                                   "can't be 0")
-        else:
-            return n
-
-    def setcommand(self):
-        command = self.topFrame.command.get(1.0, END)
-        cmnd = command[:-1]
-        cmnd = cmnd.replace("\n", ";")
-        cmnd = cmnd.replace(";;", ";")
-#        print(self.job.command[:38] + cmnd + '"\n ')
-        return self.job.command[:38] + cmnd + '"\n '
-
     def createjobs(self):
-        self.root.job.n = self.setn()
+        self.root.job.n = self.topFrame.getn()
         self.root.job.queue =  self.topFrame.queue.get()
         self.root.job.wallclock = self.topFrame.wallclock.get()
         self.root.job.cputime =  self.topFrame.cputime.get()
         self.root.job.ppn =  self.topFrame.ppn.get()
-        self.root.job.command = self.setcommand()
+        self.root.job.command = self.topFrame.getcommand()
 
         #runs = self.midFrame.runs
 

@@ -18,26 +18,28 @@ class JobCreator(Tk):
 
     >>> app = JobCreator()
     >>> app.mainloop()
-    
+
     Consists two frames - left and right.
     leftFrame contains most of the adjustable parameters for the jobs.
     rightFrame contains the used template from which dqs files will be created.
 
     Contains the Job object from the createjobs module so that all Frames can
-    inherit and access it and actually change the settings. 
+    inherit and access it and actually change the settings.
     """
     def __init__(self):
         Tk.__init__(self)
         self.geometry(utils.centerWindow(self, 1040, 750))
 
         try:
+            # we try with the default path guess
             self.job = cj.Jobs(1)
         except FileExistsError:
+            # if it fails we can ask the user where do they want to save jobs
             messagebox.showerror("Directory exists!", "To avoid overriding " +
                                  "existing jobs select a different directory.")
             foldername = filedialog.askdirectory()
             self.job = cj.Jobs(1, save_path=foldername)
-                 
+
         self.leftFrame = LeftFrame(self)
         self.rightFrame = RightFrame(self)
 

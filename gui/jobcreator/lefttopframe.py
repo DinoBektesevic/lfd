@@ -93,3 +93,38 @@ class TopFrame(Frame):
         self.command = Text(self, height=6, width=35)
         self.command.insert(END, self.job.command[38:-2])
         self.command.grid(row=row+6, column=col+1, pady=5, sticky=W+E)
+
+    def getn(self):
+        """Reads the current value from the Entry for number of jobs and
+        performs basic sanity checks. Will raise an error if the value in the
+        box is unreadable or if the number of jobs is zero.
+        Technically all these boxes should have verifiers but I can't really be
+        bothered and this one is the one that will likely get changed the most.
+        """
+        try:
+            n = int(self.numjobs.get())
+        except ValueError as e:
+            messagebox.showerror("Incorrect Format", e)
+        if n==0:
+            messagebox.showerror("Input Error", "Number of jobs "+\
+                                   "can't be 0")
+        else:
+            return n
+
+    def getcommand(self):
+        """Reads the curent command TextBox and reduces it to a form compatible
+        with the createjobs module. Separating lines in the TextBox by using
+        <Return> key is allowed.
+        """
+        # Namely entering the command in the TextBox using <Return> key to
+        # separate lines is allowed, but in the createjobs module the command
+        # has to be entered as a semicolon separated string. So the newlines
+        # are replaced by a semicolon and then all doubled-up semicolons
+        # (if users separated their lines by both ; and <Return>) are reduced
+        # to a single semicolon. It's a bit hackish which is why this is not a
+        # 'feature' of createjobs module.
+        command = self.command.get(1.0, END)
+        cmnd = command[:-1]
+        cmnd = cmnd.replace("\n", ";")
+        cmnd = cmnd.replace(";;", ";")
+        return self.job.command[:38] + cmnd + '"\n'
