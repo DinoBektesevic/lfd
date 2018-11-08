@@ -33,7 +33,7 @@ class MidFrame(Frame):
         self.runs = None
 
         # the respath and uri will only be used if the source of runs are
-        # results - otherwise mostly ignored. 
+        # results - otherwise mostly ignored.
         self.respath = "~/Desktop"
         self.uri = "sqlite:///"
 
@@ -136,6 +136,7 @@ class MidFrame(Frame):
 
     def runFromSingle(self, parent, runs):
         """Callback function for the case when a 'Single' run source is chosen.
+
             Params
         -------------------
         parent - the parent window that contains the widget that registers this
@@ -143,24 +144,58 @@ class MidFrame(Frame):
         runs - an Entry or a Text widget from which the value will be read out
             as.
         """
+        # see selection=="Single" in selectRuns method (above)
         try:
-            self.job.runs =  [ int( runs.get() ) ]
+            self.runs =  [ int( runs.get() ) ]
         except ValueError:
             messagebox.showerror("Input Error", "You have inputed "+\
                                  "runs in an incorrect format!")
         parent.destroy()
 
     def setResPath(self, *tmp):
+        """Callback 'observer' function used to track when the contents of an
+        Entry changes. Specifically, tracks when the text value of an Entry
+        used to select path to results database has changed. Updates the stored
+        path to the results.
+        Expects the arguments corresponding to the invocation of trace method
+        of a StringVar.
+        """
+        # see selection=="Results" in selectRuns method (variable respathVar)
         self.respath = tmp[-1].get()
 
     def setUriPath(self, *tmp):
+        """Callback 'observer' function used to track when the contents of an
+        Entry changes. Specifically, tracks when the text value of an Entry
+        used to select URI path to results database has changed. Updates the
+        stored URI path to the results.
+        Expects the arguments corresponding to the invocation of trace method
+        of a StringVar.
+        """
+        # see selection=="Results" in selectRuns method (variable uriVar)
         self.uri = tmp[-1].get()
 
     def readRes(self, parent):
-        self.readResults()
+        """Callback that connects to the database given by the URI and path
+        provided by the user and selects all existing Frames in that database.
+        Selected frames are propagated to the runs attribute of the job object
+        inherited from root.
+        Expects to receive the parent window containing the binding object. The
+        parent window is destroyed once all results are read in.
+        """
+        # see selection=="Results" in selectRuns method (OK button)
+        import lfd.results as results
+        results.connect2db(self.uri+self.respath)
+        self.runs = results.Frame.query().all()
         parent.destroy()
 
     def runsFromList(self, parent, runs):
+        """Callback function to convert a coma separated string of runs into a
+        list of integers. Propagates the list to the job object inherited from
+        root.
+        Expects to receive the parent window containing the binding object. The
+        parent window is destroyed once the conversion is complete.
+        """
+        # see selection=="List" in selectRuns method (OK button)
         intruns = None
         stringruns = runs.get(1.0, END).split(",")
         try:
@@ -168,11 +203,19 @@ class MidFrame(Frame):
         except ValueError:
             messagebox.showerror("Input Error", "You have inputed "+\
                                  "runs in an incorrect format!")
-        self.job.runs = intruns
+        self.runs = intruns
         parent.destroy()
 
 
     def getResultsDBPath(self, parent, update):
+        """Opens a file dialog window that enables user to navigate through the
+        filesystem to select their desired database of results.
+        Expects to receive the parent window of the binding object and a
+        StringVar that is used to represent this path. It will update its value
+        which triggers its trace method, which updates the class attribute used
+        to store the path to the database.
+        """
+        # see selection=="Results" in selectRuns method (Button e)
         respath = filedialog.askopenfilename(parent=parent,
                                              title="Please select results DB.",
                                              initialdir=self.respath)
@@ -180,18 +223,3 @@ class MidFrame(Frame):
             update.set(respath)
         else:
             messagebox.showerror("Filename Error!", "Filename does not exist!")
-
-    def readResults(self):
-        """
-        Results module can take its time reading in results. To amortize
-        the wait a progress bar is displayed. Progress bar requires
-        threading. Tkinter is a single threaded app, therefore a kernel
-        function read_results is called that doesn't edit Tk instance.
-        Function freezes the app untill thread finishes.
-        Instance is edited by adding a Results instance as attribute
-        res.
-        """
-        import lfd.results as results
-        results.connect2db(self.uri+self.respath)
-        self.job.runs = results.Frame.query().all()
-

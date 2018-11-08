@@ -196,15 +196,12 @@ DetectTrails(run= , camcol={1-6}, field={all}, filter={ugriz})
 # SAVE_PATH  - folder where results will be stored
 # DEBUG_PATH - folder where images and other debugging files are stored,
 #              not mandatory
-import os
-BOSS = os.path.join(os.path.expanduser("~"), "Desktop/boss")
-del os
 
-PHOTO_REDUX = None
-BOSS_PHOTOOBJ = None
+from lfd import BOSS, BOSS_PHOTOOBJ, PHOTO_REDUX
+
 DEBUG_PATH = None
 def setup(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ, photoreduxpath=PHOTO_REDUX,
-          debugpath=DEBUG_PATH,):
+          debugpath=DEBUG_PATH):
     """Sets up the required environmental paths for detecttrails module. If
     only BOSS is supplied it is assumed that SDSS conventions are followed and
     that the folder structure resembles:
@@ -246,9 +243,10 @@ def setup(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ, photoreduxpath=PHOTO_REDUX,
 
     if photoobjpath is None and photoreduxpath is None:
         # default to expected SDSS locations
-        photoreduxpath = os.path.join(BOSS, "photo/redux")
-        photoobjpath   = os.path.join(BOSS, "photoObj")
+        photoreduxpath = PHOTO_REDUX
+        photoobjpath   = BOSS_PHOTOOBJ
     if debugpath is None:
+        # default to invocation directory
         debugpath = os.path.abspath(os.path.curdir)
 
     # declare the env vars
@@ -257,13 +255,13 @@ def setup(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ, photoreduxpath=PHOTO_REDUX,
     os.environ["PHOTO_REDUX"]   = photoreduxpath
     os.environ["DEBUG_PATH"]    = debugpath
 
-    # set the global paths to setup paths for consistency
+    # if the paths were changed through the function call signature, update the
+    # global vars here
     BOSS          = bosspath
     DEBUG_PATH    = debugpath
     BOSS_PHOTOOBJ = photoobjpath
     PHOTO_REDUX   = photoreduxpath
 
-#    from .detecttrails import DetectTrails
 
 from .removestars import *
 from .processfield import *

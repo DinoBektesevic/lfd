@@ -31,3 +31,6 @@ class RightFrame(Frame):
 
         self.activetmpl.insert(END, self.templatetext)
         self.activetmpl.config(state=DISABLED)
+
+    def getTemplate(self):
+        return self.activetmpl.get(1.0, END)

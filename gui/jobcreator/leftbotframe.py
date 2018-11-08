@@ -8,89 +8,111 @@ from lfd.gui.utils import expandpath
 
 
 class BotFrame(Frame):
+    """Bottom part of the LeftFrame of the GUI. Handles all of the paths
+    involved in the creation of a Job and updates the template in RightFrame
+    when the template path changes.
+    """
     def __init__(self, parent, row=2, col=0):
         Frame.__init__(self, parent)
         self.grid(row=row, column=col, pady=10)
         self.parent = parent
 
         title = Label(self, text="Enviroment options",
-                      font=("Helverica", 16), justify="center")
+                      font=("Helvetica", 16), justify="center")
         title.grid(row=row, column=col, columnspan=2)
 
         self.job = self.parent.root.job
 
-############# SAVEPATH
-        self.tmpsavepath = StringVar()
-        self.tmpsavepath.set(self.job.save_path)
-        self.tmpsavepath.trace("w", self.setSavePath)
+        #######################################################################
+        #            Path to where job DQS files will be produced
+        #######################################################################
+        self.jobsavepath = StringVar()
+        self.jobsavepath.set(self.job.save_path)
 
         a = Button(self, text="Select Save Folder", width=15,
-                   command = self.getSavePath)
+                   command = self.setSavePathWithPrompt)
         a.grid(row=row+1, column=col, pady=5, sticky=W)
 
-        b = Entry(self, textvariable=self.tmpsavepath, width=25)
+        b = Entry(self, textvariable=self.jobsavepath, width=25)
         b.grid(row=row+1, column=col+1, pady=5, sticky=W+E)
 
-############ TEMPLATEPATH
-        self.templpath = StringVar(self)
-        self.templpath.set(self.job.template_path)
-        self.templpath.trace("w", self.setTemplatePath)
+        #######################################################################
+        #            Path to where the current template is located
+        #######################################################################
+        self.tmpltpath = StringVar(self)
+        self.tmpltpath.set(self.job.template_path)
+        self.tmpltpath.trace("w", self.setTemplatePath)
 
         c = Button(self, text="Select template", width=15,
-                   command = self.getTemplatePath)
+                   command = self.setTemplatePathWithPrompt)
         c.grid(row=row+2, column=col, pady=5, sticky=W)
 
-        d = Entry(self, textvariable=self.templpath, width=25)
+        d = Entry(self, textvariable=self.tmpltpath, width=25)
         d.grid(row=row+2, column=col+1, pady=5, sticky=W+E)
 
-############ EDITTEMPLATE
+        #######################################################################
+        #            Path to where the results will be saved on the cluster
+        #######################################################################
+        respathl= Label(self, text="Results save folder: ")
+        respathl.grid(row=row+6, column=col, pady=3, sticky=W)
+
+        self.respath = Entry(self)
+        self.respath.insert(0, self.job.res_path)
+        self.respath.grid(row=row+6, column=col+1, pady=3, sticky=W+E)
+
+
+        #######################################################################
+        #            Edit template
+        #######################################################################
         e = Button(self, text="Edit template", width=15,
-                   command = self.edittemplate)
+                   command = self.editTemplate)
         e.grid(row=row+3, column=col, pady=5, sticky=W+E)
 
         self.savetmpbtn = Button(self, text="Save template",
                                    width=15, state=DISABLED,
-                                   command=self.savetmpl)
+                                   command=self.saveTemplate)
         self.savetmpbtn.grid(row=row+3, column=col+1, pady=5,
                                sticky=W+E)
 
-
-
-    def setSavePath(self, *args):
-        newpath = self.tmpsavepath.get()
-        self.updateSavePath(newpath)
-
-    def getSavePath(self):
+    def setSavePath(self):
+        """Callback that will spawn a directory selector through which a new
+        path, where the job DQS files will be saved, can be selected.
+        """
         newpath = filedialog.askdirectory(parent=self,
                                           title="Please select save destination.",
-                                          initialdir=self.job.save_path)
-        self.tmpsavepath.set(newpath)
-        self.updateSavePath(newpath, showerr=True)
-
-    def updateSavePath(self, path, showerr=False):
-        tmppath = expandpath(path)
-        if tmppath[0]:
-            self.job.save_path=tmppath[1]
-        else:
-            self.job.save_path="/"
-            if showerr:
-                messagebox.showerror("Input Error",
-                                       "Input path does not " + \
-                                       "exist! \n" + path)
+                                          initialdir=self.jobsavepath)
+        self.jobsavepath.set(newpath)
 
     def setTemplatePath(self, *args):
-        newpath = self.templpath.get()
+        """Callback that will track the Entry box of the template path and upon
+        modification will cause the RightFrame template display to reload the
+        new template.
+        """
+        newpath = self.tmpltpath.get()
         self.updateTemplatePath(newpath)
 
-    def getTemplatePath(self):
-        initdir = os.path.dirname(self.job.template_path)
+    def setTemplatePathWithPrompt(self):
+        """Callback that will spawn a file selector window through which a new
+        template can be selected. See setTemplatePath.
+        Will cause an update of the RightFrame to redisplay the newly selected
+        template.
+        """
+        initdir = os.path.dirname(self.tmpltpath)
         newpath = filedialog.askopenfilename(parent=self,
                                              title="Please select a template.",
-                                             initialdir=initdir)
+                                             initialdir=self.tmpltpath)
         self.templpath.set(newpath)
-        self.updateTemplatePath(newpath, showerr = True)
+        self.updateTemplatePath(newpath, showerr=True)
 
     def updateTemplatePath(self, path, showerr=False):
+        """Updates the RightFrame's template display and replaces the current
+        content with content read from a file at the provided path. If showerr
+        is supplied an error will be raised if the given path does not exist.
+        This is useful if the directory will be created after the path selection
+        or if the update is called from a callback tied to a StringVar/Entry
+        trace methods as a way to silence errors untill the full path has been
+        manually inputed.
+        """
         tmppath = expandpath(path)
         activetmpl = self.parent.root.rightFrame.activetmpl
 
@@ -102,29 +124,33 @@ class BotFrame(Frame):
             self.job.template_path = tmppath[1]
         else:
             if showerr:
-                messagebox.showerror("Input Error",
-                                       "Input path does not exist " +\
-                                       "or is a folder! \n" + path)
+                messagebox.showerror(("Input Error. Input path does not exist "
+                                      "or is a folder! {}".format(path)))
             activetmpl.config(state=NORMAL)
             activetmpl.delete(1.0, END)
             activetmpl.config(state=DISABLED)
 
-
-    def edittemplate(self):
+    def editTemplate(self):
+        """A callback of a Button action that will change the state of the
+        RightFrame Text box and make it editable.
+        """
         self.savetmpbtn.config(state=NORMAL)
         self.activetmpl = self.parent.root.rightFrame.activetmpl
         self.activetmpl.config(state=NORMAL)
 
-    def savetmpl(self):
+    def saveTemplate(self):
+        """A Button callback that will save the current template to a file.
+        Spawns a file dialog to retrieve the save location. Changes the state
+        of the RightFrame Text box back to un-editable.
+        """
         self.savetmpbtn.config(state=DISABLED)
         self.activetmpl.config(state=DISABLED)
 
-        filename = filedialog.asksaveasfilename(initialdir=self.job.template_path,
+        filename = filedialog.asksaveasfilename(initialdir=self.tmpltpath,
                                                 confirmoverwrite=True)
         f = open(filename, "w")
         for line in self.activetmpl.get(1.0, END):
             f.write(line)
         f.close()
 
-        self.templpath.set(filename)
-
+        self.tmpltpath.set(filename)

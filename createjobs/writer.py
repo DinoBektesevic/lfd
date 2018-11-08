@@ -17,19 +17,21 @@ def get_node_with_files(job, run):
         return read[index-32:index-30]
     return "01"
 
-def writeDqs(job, runlst):
+def writeJob(job, verbose=True):
     """
     Writes the job#.dqs files. Takes in a Jobs instance and processes the
-    "generic" template replacing any/all keywords using values from Jobs instance.
-
+    "generic" template replacing any/all keywords using values from Jobs
+    instance.
     For each entry in runlst it creates a new job#.dqs file, which contains
-    commands to execute detecttrails processing for each entry of entry in runlst.
+    commands to execute detecttrails processing for each entry of entry in
+    runlst.
     """
+    runlst = job.makeRunlst()
     for i in range(0, len(runlst)):
         jobpath = os.path.abspath(job.save_path)
         newjobpath = os.path.join(jobpath, "job"+str(i)+".dqs")
         newjob = open(newjobpath, "w")
-        temp = open(job.template_path).read()
+        temp = job.template
 
         if job.pick.lower() == "Results":
             jobname = "{0}-{1}".format(runlst[i][0].run, runlst[i][-1].run)
@@ -68,7 +70,7 @@ def writeDqs(job, runlst):
             header += job.command.replace("$", command)
 
             if job.pernode:
-                node=get_node_with_files(job, run)
+                node = get_node_with_files(job, run)
                 header = header.replace("NODEFLAG", "fermi-node"+node)
                 header = header.replace("FERMINODE", "fermi-node"+node)
             else:

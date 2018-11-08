@@ -29,7 +29,16 @@ For more details on prerequisites see that package help.
 Erin Sheldon's SDSS utilities come bundled with the provided code.
 """
 import os as _os
-from .createjobs import *
+
+BOSS = _os.path.join(_os.path.expanduser("~"), "Desktop/boss")
+PHOTO_REDUX = _os.path.join(BOSS, "photo/redux")
+BOSS_PHOTOOBJ = _os.path.join(BOSS, "photoObj")
+
+
+from . import detecttrails
+from . import createjobs
+from . import gui
+from . import results
 
 def setup_detecttrails(bosspath = _os.path.join(_os.path.expanduser("~"),
                                                 "Desktop/boss"),
@@ -55,8 +64,21 @@ def setup_detecttrails(bosspath = _os.path.join(_os.path.expanduser("~"),
         See detecttrails help to see how to turn on debug mode, not used by
         default.
     """
-    from . import detecttrails
     detecttrails.setup(bosspath, debugpath, photoobjpath, photoreduxpath)
+
+
+def setup_createjobs(photoreduxpath = None):
+    """Sets up the environmental path of PHOTO_REDUX only! Required when user
+    wants to use createjobs module to create jobs for all runs un runList.par
+    file. Subset of setup_detecttrails functionality - setting up detecttrails
+    provides more than sufficient setup for createjobs module.
+
+      Parameters
+    --------------
+    photoreduxpath : The path to which PHOTO_REDUX env. var. will be set to.
+        Will default to '~/Desktop/boss/photoredux'.
+    """
+    createjobs.setup(photoreduxpath)
 
 
 def setup_db(URI="sqlite:///", dbpath="~", name="foo.db", echo=False):
@@ -72,7 +94,6 @@ def setup_db(URI="sqlite:///", dbpath="~", name="foo.db", echo=False):
     echo : verbosity of the DB. True by default.
     """
     from os import path
-    from . import results
 
     dbpath = path.expanduser(dbpath)
     db_uri = path.join(URI+dbpath, name)

@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -40,6 +41,8 @@ class Jobs:
             path to the desired template. Template should contain all
             necessary parameters described bellow. Template parameters
             have to be uppercase single words.
+        template:
+            a full template text as a string
         queue:
             sets the QSUB queue type: serial, standard or parallel.
             Default: standard.
@@ -85,7 +88,7 @@ class Jobs:
     under the name "generic".
     Location where final results are saved on Fermi cluster by default
     is
-        /home/fermi/$user/run_results/$JOB_ID.
+        /home/fermi/$user/$res_path/$JOB_ID.
 
      methods
     -----------
@@ -108,123 +111,144 @@ class Jobs:
         internal logic to work out what kwargs were sent, if any, to
         expand command to appropriate form.
     """
-
-
-    def __init__(self, n, runs=None, queue="standard", wallclock="24:00:00",
-                 ppn="3", cputime="48:00:00", pernode=False,
-                 template_path=None, save_path=None, res_path="run_results",
-                 command = 'python3 -c "import detecttrails as dt;' +\
-                                    ' dt.DetectTrails($).process()"\n',
-                 **kwargs):
-
+    def __init__(self, n, runs=None, template_path=None, save_path=None,
+                 queue="standard", wallclock="24:00:00", ppn="3",
+                 cputime="48:00:00", pernode=False,
+                 command = ('python3 -c "import detecttrails as dt; '
+                            'dt.DetectTrails($).process()"\n'),
+                  res_path="run_results", **kwargs):
         self.n = n
-        self.wallclock = wallclock
-        self.cputime = cputime
-        self.pernode = pernode
-        self.res_path = res_path
-
-
-        curpath = os.path.abspath(os.path.curdir)
-        cjpath = os.path.join(curpath, "createjobs/")
-        if save_path is not None:
-            tmppath = save_path #expandpath(save_path)
-        else:
-            tmppath = cjpath
-
-        if save_path is not None:
-            os.makedirs(tmppath)
-            tmpdir = tmppath
-        else:
-            tmpdir = os.path.join(tmppath, "jobs")
-            os.makedirs(tmpdir)
-
-        self.save_path = tmpdir
-
-        self.queue = queue
         self.ppn = ppn
         self.runs = runs
+        self.pick = None
+        self.queue = queue
+        self.cputime = cputime
+        self.pernode = pernode
+        self.command = command
+        self.wallclock = wallclock
+        self.kwargs = kwargs
+
+        # Paths are harder to set up. There are three paths to track: where to
+        # save DQS scripts (save_path), where to find template path
+        # (template_path) and into which folder to copy the results on the
+        # cluster after processing (res_path)
+        self.res_path = res_path
+        self.__init__createjobs_folder(save_path)
+        self.__init__template(template_path, kwargs.pop("template", None))
+
+        # set the initial value of self.pick if at all possible
+        self._findKwargs()
+
+    def __init__createjobs_folder(self, save_path):
+        """Creates the createjobs folder at the given location, the current
+        directory by default. In createjobs folder a new directory is opened
+        for each set of jobs produced to avoid overwriting each other.
+        """
+        # this will be the location of invocation, not the dir of this file
+        curpath = os.path.abspath(os.path.curdir)
+        cjpath = os.path.join(curpath, "createjobs/")
+        tmppath = cjpath
+
+        if save_path is not None:
+            tmppath = os.path.expanduser(save_path)
+        if os.path.split(tmppath)[-1] == "createjobs":
+            tmppath = os.path.join(tmppath, "jobs")
+
+        if os.path.isdir(tmppath) and len(os.listdir(tmppath)) == 0:
+            pass
+        else:
+            os.makedirs(tmppath)
+
+        self.save_path = tmppath
+
+    def __init__template(self, template_path, template):
+        """Verifies if the provided path to template is correct or not and
+        loads the template. If the provided template path is incorrect it loads
+        the default template provided with this module.
+        If a whole template is provided as a string, it will use that string as
+        the template.
+        """
+        # this will be the dir of this file
+        default_path = os.path.split(__file__)[0]
+        default_path = os.path.join(default_path, "generic")
 
         if template_path is not None:
             tmppath = expandpath(template_path)
         else:
-            tmppath = os.path.split(__file__)[0]
-            tmppath = os.path.join(tmppath, "generic")
-            tmppath = (True, tmppath)
+            tmppath = default_path
 
-        if  os.path.isfile(tmppath[1]):
-            self.template_path = tmppath[1]
+        if  os.path.isfile(tmppath):
+            self.template_path = tmppath
         else:
+            warnings.Warning(("Could not open the given template. Check it "
+                              "exists, is not a folder, is not corrupt. Using "
+                              "the default template provided with the module."))
             self.template_path = os.path.join(cjpath, "generic")
 
-        self.command = command
+        if template is None:
+            self.template = open(self.template_path).read()
+        else:
+            self.template = template
 
-        self.kwargs = kwargs
-
-    def _runlstAll(self):
-        """
-        Returns a runlst made for all runs found in runlist.par
-        file. Used in createAll function to create a runlst for all
-        runs.
-        """
+    def getAllRuns(self):
+        """Returns a list of all runs found in runlist.par file."""
         rl = files.runlist()
-        indices = np.where(rl["rerun"] == "301")
+        indices = np.where(rl["rerun"] == b"301")
         rl = rl[indices]
-        runs = rl["run"]
-        nruns = int(len(runs)/self.n)
-        runlst = [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
-        return runlst
+        return rl["run"]
 
-    def makeRunlst(self, runs):
+    def makeRunlst(self, runs=None):
         """
-        Create a runlst from a list of runs or Results instance.
-        Recieves a list of runs: [N1,N2,N3,N4,N5...] and returns
-        a runlst:
-        [   (N1, N2...N( n_runs / n_jobs)) 0
+        Create a runlst from a list of runs or Results instance. Recieves a
+        list of runs: [N1,N2,N3,N4,N5...] and returns a runlst:
+        [   (N1, N2...N( n_runs / n_jobs)) # idx = 0
             ...
-            (N1, N2...N( n_runs / n_jobs)) n_jobs
+            (N1, N2...N( n_runs / n_jobs)) # idx = n_jobs
         ]
-        Runlst is a list of lists. Inner lists contain runs that
-        will be executed in a single job. Lenght of outter list
-        matches the number of jobs that will be started i.e.
+
+        Runlst is a list of lists. Inner lists contain runs that will be
+        executed in a single job. Lenght of outter list matches the number of
+        jobs that will be started i.e.
             runls = list(  (2888, 2889, 2890)
                            (3001, 3002, 3003)
                         )
-        will start 2 jobs (job0.dqs, job1.dqs), where job0.dqs will
-        call DetectTrails.process on 3 runs: 2888, 2889, 2890.
-        """
-        if len(runs) % self.n == 0:
-            nruns = int(len(runs)/self.n)
-            runlst = [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
-        else:
-            nruns = int(len(runs)/self.n)+1
-            runlst = [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
-        return runlst
+        will start 2 jobs (job0.dqs, job1.dqs), where job0.dqs will call
+        DetectTrails.process on 3 runs: 2888, 2889, 2890.
 
-    def _createBatch(self, runlst):
+        If (optionally) a list of runs is supplied a run list will be produced
+        fom that list, instead of the runs attribute.
         """
-        Writes a batch.sh script that contians qsub job#.dqs
-        for each job found in runlst.
-        Created automatically if you use create or createAll
+        runs = self.runs if runs is None else runs
+
+        whole, remain = divmod(len(runs), self.n)
+        nruns = whole if remain == 0 else whole+1
+        njobs = int(np.ceil(len(runs)/nruns))
+
+        return [runs[i:i+nruns] for i in range(0, len(runs), nruns)]
+
+    def _createBatch(self, njobs):
+        """ Writes a batch.sh script that contians qsub job#.dqs for each job
+        found in runlst. Created automatically if you use create or createAll
         methods.
         """
         newbatch = open(self.save_path+"/batch.sh", "w")
 
-        for i in range(0, len(runlst)):
+        for i in range(0, njobs):
             newbatch.writelines("qsub job"+str(i)+".dqs\n")
         newbatch.close
 
 
     def _findKwargs(self):
-        """
-        Works out what kwargs, if any were sent. If camcol and/or
-        filter was sent it adds them as instance attributes.
-        It always adds a "pick" instance attribute that describes
-        the parameters sent. pick attribute is used by  writeDqs from
-        writer module expand command attribute to appropriate string.
+        """ Works out what kwargs, if any were sent. If camcol and/or filter
+        was sent it adds them as instance attributes. It always adds a "pick"
+        instance attribute that describes the parameters sent. 'pick0 attribute
+        is used by  writeJob from writer module expand command attribute to
+        appropriate string.
 
         METHOD DOESN'T GET CALLED UNTILL CREATE FUNCTION!
-        this avoids potential problems, i.e. if the user sets runs
-        attribute after initialization.
+        This avoids potential problems, i.e. if the user sets runs
+        attribute after initialization but makes it impossible to determine
+        the 'pick' attribute value untill execution.
         """
         kwargs = self.kwargs
 
@@ -254,37 +278,38 @@ class Jobs:
             self.pick="Results"
 
     def create(self):
+        """Creates job#.dqs files from runlst. runlst is a list(list()) in
+        which inner list contains all runs per job. Length of outter list is
+        the number of jobs started. See class help.
         """
-        Creates job#.dqs files from runlst.
-        runlst is a list(list()) in which inner list contains all runs per job.
-        Length of outter list is the number of jobs started. See class help.
-        """
+        # Continuously updating all the class attributes based on the exact
+        # settings chosen in real-time is very ugly. So we force update all
+        # attributes that could have changed (i.e. self.pick, self.runs, job
+        # partitioning stats etc.)
+
         self._findKwargs()
 
         if not self.runs:
             print("There are no runs to create jobs from. Creating jobs"+\
                   " for all runs in runlist.par file.")
-            runlst = self._runlstAll()
-            writer.writeDqs(self, runlst)
+            self.runs = self.getAllRuns()
 
-        elif self.runs:
-            runlst = self.makeRunlst(self.runs)
-            writer.writeDqs(self, runlst)
-        else:
-            raise ValueError("Unrecognized format for runs.")
-
+        whole, remain = divmod(len(self.runs), self.n)
+        nruns = whole if remain == 0 else whole+1
+        njobs = int(np.ceil(len(self.runs)/nruns))
         print("Creating: \n "\
               "    {} jobs with {} runs per job \n"\
               "    Queue:     {} \n"\
               "    Wallclock: {} \n"\
               "    Cputime:   {} \n"\
               "    Ppn:       {} \n"\
-              "    Path:      {}".format(len(runlst), len(runlst[0]),
-                                         self.queue, self.wallclock,
-                                         self.cputime, self.ppn,
-                                         self.save_path)
-             )
-        self._createBatch(runlst)
+              "    Path:      {}".format(njobs, nruns,
+                                         self.queue, self.wallclock, self.cputime,
+                                         self.ppn, self.save_path)
+        )
+
+        writer.writeJob(self)
+        self._createBatch(njobs)
 
 
 

@@ -88,11 +88,11 @@ class TopFrame(Frame):
         #######################################################################
         commandl= Label(self, text="Command: python -c \n \"import "+
                         "detecttrails as dt;")
-        commandl.grid(row=row+6, column=col, pady=5, sticky=W)
+        commandl.grid(row=row+7, column=col, pady=5, sticky=W)
 
         self.command = Text(self, height=6, width=35)
         self.command.insert(END, self.job.command[38:-2])
-        self.command.grid(row=row+6, column=col+1, pady=5, sticky=W+E)
+        self.command.grid(row=row+7, column=col+1, pady=5, sticky=W+E)
 
     def getn(self):
         """Reads the current value from the Entry for number of jobs and
@@ -116,13 +116,12 @@ class TopFrame(Frame):
         with the createjobs module. Separating lines in the TextBox by using
         <Return> key is allowed.
         """
-        # Namely entering the command in the TextBox using <Return> key to
-        # separate lines is allowed, but in the createjobs module the command
-        # has to be entered as a semicolon separated string. So the newlines
-        # are replaced by a semicolon and then all doubled-up semicolons
-        # (if users separated their lines by both ; and <Return>) are reduced
-        # to a single semicolon. It's a bit hackish which is why this is not a
-        # 'feature' of createjobs module.
+        # using <Return> key to separate lines is allowed, but in the createjob
+        # module the command has to be entered as a semicolon separated string.
+        # So the newlines are replaced by semicolons and then all doubled-up
+        # semicolons (if users separated their lines by both ; and <Return>)
+        # are reduced to a single semicolon. It's a bit hackish which is why
+        # this is not a 'feature' of createjobs module.
         command = self.command.get(1.0, END)
         cmnd = command[:-1]
         cmnd = cmnd.replace("\n", ";")

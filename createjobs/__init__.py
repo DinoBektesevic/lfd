@@ -202,11 +202,32 @@ and save the result as a new template.
 
    This time it's not runs you're executing but frames, therefore you
    can let a larger number of them per job; i.e. the invocation of
-   DetectTrails now looks like: 
+   DetectTrails now looks like:
 
 	python3 -c "import detect_trails as dt;
                dt.DetectTrails(run=125,camcol=1,filter='i',
                                field=69).process()"
 """
 
-from lfd.createjobs.createjobs import Jobs
+#PHOTO_REDUX = os.path.join(os.path.expanduser("~"), "Desktop/boss/photo/redux")
+
+def setup(photoreduxpath=None):
+    """Sets up the required environmental paths for createjobs module.
+
+      Parameters
+    --------------
+    photoreduxpath : The path to which PHOTO_REDUX env. var. will be set to.
+        If only bosspath is suplied it will default to BOSS/photoObj but is
+        left configurable if SDSS conventions are not followed.
+    """
+    import os
+
+    if photoreduxpath is None:
+        try: bosspath = os.environ["BOSS"]
+        except KeyError: bosspath = os.path.join(os.path.expanduser("~"), "Desktop/boss")
+        photoreduxpath = os.path.join(bosspath, "photo/redux")
+
+    os.environ["PHOTO_REDUX"] = photoreduxpath
+
+from .createjobs import *
+
