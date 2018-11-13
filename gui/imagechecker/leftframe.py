@@ -18,24 +18,32 @@ class LeftFrame(Frame):
         self.canvas.bind("<Button-3>", self.rmb)
         self.canvas.pack(fill=BOTH, expand=1)
 
-    def update(self):
-        curimg = self.data.getImage()
+        self.x1 = None
+        self.y1 = None
+        self.x2 = None
+        self.y2 = None
 
-        if curimg is not None:
+    def update(self):
+        try: self.data.loadImage()
+        except IndexError: self.failedImageLoadScreen()
+
+        if self.data.image is not None:
             self.canvas.delete("all")
-            tmpimg = Image.open(curimg)
-            self.img = ImageTk.PhotoImage(tmpimg)
+            self.img = ImageTk.PhotoImage(self.data.image)
             self.canvas.create_image(0, 0, image=self.img, anchor=NW)
             #self.canvas.winfo_height(), anchor=SW, image=self.img)
-            curimgdata = self.data.getImageData()
+            curimgdata = self.data.loadEvent()
             if curimgdata is not None:
                 self.drawline(curimgdata)
         else:
-            import lfd.gui
-            tmpimg = Image.open(os.path.join(lfd.gui.__path__[0],
-                                             "imagechecker/noimage.png"))
-            self.img = ImageTk.PhotoImage(tmpimg)
-            self.canvas.create_image(0, 0, image=self.img, anchor=NW)
+            self.failedImageLoadScreen()
+
+    def failedImageLoadScreen(self):
+        import lfd.gui
+        tmpimg = Image.open(os.path.join(lfd.gui.__path__[0],
+                                         "imagechecker/noimage.png"))
+        self.img = ImageTk.PhotoImage(tmpimg)
+        self.canvas.create_image(0, 0, image=self.img, anchor=NW)
 
     def lmb(self, event):
         x1,y1,x2,y2 =  self.canvas.coords(self.drawnline)

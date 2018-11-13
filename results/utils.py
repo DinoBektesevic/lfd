@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import sqlalchemy
 
 __all__ = ["from_file", "create_test_sample", "session_scope", "pprint"]
 

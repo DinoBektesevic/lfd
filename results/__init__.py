@@ -320,7 +320,7 @@ __query_aliases = {
     "cx1"   : "_cx1"  ,
     "cy1"   : "_cy1"  ,
     "cx2"   : "_cx2"  ,
-    "cy2"   : "_cy2" 
+    "cy2"   : "_cy2"
 }
 
 Base = _declarative_base()

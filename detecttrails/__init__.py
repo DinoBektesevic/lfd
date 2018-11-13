@@ -200,8 +200,7 @@ DetectTrails(run= , camcol={1-6}, field={all}, filter={ugriz})
 from lfd import BOSS, BOSS_PHOTOOBJ, PHOTO_REDUX
 
 DEBUG_PATH = None
-def setup(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ, photoreduxpath=PHOTO_REDUX,
-          debugpath=DEBUG_PATH):
+def setup(bosspath, photoobjpath, photoreduxpath, debugpath):
     """Sets up the required environmental paths for detecttrails module. If
     only BOSS is supplied it is assumed that SDSS conventions are followed and
     that the folder structure resembles:
@@ -236,15 +235,15 @@ def setup(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ, photoreduxpath=PHOTO_REDUX,
         be left as None in which case it will default to the current directory.
         See detecttrails help to see how to turn on debug mode, not used by
         default.
-    """
-
+    """    
     global BOSS, DEBUG_PATH, PHOTO_REDUX, BOSS_PHOTOOBJ
     import os
 
-    if photoobjpath is None and photoreduxpath is None:
-        # default to expected SDSS locations
-        photoreduxpath = PHOTO_REDUX
+    # default to expected SDSS locations for all the values that are not sent
+    if photoobjpath is None:
         photoobjpath   = BOSS_PHOTOOBJ
+    if photoreduxpath is None:
+        photoreduxpath = PHOTO_REDUX        
     if debugpath is None:
         # default to invocation directory
         debugpath = os.path.abspath(os.path.curdir)

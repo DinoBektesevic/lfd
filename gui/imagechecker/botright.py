@@ -64,7 +64,7 @@ class BottomRight(Frame):
         self.parent.root.update()
 
     def selectresults(self):
-        self.parent.root.initImageData()
+        self.parent.root.initResults()
         self.parent.root.update()
 
     def search(self):

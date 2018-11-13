@@ -40,11 +40,8 @@ from . import createjobs
 from . import gui
 from . import results
 
-def setup_detecttrails(bosspath = _os.path.join(_os.path.expanduser("~"),
-                                                "Desktop/boss"),
-                       photoobjpath = None,
-                       photoreduxpath = None,
-                       debugpath = None):
+def setup_detecttrails(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ,
+                       photoreduxpath=PHOTO_REDUX, debugpath=None):
     """Sets up the environmental paths BOSS, BOSS_PHOTOOBJ, PHOTO_REDUX and
     DEBUG_PATH required for detecttrails package.
 
@@ -64,7 +61,7 @@ def setup_detecttrails(bosspath = _os.path.join(_os.path.expanduser("~"),
         See detecttrails help to see how to turn on debug mode, not used by
         default.
     """
-    detecttrails.setup(bosspath, debugpath, photoobjpath, photoreduxpath)
+    detecttrails.setup(bosspath, photoobjpath, photoreduxpath, debugpath)
 
 
 def setup_createjobs(photoreduxpath = None):
@@ -81,7 +78,8 @@ def setup_createjobs(photoreduxpath = None):
     createjobs.setup(photoreduxpath)
 
 
-def setup_db(URI="sqlite:///", dbpath="~", name="foo.db", echo=False):
+def setup_results(URI="sqlite:///", dbpath="~/Desktop", name="foo.db",
+                  echo=False):
     """Either connects to an existing DB (that has to be mappable by results
     package) or creates a new empty DB with the required tables.
 

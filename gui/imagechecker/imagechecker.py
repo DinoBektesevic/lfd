@@ -3,14 +3,14 @@
 from .leftframe import LeftFrame
 from .rightframe import RightFrame
 from lfd.gui import utils
-from .images import Images
-
 from tkinter import *
 from tkinter import ttk
 
 from tkinter import Label
 from tkinter import filedialog
 
+import lfd.results as res
+from .images import Images
 
 class ImageChecker(Tk):
     def __init__(self):
@@ -23,37 +23,44 @@ class ImageChecker(Tk):
 
         self.data = Images(self)
 
-        self.leftframe = LeftFrame(self)
-        self.rightframe = RightFrame(self)
+        self.leftFrame = LeftFrame(self)
+        self.rightFrame = RightFrame(self)
 
-
-        self.bind('<Left>', self.rightframe.bottomright.previmg)
-        self.bind('<Right>', self.rightframe.bottomright.nextimg)
-        self.bind("<Up>", self.rightframe.bottomright.true)
-        self.bind("<Down>", self.rightframe.bottomright.false)
+        self.bind('<Left>', self.rightFrame.bottomRight.previmg)
+        self.bind('<Right>', self.rightFrame.bottomRight.nextimg)
+        self.bind("<Up>", self.rightFrame.bottomRight.true)
+        self.bind("<Down>", self.rightFrame.bottomRight.false)
 
         self.initGUI()
 
     def initGUI(self):
+        self.initResults()
         self.initImages()
-        self.initImageData()
         self.update()
 
-    def initImageData(self):
-        path = filedialog.askdirectory(parent=self,
-                                       title="Please select results folder...",
-                                       initialdir=self.respath)
-        self.data.setResults(path)
+    def initResults(self):
+        path = filedialog.askopenfilename(parent=self,
+                                          title="Please select results database...",
+                                          initialdir=self.respath)
+        if path:
+            try: self.data.initEvents(path)
+            except OSError: self.rightFrame.failedEventLoadScreen()
+        else:
+            self.rightFrame.failedEventLoadScreen()
 
     def initImages(self):
         path = filedialog.askdirectory(parent=self,
                                        title="Please select image folder...",
                                        initialdir=self.imgpath)
-        self.data.setImages(path)
+        if path:
+            try: self.data.initImages(path)
+            except OSError: self.leftFrame.failedImageLoadScreen()
+        else:
+            self.leftFrame.failedImageLoadScreen()
 
     def update(self):
-        self.leftframe.update()
-        self.rightframe.update()
+        self.leftFrame.update()
+        self.rightFrame.update()
 
 
 def run():
