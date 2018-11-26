@@ -150,6 +150,9 @@ class Event(Base):
     _cx2 = sql.Column(sql.Float, nullable=False)
     _cy2 = sql.Column(sql.Float, nullable=False)
 
+    verified = sql.Column(sql.Boolean, nullable=False, default=False)
+    false_positive = sql.Column(sql.Boolean, nullable=False, default=True)
+
     start_t = sql.Column(BasicTime)
     end_t   = sql.Column(BasicTime)
 
