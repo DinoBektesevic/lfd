@@ -121,10 +121,10 @@ class Event(Base):
     'frame' coordinates are defined and an error will not be raised. For more
     details see Point class.
 
-    Point objects will issue warnings or errors if inconsistent situations arise
-    when a warning is issues, unless it's clearly understood and expected, the
-    best course of action is to issue a rollback. DB could be sent to an
-    inconsistent state otherwise.
+    Point objects will issue warnings or errors if inconsistent situations
+    arise. When a warning is issued, unless it's clearly understood and
+    expected, the best course of action is to issue a rollback. Otherwise DB
+    could be sent to an inconsistent state.
 
     The start/end times are stored in the DB in the SDSS-TAI format. There are
     some caveats when converting this time to MJD.
@@ -164,8 +164,8 @@ class Event(Base):
     # order of parameters in the composite, when instantiating from the DB wrong
     # values will be sent as wrong parameters. Additionally _camcol and _filter
     # can not be in front of the _cx and _cy because __composite_values__ of
-    # Point DO NOT CHANGE THEM so the x, y, cx, cy will try to map to
-    # x, y, camcol, filter, cx, cy and because types won't be correct it will
+    # Point DO NOT CHANGE THEM. Therefore the x, y, cx, cy will map to
+    # x, y, camcol, filter, cx, cy but because types won't be correct - it will
     # default to None
     lt = composite(LineTime, start_t, end_t)
     p1 = composite(Point, _x1, _y1, _cx1, _cy1, _camcol, _filter)
@@ -179,12 +179,14 @@ class Event(Base):
     __table_args__ = (
         sql.ForeignKeyConstraint(['_run', '_camcol', "_filter", "_field"],
                                  ['frames.run', 'frames.camcol', "frames.filter",
-                                  "frames.field"], onupdate = "CASCADE"),{}
+                                  "frames.field"], onupdate="CASCADE"),{}
 	  )
 
     # back_populates will create an attribute on Event that will make the Frame
-    # object accessible through Event.
-    frame = relationship("Frame", back_populates="events")
+    # object accessible through Event. How do cascades work, or why don't they
+    # work?!?!
+    frame = relationship("Frame", back_populates="events",
+                         cascade="save-update,merge,expunge")
 
 
     def __init__(self, frame, x1=None, y1=None, x2=None, y2=None, cx1=None,

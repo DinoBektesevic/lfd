@@ -68,7 +68,8 @@ class Frame(Base):
 
     #http://docs.sqlalchemy.org/en/latest/orm/cascades.html
     events = relationship("Event", back_populates="frame", passive_updates=False,
-    cascade="save-update, delete")#, lazy="joined", innerjoin=True)
+                          cascade="save-update,delete,expunge")
+    #, lazy="joined", innerjoin=True)
 
     def __init__(self, run, camcol, filter, field, crpix1, crpix2, crval1, crval2,
                  cd11, cd12, cd21, cd22, t, **kwargs):

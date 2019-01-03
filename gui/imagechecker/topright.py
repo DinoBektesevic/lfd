@@ -43,13 +43,7 @@ class TopRight(Frame):
         for widget in self.winfo_children():
             widget.destroy()
 
-        if self.data.event is None:
-            # This is not the best choice of an Error type but the choice was
-            # made for simplicity and you could argue that None index is invalid
-            raise IndexError("No Event loaded.")
-        else:
-            event = self.data.event        
-
+        event = self.data.event
         # spacer between top of window and table
         Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
 

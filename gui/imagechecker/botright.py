@@ -62,7 +62,7 @@ class BottomRight(Frame):
         to the following data instance and updates the whole GUI.
         """
         self.data.event.false_positive = False
-        self.data.commit()
+        self.data.events.commit()
         self.nextimg()
 
     def false(self, *args):
@@ -71,7 +71,7 @@ class BottomRight(Frame):
         the following data instance and updates the whole GUI.
         """
         self.data.event.false_positive = True
-        self.data.commit()
+        self.data.events.commit()
         self.nextimg()
 
     def selectimages(self):

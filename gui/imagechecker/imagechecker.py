@@ -9,8 +9,7 @@ from tkinter import ttk
 from tkinter import Label
 from tkinter import filedialog
 
-import lfd.results as res
-from .images import Data
+from .databrowser import ImageBrowser, EventBrowser
 
 class ImageChecker(Tk):
     """GUI app that allows for visual inspection of Events. To run the app
@@ -20,7 +19,8 @@ class ImageChecker(Tk):
     >>> app.mainloop()
 
     or invoke run function located in this module. The App itself does not
-    manage the data. Data loading and management is handled by the Data class.
+    manage the data. Data loading and management is handled by the EventBrowser
+    class (self.data attribute).
 
     The GUI consits of 2 Frames - left and right. Left frame is used to display
     information on the Event and the right hand side displays the image
@@ -43,9 +43,9 @@ class ImageChecker(Tk):
     """
     def __init__(self):
         """There are several configurable parameters that are imporant for this
-        class: 
+        class:
             resize_x - the reduction factor describing how much has the width
-                       been reduced from the original to the displayed image. 
+                       been reduced from the original to the displayed image.
             resize_y - the reduction factor describing how much has the height
                        reduced between the original and displayed image.
 
@@ -64,7 +64,7 @@ class ImageChecker(Tk):
         self.resize_x = 2.56
         self.resize_y = 2.5628227194492257
 
-        self.data = Data(self)
+        self.data = EventBrowser() #ImageBrowser()
 
         self.leftFrame = LeftFrame(self)
         self.rightFrame = RightFrame(self)
@@ -85,8 +85,6 @@ class ImageChecker(Tk):
         """
         self.initResults()
         self.initImages()
-#        self.data.loadEvent()
-#        self.data.loadImage()
         self.update()
 
     def initResults(self):
@@ -94,24 +92,22 @@ class ImageChecker(Tk):
         path = filedialog.askopenfilename(parent=self,
                                           title="Please select results database...",
                                           initialdir=self.respath)
-        if path:
+        if path is not None:
             try:
-                self.data.initEvents(path)
-                self.data.loadEvent()
-            except (OSError, IndexError):
+                self.data.initEvents("sqlite:///"+path)
+            except (OSError, IndexError, FileNotFoundError):
                 self.rightFrame.failedEventLoadScreen()
         else:
             self.rightFrame.failedEventLoadScreen()
 
     def initImages(self):
         """Prompt user for the directory containing all the images in the DB."""
-        path = filedialog.askdirectory(parent=self,
-                                       title="Please select image folder...",
-                                       initialdir=self.imgpath)
-        if path:
+        path = filedialog.askopenfilename(parent=self,
+                                          title="Please select image database...",
+                                          initialdir=self.imgpath)
+        if path is not None:
             try:
-                self.data.initImages(path)
-                self.data.loadImage()
+                self.data.initImages("sqlite:///"+path)
             except (OSError, IndexError, FileNotFoundError):
                 self.leftFrame.failedImageLoadScreen()
         else:

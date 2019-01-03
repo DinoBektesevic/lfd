@@ -46,14 +46,13 @@ class LeftFrame(Frame):
 
     def update(self):
         """Updates the canvas and handles the errors."""
-        try: self.data.loadImage()
-        except (IndexError, FileNotFoundError):
-            self.failedImageLoadScreen()
-
         if self.data.image is not None:
             self.canvas.delete("all")
-            self.img = ImageTk.PhotoImage(self.data.image)
+            tmpimg = Image.open(self.data.image.imgpath)
+            # a reference to the image has to be kept, otherwise img is lost
+            self.img = ImageTk.PhotoImage(tmpimg)
             self.canvas.create_image(0, 0, image=self.img, anchor=NW)
+
             try:
                 self.drawline()
             except AttributeError:
@@ -67,6 +66,7 @@ class LeftFrame(Frame):
         self.canvas.delete("all")
         tmppath = os.path.split(__file__)[0]
         tmpimg = Image.open(os.path.join(tmppath, "noimage.png"))
+        # a reference to the image has to be kept, otherwise img is lost
         self.img = ImageTk.PhotoImage(tmpimg)
         self.canvas.create_image(0, 0, image=self.img, anchor=NW)
 
@@ -99,8 +99,8 @@ class LeftFrame(Frame):
                 point 2 of the Event. A string, either '1' or '2'.
         """
         #y2 = self.data.event.y2
-        x = sx*self.parent.resize_x
-        y = sy*self.parent.resize_y
+        x = sx*self.root.resize_x
+        y = sy*self.root.resize_y
         if which == "1":
             #y = (y1+y2)/2.0
             self.data.event.x1 = x

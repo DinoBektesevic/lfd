@@ -22,13 +22,11 @@ class RightFrame(Frame):
 
     def update(self):
         """Calls the update methods of each subframe in the correct order and
-        handles failures. 
+        handles failures.
         """
         # in this case it's only the top right frame, displaying the data, that
         # needs to be updated as the action elements need to stay put.
-        try:
-            self.data.loadEvent()
-        except IndexError:
+        if self.data.event is None:
             self.failedEventLoadScreen()
         else:
             self.topRight.updateImageData()
