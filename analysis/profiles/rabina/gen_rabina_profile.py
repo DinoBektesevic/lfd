@@ -120,19 +120,19 @@ def rotate_2Dgaus_range(x, y, z, thetamin, thetamax, my_dpi, Npoints, step=0.1,
     for i in angles:
         rx, ry, rz = rotate_func_theta(x, y, z, i)
         rx2, ry2, rz2 = rotate_func_theta(xp, yp, zp, i)
-        
+
         rx, ry, rz = rx+5.0, ry+5.0, rz+5.0
         rx2, ry2, rz2 = rx2+5.0, ry2+5.0, rz2+5.0
 
         leveled = rz-rz2
         levs = np.linspace(leveled.min(), leveled.max(), 1000)
-    
+
         fig = plt.figure(figsize=(Npoints/float(my_dpi),
                                   Npoints/float(my_dpi)), dpi=my_dpi)
         fig.subplots_adjust(bottom=0., left=0., right=1., top=1.)
         ax = fig.add_subplot(111)
         ax.contourf(rx, ry, leveled, levs, cmap="gray_r")
-        
+
         plt.savefig('Rabina/img{0}_r.png'.format(int(i*10)),dpi=my_dpi)
         #plt.show()
         plt.cla()
@@ -163,7 +163,7 @@ def rotate_Rabina_range(x, y, z, thetamin, thetamax, my_dpi, Npoints, step=0.1,
     #angles = np.arange(thetamin, thetamax, step)
     #nangl = len(angles)
     angles = [0.0, 0.523599, np.pi/2.0001]
-    
+
     for i in angles:
         rx, ry, rz = rotate_func_theta(x, y, z, i, axis=[0.0, 1.0, 0.0])
         w = gen_Rabina(rx, ry, rz)
@@ -171,7 +171,7 @@ def rotate_Rabina_range(x, y, z, thetamin, thetamax, my_dpi, Npoints, step=0.1,
         normed *= 255.0
         normed += 1.0
         levs = np.linspace(normed.min(), normed.max(), 1000)
-    
+
         fig = plt.figure(figsize=(Npoints/float(my_dpi),
                                   Npoints/float(my_dpi)), dpi=my_dpi)
         fig.subplots_adjust(bottom=0., left=0., right=1., top=1.)
@@ -183,7 +183,7 @@ def rotate_Rabina_range(x, y, z, thetamin, thetamax, my_dpi, Npoints, step=0.1,
         #normed = w/w.max()
 
         #ax.plot_surface(rx, ry, normed, color='red',alpha=0.65, linewidth=1)
-        
+
         plt.savefig('Rabina/img{0}_r.png'.format(int(i*10)),dpi=my_dpi)
         #plt.show()
         plt.cla()
@@ -191,7 +191,7 @@ def rotate_Rabina_range(x, y, z, thetamin, thetamax, my_dpi, Npoints, step=0.1,
         plt.close()
         #break
 
-        
+
 
 ###############################################
 ### Generate Distributions

@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from .convolutionobj import ConvolutionObject
+from .consts import *
 
 class PointSource(ConvolutionObject):
     """Simple point like source. Point-like sources are not resolved, therefore
@@ -105,12 +106,13 @@ class DiskSource(ConvolutionObject):
 
 
 class RabinaProfile(ConvolutionObject):
-    """ Rabina J., et al. 2016, J. Quant. Spectrosc. Radiat. Transf,178, 295
-    provide a fiducial 3D model of the meteor head. The integration of this
-    profile is complicated and depends on variety of parameters, such as the
-    angle of the observer linesight and meteor direction of travel. It is not
-    practical to preform the integration every time brightness value needs to
-    be estimated (too slow).
+    """Bektesevic & Vinkovic 2017, MNRAS, 471, 2626 (arxiv: 1707.07223) Eq. (9)
+    a 1D integrated projection of the fiducial 3D meteor head model as given by
+        Rabina J., et al. 2016, J. Quant. Spectrosc. Radiat. Transf,178, 295
+    The integration of this profile is complicated and depends on variety of
+    parameters, such as the angle of the observer linesight and meteor
+    direction of travel. It is not practical to preform the integration every
+    time brightness value needs to be estimated (too slow).
     A set of pregenerated projections of this profile to a plane  were created
     where the angle between meteor direction of travel and observer linesight
     varies in the range from 0-1.5 radians (0-86 degrees) which are then used

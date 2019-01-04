@@ -10,7 +10,7 @@ def largest_common_scale(*args):
     It is very important that the scale of the two convolved functions is the
     same! F.e. convolving a functions with scale lengths of 1 arcsecond and 1
     degree is drastically different than convolving functions with the same
-    scale length. 
+    scale length.
     """
     left = min([obj.scaleleft for obj in args])
     right = max([obj.scaleright for obj in args])
