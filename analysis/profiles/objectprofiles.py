@@ -1,7 +1,13 @@
+import copy
+
 import numpy as np
+from scipy import stats
 import cv2
+
 from .convolutionobj import ConvolutionObject
 from .consts import *
+
+__all__ = ["PointSource", "GaussianSource", "DiskSource", "RabinaSource"]
 
 class PointSource(ConvolutionObject):
     """Simple point like source. Point-like sources are not resolved, therefore
@@ -23,19 +29,38 @@ class PointSource(ConvolutionObject):
         ConvolutionObject.__init__(self, obj, scale)
 
     def f(self, r):
-        """Returns the intensity value of the object at a point."""
+        """Returns the intensity value of the object at a point. Evaluating a
+        point source over only handfull of points is not well defined. The
+        function may not behave properly if number of points is very small,
+        i.e. 2 or 3 points only.
+        """
         if hasattr(r, "__iter__"):
-            obj = np.zeros(r.shape)
-            obj[len(obj)/2] += 1.0
+            # if PointSource is evaluated over an array with finer grid than
+            # scale and we calculate the values we would get max value for all
+            # points closer than current scale step - this wouldn't be a point
+            # so instead a new array of same shape is returned with only 1
+            # element at max - a point source. We make a check if r is ndarray
+            # or just a list or tuple
+            try:
+                obj = np.zeros(r.shape)
+            except AttributeError:
+                obj = np.zeros(len(r))
+            obj[int(len(obj)/2)] += 1.0
             return obj
         else:
+            # in the case where we evaluate at a singular point 
+            # if the position is closer to the location of the peak than the
+            # resolution of our scale - we are looking at the source, otherwise
+            # we are looking somewhere else
             peak = np.where(self.obj == self.obj.max())[0][0]
             if (r - self.scale[peak]) <= self.step:
-                return self.obj.max()
+                # standardize the output format to numpy array even in case of
+                # a single number
+                return np.array([self.obj.max()])
             else:
-                return 0
+                return np.array([0.0])
 
-class Gauss(ConvolutionObject):
+class GaussianSource(ConvolutionObject):
     """Simple gaussian intensity profile.
 
          init params
@@ -46,14 +71,26 @@ class Gauss(ConvolutionObject):
     units - spatial units (meters by default)
     """
     def __init__(self, h, fwhm, res=0.001, units="meters"):
-        theta = fwhm/(h*1000.)*RAD2ARCSEC
 
-        self.scale = np.arange(-1.7*theta, 1.7*theta, theta*res)
+        self.theta = fwhm/(h*1000.)*RAD2ARCSEC
         self.sigma = fwhm/2.355
-        self.f = stats.norm(scale=fwhm/2.355).pdf
+        self._f = stats.norm(scale=fwhm/2.355).pdf
 
-        obj = self.f(self.scale)
-        ConvolutionObject.__init__(self, obj, self.scale)
+        scale = np.arange(-1.7*self.theta, 1.7*self.theta, self.theta*res)
+        obj = self.f(scale)
+        ConvolutionObject.__init__(self, obj, scale)
+
+    def f(self, r):
+        """Evaluate the gaussian at a point."""
+        # standardize the output format to numpy array even in case of a number
+        if any((isinstance(r, int), isinstance(r, float),
+               isinstance(r, complex))):
+            rr = np.array([r], dtype=float)
+        else:
+            rr = np.array(r, dtype=float)
+
+        return self._f(rr)
+
 
 class DiskSource(ConvolutionObject):
     """Brightness profile of a disk-like source.
@@ -65,33 +102,46 @@ class DiskSource(ConvolutionObject):
     res    - desired resolution
     """
     def __init__(self, h, radius, res=0.001):
-        theta = radius/(2*h*1000.) * RAD2ARCSEC
-
         self.r = radius
-        self.theta = theta
-        self.scale = np.arange(-2*theta, 2*theta, theta*res)
+        self.theta = radius/(2*h*1000.) * RAD2ARCSEC
 
-        obj = self.f(self.scale)
-        ConvolutionObject.__init__(self, obj, self.scale)
+        scale = np.arange(-2*self.theta, 2*self.theta, self.theta*res)
+        obj = self.f(scale)
+
+        ConvolutionObject.__init__(self, obj, scale)
+
 
     def f(self, r, units="arcsec"):
         """Returns the brightness value of the object at a point. By default
         the units of the scale are arcseconds but radians are also accepted.
         """
-        if units.upper() == "RAD":
-            r = np.multiply(r, RAD2ARCSEC)
-        if hasattr(r, "__iter__"):
-            pass
-        else:
-            r = np.asarray(r)
-        return np.asarray(map(self._f, r))
+        # 99% (578x) speedup was achieved refactoring this code - Jan 2018 
 
-    def _f(self, x):
-        theta = self.theta
-        if abs(x) > theta:
-            return 0
+        # standardize the output format to numpy array even in case of a number
+        if any((isinstance(r, int), isinstance(r, float),
+               isinstance(r, complex))):
+            rr = np.array([r], dtype=float)
         else:
-            return 2*np.sqrt(theta*theta-x*x)/(np.pi*self.theta*self.theta)
+            rr = np.array(r, dtype=float)
+
+        if units.upper() == "RAD":
+            rr = rr*RAD2ARCSEC
+
+        theta = self.theta
+        _f = lambda x: 2*np.sqrt(theta**2-x**2)/(np.pi*theta**2)
+
+        # testing showed faster abs performs faster for smaller arrays and
+        # logical_or outperforms abs by 12% for larger ones 
+        if len(rr) < 50000:
+            mask = np.abs(rr)>=theta
+        else:
+            mask = np.logical_or(rr>theta, rr<-theta)
+
+        rr[mask] = 0
+        rr[~mask] = _f(rr[~mask])
+
+        return rr
+
 
     def width(self):
         """FWHM is not a good metric for measuring the end size of the object
@@ -105,15 +155,15 @@ class DiskSource(ConvolutionObject):
         return right-left
 
 
-class RabinaProfile(ConvolutionObject):
-    """Bektesevic & Vinkovic 2017, MNRAS, 471, 2626 (arxiv: 1707.07223) Eq. (9)
+class RabinaSource(ConvolutionObject):
+    """Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223) Eq. (9)
     a 1D integrated projection of the fiducial 3D meteor head model as given by
         Rabina J., et al. 2016, J. Quant. Spectrosc. Radiat. Transf,178, 295
     The integration of this profile is complicated and depends on variety of
     parameters, such as the angle of the observer linesight and meteor
     direction of travel. It is not practical to preform the integration every
     time brightness value needs to be estimated (too slow).
-    A set of pregenerated projections of this profile to a plane  were created
+    A set of pregenerated projections of this profile to a plane were created
     where the angle between meteor direction of travel and observer linesight
     varies in the range from 0-1.5 radians (0-86 degrees) which are then used
     to produce this 1D profile. The 1D profile is created from a crosssection
@@ -135,10 +185,10 @@ class RabinaProfile(ConvolutionObject):
 
     def __init__(self, imgpath, h):
         #xmin, xmax = RabinaProfile.xmin, RabinaProfile.xmax
-        ymin, ymax = RabinaProfile.ymin, RabinaProfile.ymax
+        #ymin, ymax = RabinaSource.ymin, RabinaSource.ymax
 
         #xstep = (xmax-xmin)/RabinaProfile.N
-        ystep = (ymax-ymin)/RabinaProfile.N
+        ystep = (RabinaSource.ymax- RabinaSource.ymin)/RabinaSource.N
 
         imgneg = cv2.imread(imgpath, cv2.IMREAD_GRAYSCALE)
         white = 255.*np.ones(imgneg.shape)
@@ -149,7 +199,7 @@ class RabinaProfile(ConvolutionObject):
         imgrn = imgr/imgr.max()
 
         #meterscalex = np.arange(xmin, xmax, xstep)
-        meterscaley = np.arange(ymin, ymax, ystep)
+        meterscaley = np.arange( RabinaSource.ymin,  RabinaSource.ymax, ystep)
 
         #scalex = meterscalex/(h*1000.) * RAD2ARCSEC
         scaley = meterscaley/(h*1000.) * RAD2ARCSEC
@@ -163,21 +213,29 @@ class RabinaProfile(ConvolutionObject):
 
     def f(self, r, units="arcsec"):
         """Returns the brightness value at a desired point."""
+        # 10x aster than previous impementation - Jan 2018
+
+        # standardize the output format
+        if any((isinstance(r, int), isinstance(r, float),
+               isinstance(r, complex))):
+            rr = np.array([r], dtype=float)
+        else:
+            rr = np.array(r, dtype=float)
+
         if units.upper() == "RAD":
-            rarcsec = np.multiply(r, RAD2ARCSEC)
+            rr = rr*RAD2ARCSEC
+        
+        # testing showed faster abs performs faster for smaller arrays and
+        # logical_or outperforms abs by 12% for larger ones 
+        if len(rr) < 50000:
+            mask = np.abs(rr)>=self.scaley[-1]
         else:
-            if not hasattr(r, "__iter__"):
-                rarcsec = np.asarray([r])
-            else:
-                rarcsec = r
-        return np.asarray(map(self._f, rarcsec))
+            mask = np.logical_or(rr>self.scaley[-1], rr<-scaley[-1])
 
+        rr[mask] = 0
+        rr[~mask] = self._guessf(rr[~mask])
+        return rr
 
-    def _f(self, x):
-        if abs(x) >= self.scaley[-1]:
-            return 0
-        else:
-            return self._guessf(x)
 
 def exp_fwhms(tau, n, duration):
     """Generates series of n exponentially smaller FWHM values depending on the
