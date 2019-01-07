@@ -16,19 +16,6 @@ class Indexer:
       init parameters
     -------------------
     items    - list of unique ids of the objects from the db
-    dbcong   - a dictionary containing the following keys and values
-               connector :        a callable that takes a URI, creates an
-                                  engine to the database, maps the tables and
-                                  creates a Session object. Since engine and
-                                  Session should persist through the lifetime
-                                  of the Indexer these should be declared as a
-                                  module global values to which session_manager
-                                  can hook to (see imagedb.py or __init__.py of
-                                  results module for implementation details)
-                session_manager : a context manager for instantiated Session
-                                  (see imagedb.py or utils.py of results)
-                table           : the ORM class that maps the table(s) in the
-                                  database.
 
       attributes
     -------------------
@@ -38,35 +25,23 @@ class Indexer:
                  currently selected row of the db
     item       - currently selected object, dynamically loaded from the database
     """
-    def __init__(self, items=None, dbconf=None):
+    def __init__(self, items=None):
         self.item = None
         self.items = [None]
         self.current = None
-        self.dbconf = {
-            "connector": None,
-            "session_manager" : None,
-            "table" : None
-        }
 
         if items is not None:
             self.items = items
             self.current = 0
 
-        if dbconf is not None:
-            self.dbconf = dbconf
-
         self.maxindex = len(self.items)
+        # loads the first item into self.item, if possible
+        self.get()
 
     def initFromDB(self, dbURI):
-        """Given a db URI connects to it and indexes all rows found in it."""
-        db = self.dbconf
-        db["connector"](dbURI)
-        with db["session_manager"]() as session:
-            items = [id for id, in session.query(db["table"].id).all()]
-        self.items = items
-        self.current = 0
-        self.maxindex = len(self.items)
-        self.get()
+        """Connects to the given DB URI and indexes wanted rows from it."""
+        raise NotImplementedError(("The implementations needs to be defined "
+                                   "by a specific child class."))
 
     def __step(self, step):
         """Makes a positive (forward) or negative (backwards) step in the list
@@ -112,54 +87,22 @@ class Indexer:
             steps = index-self.current
         self.skip(steps)
 
-
-    def __getFromFrameIds(self, run, camcol, filter, field, which):
+    def _getFromFrameId(self, *args, **kwargs):
         """Given a frame identifier (run, camcol, filter, field), and possibly
         `which`, queries the database for the object and returns it.
-        In case multiple objects correspond to the same frame identifier `which`
-        selects which of the returned results are desired.
-        The returned object is expunged from the database session.
+        Should be implementation specific perogative of classes that inehrit
+        from Indexer.
         """
-        db = self.dbconf
-        with db["session_manager"]() as session:
-            query = session.query(db["table"]).filter(db["table"].run==run,
-                                                      db["table"].filter==filter,
-                                                      db["table"].camcol==camcol,
-                                                      db["table"].field==field)
-            items = query.all()
-            if len(items) > 1:
-                item = items[which][0]
-            elif len(items) == 1:
-                item = items[0]
-            else:
-                return None
+        raise NotImplementedError(("Implementation needs to be defined by a "
+                                   "specific child class."))
 
-            insp = sql.inspect(item)
-            relationships = insp.mapper.relationships.keys()
-            for relative in relationships:
-                session.expunge(getattr(item, relative))
-            session.expunge(item)
-        return item
-
-    def __getFromItemId(self, itemid):
+    def _getFromItemId(self, *args, **kwargs):
         """Given an unique object id queries the database for the row and
         returns it as an appropriate object. The returned object is expunged
         from the database session.
         """
-        db = self.dbconf
-        with db["session_manager"]() as session:
-            q = session.query(db["table"])
-            q = q.filter(db["table"].id==itemid)
-            item = q.first()
-            if item is not None:
-                # objects potentially have many relationships that also need to
-                # be expunged if we want them to be visible after session.close
-                insp = sql.inspect(item)
-                relationships = insp.mapper.relationships.keys()
-                for relative in relationships:
-                    session.expunge(getattr(item, relative))
-                session.expunge(item)
-        return item
+        raise NotImplementedError(("Implementation needs to be defined by a "
+                                   "specific child class."))
 
     def get(self, run=None, camcol=None, filter=None, field=None, which=0,
             itemid=None):
@@ -172,18 +115,23 @@ class Indexer:
         In some cases the frame identifiers can be shared among multiple rows
         (i.e. multiple Events on a Frame) in which case providing 'which' makes
         it possible to select a particular item from the returned set.
+
+        The selected item is expunged from the session.
         """
         if all([run, camcol, filter, field]):
-            item = self.__getFromFrameIds(run, camcol, filter, field, which)
+            item = self._getFromFrameId(run, camcol, filter, field, which)
             if item is not None:
                 self.goto(itemid=item.id)
         elif itemid is not None:
-            item = self.__getFromItemId(itemid)
+            item = self._getFromItemId(itemid)
             if item is not None:
                 self.goto(itemid=itemid)
         else:
-            itemid = self.items[self.current]
-            item = self.__getFromItemId(itemid)
+            if self.current is None:
+                item = None
+            else:
+                itemid = self.items[self.current]
+                item = self._getFromItemId(itemid)
 
         self.item = item
 
@@ -194,14 +142,53 @@ class EventIndexer(Indexer):
     """
     def __init__(self,  URI=None):
         super().__init__()
-        self.dbconf = {
-            "connector" : res.connect2db,
-            "session_manager" : res.session_scope,
-            "table" : Event
-        }
 
         if URI is not None:
             self.initFromDB(URI)
+
+    def initFromDB(self, uri):
+        res.connect2db(uri)
+        with res.session_scope() as session:
+            events = [id for id, in session.query(Event.id).all()]
+        super().__init__(items=events)
+
+    def _getFromFrameId(self, run, camcol, filter, field, which=0):
+        """Given a frame identifier (run, camcol, filter, field), and possibly
+        `which`, queries the database for the object and returns it.
+        In case multiple objects correspond to the same frame identifier, which
+        selects which one of the returned results are desired.
+        The returned object is expunged from the database session.
+        """
+        with res.session_scope() as session:
+            query = session.query(Event).filter(Event.run==run,
+                                                Event.filter==filter,
+                                                Event.camcol==camcol,
+                                                Event.field==field)
+            events = query.all()
+            if len(events) > 1:
+                event = events[which][0]
+            elif len(events) == 1:
+                event = events[0]
+            else:
+                return None
+
+            session.expunge(event.frame)
+            session.expunge(event)
+        return event
+
+    def _getFromItemId(self, eventid):
+        """Given an unique evet id queries the database for the row and
+        returns it as an appropriate object.
+        The returned object is expunged from the database session.
+        """
+        with res.session_scope() as session:
+            q = session.query(Event)
+            q = q.filter(Event.id==eventid)
+            event = q.first()
+            if event is not None:
+                session.expunge(event.frame)
+                session.expunge(event)
+        return event
 
     @property
     def event(self):
@@ -222,14 +209,52 @@ class ImageIndexer(Indexer):
     """
     def __init__(self,  URI=None):
         super().__init__()
-        self.dbconf = {
-            "connector" : imagedb.connect2db,
-            "session_manager" : imagedb.session_scope,
-            "table" : Image
-        }
-
+    
         if URI is not None:
             self.initFromDB(URI)
+
+    def initFromDB(self, uri):
+        imagedb.connect2db(uri)
+        with imagedb.session_scope() as session:
+            images = [id for id, in session.query(Image.id).all()]
+        super().__init__(items=images)
+
+    def _getFromFrameId(self, run, camcol, filter, field, which=0):
+        """Given a frame identifier (run, camcol, filter, field), and possibly
+        `which`, queries the database for the object and returns it.
+        In case multiple objects corimagedbpond to the same frame identifier, which
+        selects which one of the returned imagedbults are desired.
+        The returned object is expunged from the database session.
+        """
+        with imagedb.session_scope() as session:
+            query = session.query(Image).filter(Image.run==run,
+                                                Image.filter==filter,
+                                                Image.camcol==camcol,
+                                                Image.field==field)
+            images = query.all()
+            if len(images) > 1:
+                image = images[which][0]
+            elif len(images) == 1:
+                image = images[0]
+            else:
+                return None
+
+            session.expunge(image)
+        return image
+
+    def _getFromItemId(self, imageid):
+        """Given an unique evet id queries the database for the row and
+        returns it as an appropriate object.
+        The returned object is expunged from the database session.
+        """
+        with imagedb.session_scope() as session:
+            query = session.query(Image)
+            query = query.filter(Image.id==imageid)
+            image = query.first()
+            if image is not None:
+                session.expunge(image)
+        return image
+
 
     @property
     def image(self):
