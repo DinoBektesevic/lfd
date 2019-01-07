@@ -138,7 +138,7 @@ class Indexer:
 
 class EventIndexer(Indexer):
     """Indexes Events database providing a convenient way to establish order
-    among the items. 
+    among the items.
     """
     def __init__(self,  URI=None):
         super().__init__()
@@ -205,7 +205,7 @@ class EventIndexer(Indexer):
 
 class ImageIndexer(Indexer):
     """Indexes Image database providing a convenient way to establish order
-    among the items. 
+    among the items.
     """
     def __init__(self,  URI=None):
         super().__init__()
