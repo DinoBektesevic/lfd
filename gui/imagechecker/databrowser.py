@@ -57,6 +57,12 @@ class Browser(metaclass=GenericBrowser):
     def _initPrimary(self, URI):
         """Instantiate the primary indexer"""
         self.__primary = self.primaryIndexer(URI)
+        run    = self.__primary.item.run
+        camcol = self.__primary.item.camcol
+        filter = self.__primary.item.filter
+        field  = self.__primary.item.field
+        if self.__secondary is not None:
+            self.__secondary.get(run, camcol, filter, field)
 
     def _initSecondary(self, URI):
         """Instantiate the secondary indexer"""
@@ -69,7 +75,7 @@ class Browser(metaclass=GenericBrowser):
 
     def getNext(self):
         """Advance the index of the primary by a step and then find if the
-        secondary contains the newly selected object. 
+        secondary contains the newly selected object.
         """
         if self.__primary is not None:
             self.__primary.next()
@@ -78,7 +84,7 @@ class Browser(metaclass=GenericBrowser):
                                field=tmp.field)
     def getPrevious(self):
         """Regress the index of the primary by a step and then find if the
-        secondary contains the newly selected object. 
+        secondary contains the newly selected object.
         """
         if self.__primary is not None:
             self.__primary.previous()
