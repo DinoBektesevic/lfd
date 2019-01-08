@@ -235,7 +235,7 @@ def setup(bosspath, photoobjpath, photoreduxpath, debugpath):
         be left as None in which case it will default to the current directory.
         See detecttrails help to see how to turn on debug mode, not used by
         default.
-    """    
+    """
     global BOSS, DEBUG_PATH, PHOTO_REDUX, BOSS_PHOTOOBJ
     import os
 
@@ -243,7 +243,7 @@ def setup(bosspath, photoobjpath, photoreduxpath, debugpath):
     if photoobjpath is None:
         photoobjpath   = BOSS_PHOTOOBJ
     if photoreduxpath is None:
-        photoreduxpath = PHOTO_REDUX        
+        photoreduxpath = PHOTO_REDUX
     if debugpath is None:
         # default to invocation directory
         debugpath = os.path.abspath(os.path.curdir)

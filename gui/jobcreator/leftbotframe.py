@@ -74,7 +74,7 @@ class BotFrame(Frame):
         self.savetmpbtn.grid(row=row+3, column=col+1, pady=5,
                                sticky=W+E)
 
-    def setSavePath(self):
+    def setSavePathWithPrompt(self):
         """Callback that will spawn a directory selector through which a new
         path, where the job DQS files will be saved, can be selected.
         """
@@ -97,11 +97,11 @@ class BotFrame(Frame):
         Will cause an update of the RightFrame to redisplay the newly selected
         template.
         """
-        initdir = os.path.dirname(self.tmpltpath)
+        initdir = os.path.dirname(self.tmpltpath.get())
         newpath = filedialog.askopenfilename(parent=self,
                                              title="Please select a template.",
                                              initialdir=self.tmpltpath)
-        self.templpath.set(newpath)
+        self.tmpltpath.set(newpath)
         self.updateTemplatePath(newpath, showerr=True)
 
     def updateTemplatePath(self, path, showerr=False):
