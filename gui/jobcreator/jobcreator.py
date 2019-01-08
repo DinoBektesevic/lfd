@@ -13,6 +13,42 @@ from tkinter import messagebox
 
 import lfd.createjobs as cj
 
+
+class SetupPopUp:
+    """A TopLevel popup that will lock the main App and allow users to set up
+    the required environmental paths to the SDSS data before unlocking the App
+    again.
+
+    Without those paths the createjobs module will likely not be able to create
+    jobs. 
+    """
+    def __init__(self, parent):
+        self.top = Toplevel(parent)
+        self.top.wm_title("Envionment not set up properly!")
+        txt = ("Environment is missing BOSS and/or PHOTO_REDUX env variables.\n"
+               "Please provide the PHOTO_REDUX path. See"
+               "help(createjobs.setup.) for details.")
+
+        self.explainLabel = Label(self.top, text=txt)
+        self.explainLabel.pack()
+
+        self.photoreduxSV = StringVar()
+        self.pathEntry = Entry(self.top)
+        self.pathEntry.pack(padx=5)
+
+        self.okButton = Button(self.top, text="OK", command=self.ok)
+        self.okButton.pack(pady=5)
+        self.top.grab_set()
+
+    def ok(self):
+        """A callback function that will call the createjobs setup function,
+        unlock the main app and destroy the popup.
+        """
+        cj.setup(self.photoreduxSV.get())
+        self.top.grab_release()
+        self.top.destroy()
+
+
 class JobCreator(Tk):
     """Class for the GUI that interfaces createjobs package. Not all options
     are seamlessly supported. To execute it instantiate the class and run its
@@ -34,8 +70,6 @@ class JobCreator(Tk):
         Tk.__init__(self)
         self.geometry(utils.centerWindow(self, 1040, 750))
 
-        self.check_setup()
-
         # we create a default Job instance so that we could take advantage of
         # all the defaults defined in the createjobs module. Its state is NOT
         # changed anywhere in the code nor is the Job itself used to create the
@@ -55,33 +89,22 @@ class JobCreator(Tk):
 
         self.title("Job Creator")
 
-    def  check_setup(self):
-        """Checks if the required environment variables are set so that
-        createjobs module can work properly. If $BOSS is set up then default
-        $PHOTO_REDUX path is assumed, if not $PHOTO_REDUX path is prompted for.
+        self.check_setup()
+
+
+    def check_setup(self):
+        """If BOSS or PHOTO_REDUX environemntal paths to the SDSS data were not
+        set up before launching the app spawns a popup that will let users
+        set the required minimal path to data.
+        If the toplevel directory $BOSS variable is set up and $PHOTO_REDUX is
+        not it is assumed that the SDSS convention is followed and $PHOTO_REDUX
+        is set to $BOSS/photo/redux.
         """
-        if "BOSS" in os.environ:
+        if ("BOSS" in os.environ) and not ("PHOTO_REDUX" in os.environ):
             cj.setup()
 
-        if not("BOSS" in os.environ) or not ("PHOTO_REDUX" in os.environ):
-            t = Toplevel(self)
-            t.wm_title("Environment is not set up properly!")
-            txt = ("Environment is missing BOSS and/or PHOTO_REDUX env variables.\n"
-                   "Please provide the PHOTO_REDUX path. "
-                   "See help(createjobs.setup.) for more details.")
-            l = Label(t, text=txt)
-            l.pack(side=TOP, fill="both")
-            photoredux = StringVar()
-            e = Entry(t, textvariable=photoredux, width=50)
-            e.pack(side=TOP)
-            
-        def setup_callback():
-            cj.setup(photoredux.get())
-            t.destroy()
-
-        b = Button(t, text="OK", width=15, command=setup_callback)
-        b.pack()
-
+        if not ("BOSS" in os.environ) or not ("PHOTO_REDUX" in os.environ):
+            tplvl = SetupPopUp(self)
 
     def create(self):
         """Changes the state of the Job instance of the application to write
