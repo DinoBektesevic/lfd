@@ -10,7 +10,8 @@ from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_L1,
                  CHAIN_APPROX_TC89_KCOS)
 
 from .removestars import * #remove_stars
-from .processfield import * #process_field_bright, process_field_dim, setup_debug
+from .processfield import * #process_field_bright, process_field_dim
+from .processfield import setup_debug
 from .sdss import files
 
 __all__ = ["DetectTrails", "process_field"]

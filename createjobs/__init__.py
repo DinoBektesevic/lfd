@@ -217,8 +217,8 @@ def setup(photoreduxpath=None):
       Parameters
     --------------
     photoreduxpath : The path to which PHOTO_REDUX env. var. will be set to.
-        If only bosspath is suplied it will default to BOSS/photoObj but is
-        left configurable if SDSS conventions are not followed.
+        If nothing is given it will default to $BOSS/photoObj but is left
+        configurable if SDSS conventions are not followed.
     """
     import os
 
