@@ -12,15 +12,32 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.abspath("/home/dino/Desktop"))
+
+#import os
+#import sys
+
+#pth = __file__.split("lfd/")[0]
+#print("ROOT PATH SET TO ", pth)
+#sys.path.insert(0, os.path.abspath(pth))
+
+
 #sys.path.insert(0, os.path.abspath("/home/dino/Desktop/lfd"))
 #sys.path.insert(0, os.path.abspath('.'))
 
 
-# -- Project information -----------------------------------------------------
+import sys
+from unittest.mock import MagicMock
 
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['cv2', 'opencv-python']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+
+# -- Project information -----------------------------------------------------
 project = 'lfd'
 copyright = '2019, Dino Bektesevic'
 author = 'Dino Bektesevic'
