@@ -14,7 +14,12 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath("/home/dino/Desktop"))
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    sys.path.insert(0, os.path.abspath('../'))
+else:
+    dsktppath = os.path.expanduser("~/Desktop")
+    sys.path.insert(0, os.path.abspath(dsktppath)
 #sys.path.insert(0, os.path.abspath("/home/dino/Desktop/lfd"))
 #sys.path.insert(0, os.path.abspath('.'))
 
