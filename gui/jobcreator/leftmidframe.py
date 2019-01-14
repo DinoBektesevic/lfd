@@ -12,12 +12,13 @@ from lfd.gui.utils import utils
 import lfd.results as results
 
 class MidFrame(Frame):
-    """Part of the LeftFrame of the GUI.
-    Contains the drop-down menu that selects the runs that will be processed.
-    Currently the option to select from results database are a bit wonky.
+    """Part of the LeftFrame of the GUI. Contains the drop-down menu that
+    selects the runs that will be processed. Currently the option to select
+    from results database are a bit wonky.
 
     Requires a parent Frame that has access to Job object so that the settings
     can propagate to it.
+
     """
     def __init__(self, parent, row=1, col=0):
         Frame.__init__(self, parent)
@@ -56,14 +57,15 @@ class MidFrame(Frame):
         that will triger the appropriate additional menus required to configure
         the job.
 
-        All - the runs are allowed to be undefined, createjobs package will
-            read the runlistAll file in $PHOTO_REDUX env var location for runs
-        Single - a pop-up with an entry field is displayed where only 1 run id
-            is permitted
-        List - a pop-up with a textbox is displayed where a list of runs is
-            given as a comma separated string
-        Results - a pop-up window that lets user select the DB from which jobs
-            will be created.
+        * All - the runs are allowed to be undefined, createjobs package will
+          read the runlistAll file in $PHOTO_REDUX env var location for runs
+        * Single - a pop-up with an entry field is displayed where only 1 run
+          id is permitted
+        * List - a pop-up with a textbox is displayed where a list of runs is
+          given as a comma separated string
+        * Results - a pop-up window that lets user select the DB from which
+          jobs will be created.
+
         """
         if selection == "All":
             self.runs = None
@@ -137,12 +139,13 @@ class MidFrame(Frame):
     def runFromSingle(self, parent, runs):
         """Callback function for the case when a 'Single' run source is chosen.
 
-            Params
-        -------------------
+        Parameters
+        ----------
         parent - the parent window that contains the widget that registers this
             callback. This window will be destroyed at the end of this func.
         runs - an Entry or a Text widget from which the value will be read out
             as.
+
         """
         # see selection=="Single" in selectRuns method (above)
         try:
@@ -157,8 +160,10 @@ class MidFrame(Frame):
         Entry changes. Specifically, tracks when the text value of an Entry
         used to select path to results database has changed. Updates the stored
         path to the results.
+
         Expects the arguments corresponding to the invocation of trace method
         of a StringVar.
+
         """
         # see selection=="Results" in selectRuns method (variable respathVar)
         self.respath = tmp[-1].get()
@@ -168,8 +173,10 @@ class MidFrame(Frame):
         Entry changes. Specifically, tracks when the text value of an Entry
         used to select URI path to results database has changed. Updates the
         stored URI path to the results.
+
         Expects the arguments corresponding to the invocation of trace method
         of a StringVar.
+
         """
         # see selection=="Results" in selectRuns method (variable uriVar)
         self.uri = tmp[-1].get()
@@ -210,10 +217,12 @@ class MidFrame(Frame):
     def getResultsDBPath(self, parent, update):
         """Opens a file dialog window that enables user to navigate through the
         filesystem to select their desired database of results.
+
         Expects to receive the parent window of the binding object and a
         StringVar that is used to represent this path. It will update its value
         which triggers its trace method, which updates the class attribute used
         to store the path to the database.
+
         """
         # see selection=="Results" in selectRuns method (Button e)
         respath = filedialog.askopenfilename(parent=parent,

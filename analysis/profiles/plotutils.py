@@ -1,3 +1,7 @@
+"""A collection of carious miscelaneous functionality that helps visualize the
+profiles and results of convolutions and their numerical values.
+
+"""
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -12,8 +16,9 @@ __all__ = ["plot_profiles"]
 def plot_profiles(ax, profiles, *args, normed=True, **kwargs):
     """Normalizes all given profiles and then plots them on a given axis. Set
     normed to False if normalization is not desired. Lables are determined from
-    the name attribute of the profile. *args and **kwargs are forwarded to the
-    matplotlib plot function.
+    the name attribute of the profile. `*args` and `**kwargs` are forwarded to
+    the matplotlib plot function.
+    
     """
     for profile in profiles:
         if normed:

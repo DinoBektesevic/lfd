@@ -1,18 +1,21 @@
+"""Event contains a single linear feature detected with all its measured
+parameters on a single Frame. Event is intended to be used as the basic object
+on which work is done, as it encompases all information (times, frame,
+points...) required. While that may be true, Event is still composed of
+multiple smaller movimg pieces with which it can have complex relationships
+with so there are some things worth remembering when working with Event.
+"""
 import sqlalchemy as sql
-from sqlalchemy.orm import relationship, composite, validates
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.orm import relationship, composite
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from astropy.time import Time
 
-from .basictime import BasicTime, LineTime
-from .frame import Frame
-from .point import Point
-from .coord_conversion import convert_frame2ccd, convert_ccd2frame
-from .ccd_dimensions import W_CAMCOL, H_FILTER
-from .utils import session_scope
-
 from . import Base
 from . import __query_aliases as query_aliases
+from .point import Point
+from .basictime import BasicTime, LineTime
+from .utils import session_scope
 
 __all__ = ["Event"]
 
@@ -22,113 +25,104 @@ class Event(Base):
     detection. Contains the measured properties of the feature and links to the
     Frame on which it was detected.
 
-      Attributes
-    ----------------
-    id       - PrimaryKey, autoincremental
-    _run     - run id (ForeignKey)
-    _camcol  - camcol id (ForeignKey)
-    _filter  - filter id (ForeignKey)
-    _field   - field id (ForeignKey)
-    frame    - Frame on which the linear feature was detected, a many to one
-               relationship to frames
-    x1, y1   - x, y frame coordinates of a point 1 of the linear feature
-    x2, y2   - x, y frame coordinates of a point 2 of the linear feature
-    cx1, cy2 - x, y ccd coordinates of a point 1 of the linear feature
-    cx2, cy2 - x, y ccd coordinates of a point 2 of the linear feature
-    p1       - see class Point composite Column mapping of x1, y1 to a point p1
-    p2       - see class Point,composite Column mapping of x2, y2 to a point p2
-    start_t  - if possible, the time of the first detection of the linear
-               feature on the frame, see class BasicTime
-    end_t    - if possible, the time of the last detection of the linear
-               feature on the frame, see class BasicTime
-    lt       - not very usefull, see class LineTime
+    Parameters
+    ----------
+    id : int
+      PrimaryKey, autoincremental
+    _run : int
+      run id (ForeignKey)
+    _camcol : int
+      camcol id (ForeignKey)
+    _filter : str
+      filter id (ForeignKey)
+    _field : int
+      field id (ForeignKey)
+    frame : sql.relationshitp
+      Frame on which the linear feature was detected, a many to one
+      relationship to frames
+    x1 : float
+      x frame coordinate of point 1 of the linear feature
+    y1 : float
+      y frame coordinate of point 1 of the linear feature
+    x2 : float
+      x frame coordinate of point 2 of the linear feature
+    y2 : float
+      y frame coordinate of point 2 of the linear feature
+    cx1 : float
+      x ccd coordinate of point 1 of the linear feature
+    cy2 : float
+      x ccd coordinate of point 1 of the linear feature
+    cx2 : float
+      x ccd coordinate of point 2 of the linear feature
+    cy2 :
+      y ccd coordinate of point 2 of the linear feature
+    p1 : 
+      see class Point composite Column mapping of x1, y1 to a point p1
+    p2 :
+      see class Point,composite Column mapping of x2, y2 to a point p2
+    start_t :
+      if possible, the time of the first detection of the linear feature on the
+      frame, see class BasicTime
+    end_t :
+      if possible, the time of the last detection of the linear feature on the
+      frame, see class BasicTime
+    lt :
+      not very usefull, see class LineTime
 
-      Usage
-    ----------------
+    Examples
+    --------
+
     A Frame object reference is required. See lfd.results.frame.Frame for
     documentation. At minimum, supply the Frame object and coordinates of two
     points defining a line:
-        foo = Event(Frame, 1, 1, 2, 2)
+
+    >>> foo = Event(Frame, 1, 1, 2, 2)
+
     By default the coordinates are considered to be in "frame" coordinate sys.
+    Optionally specify the "ccd" as the reference coordinate system:
 
-    Optionally it is possible to specify the "ccd" as the reference coordinate
-    sys, then the supplied coordinates are not assumed to be in the "frame"
-    coord. sys:
-        foo = Event(Frame, 1, 1, 2, 2, coordsys="ccd")
-    CAUTION: If the Frame camcol!=1 and filter!="r" an Error will be raised.
-    It is not possible to have CCD coordinates (1, 1) or (2, 2) except on the
-    first chip of the CCD-array which is the camcol=1, filter='r' chip.
+    >>> foo = Event(Frame, 1, 1, 2, 2, coordsys="ccd")
 
-    Additionally all values could be supplied:
-        foo = Event(Frame, 1, 1, 2, 2, 1, 1, 2, 2)
-    or verbosely:
-        foo = Event(frame=Frame, x1=1, y1=1, x2=2, y2=2,
-                    cx1=1, cy1=1, cx2=2, cy2=2, coordsys="frame")
+    Optionaly all values could be supplied:
+
+    >>> foo = Event(Frame, 1, 1, 2, 2, 1, 1, 2, 2)
+
     or on an example of a different CCD (4, 'i'):
-        foo = Event(f, 1, 1, 1, 1,
-                    11376.462868, 2709.4435401, 11376.462868, 2709.4435401)
-    CAUTION: This will only be possible if frame is set to correct CCD of the
-    CCD array, as explained, and if x1=cx1, y1=cy1, x2=cx2 and cy2=y2. Any
-    inconsistency in the coordinates would cause an error at instantiation.
+
+    >>> foo = Event(f, 1, 1, 1, 1, 11377, 27010, 11377, 2710)
+
+    or verbosely:
+
+    >>> foo = Event(frame=Frame, x1=1, y1=1, x2=2, y2=2, cx1=1, cy1=1, cx2=2,
+                    cy2=2, coordsys="frame")
+
+    .. caution::
+
+       When specifying coordinates in the ccd coordinate system be mindful of
+       the fact that coordinates (0, 0) in 'ccd' frame are upper left corner of
+       the ccd array (camcol 1, filter 'r'). It is not possible to have CCD
+       coordinates (1, 1) or (2, 2) except on the first chip of the CCD-array.
+       If the Frame reference is with respect to some other camcol and filter
+       the ccd coordinates must, otherwise an Error will be raised.
 
     It is possible to submit start or end time of the linear feature in any
     the following formats: Astropy Time object, float number in mjd format,
     float number in sdss-tai format:
+
     Astropy Time Object - supply an instantiated Astropy Time Object:
-        st = astropy.time.Time(58539.0, format="mjd")
-        et = astropy.time.Time("2019-02-25 00:00:10.000")
-        foo = Event(frame, 1, 1, 2, 2, start_t=st, end_t=et)
+
+    >>> st = astropy.time.Time(58539.0, format="mjd")
+    >>> et = astropy.time.Time("2019-02-25 00:00:10.000")
+    >>> foo = Event(frame, 1, 1, 2, 2, start_t=st, end_t=et)
+
     Any Astropy Time supported format such as mjd, iso, isot, jd etc...
-        foo = Event(frame, 1, 1, 2, 2, start_t= 63072064.184, format="cxcsec")
-    the SDSS modified tai format:
-        foo = Event(frame, 1, 1, 2, 2, end_t=4575925956.49, format="sdss-tai")
 
+    >>> foo = Event(frame, 1, 1, 2, 2, end_t=63072064.184, format="cxcsec")
 
-      Important Notes
-    -------------------
-    In short:
-    1) x1, y1, cx2 ... are properties and _x1, _y1 ... are the actual column
-       names
-    2) always change the coordinates through properties, or better yet p1, p2
-       Point objects
-    3) Points interpret the coordinates in frame-referenced mode
-    4) Frame properties can not be changed through Event
-    5) If Frame is changed the changes won't reflect on Event untill DB commit
-       is made.
+    or in the SDSS modified tai format:
 
-    In long:
-    Non-prefixed coordinates are properties of the Event class (i.e. x1, y1...).
-    The column names are prefixed with an underscore (i.e. _x1, _cx1...) and
-    should not be changed directly.
-    Point objects handle the coord conversions and maintain consistency among
-    the coordinates during interactive work. The table values are hot-wired to
-    Point objects through composites and properties. Changing prefixed values
-    directly can leave the DB in an inconsistent state from which it is hard
-    to recover. Always use the properties of Event or, better yet, the Point
-    objects themselves, available as attributes p1 and p2, to change coords.
+    >>> foo = Event(frame, 1, 1, 2, 2, start_t=4575925956.49, format="sdss-tai")
 
-    Point objects are dependant on the Frame object to provide a reference point
-    for conversion between the two coordinate systems. Therefore, changing the
-    Event's Frame should update the Event's coordinates, but this is only
-    enforced at instantiation time. Because of this it is possible to exit the
-    narrow definition of a consistent state when in interacive mode. If a Frame
-    attribute is changed - that change will not reflect in the Event object
-    until a DB commit is made.
-
-    Because a frame reference must always be provided for an Event the Point
-    will default to its referenced mode of interpreting the coordinates. Points
-    are allowed to exist outside of CCD areas where their camcol, filter and
-    'frame' coordinates are defined and an error will not be raised. For more
-    details see Point class.
-
-    Point objects will issue warnings or errors if inconsistent situations
-    arise. When a warning is issued, unless it's clearly understood and
-    expected, the best course of action is to issue a rollback. Otherwise DB
-    could be sent to an inconsistent state.
-
-    The start/end times are stored in the DB in the SDSS-TAI format. There are
-    some caveats when converting this time to MJD.
-    See: https://www.sdss.org/dr12/help/glossary/#tai
     """
     __tablename__ = "events"
     id = sql.Column(sql.Integer, primary_key=True)
@@ -295,10 +289,12 @@ class Event(Base):
         Interestingly, if working from 'frame' reference system it's not
         neccessary to know which reference frame we're looking at.
 
-          Params
-        -------------------
-        m - line slope
-        b - line y intercept
+        Parameters
+        ----------
+        m : float
+          line slope
+        b : float
+          line y intercept
         """
         # make new coords
         newx = []

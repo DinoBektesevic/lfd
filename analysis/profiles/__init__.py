@@ -10,7 +10,7 @@ Sources represent 1D integrated brightness profiles of different source
 distributions  as well as various parameters describing these distributions
 (such as FWHM, width, distance from instrument, variance etc.) in a common
 lookalike interface. They usually carry with them their resolution, scale or
-units.
+units (units are more for personal reference than actually useful).
 
 Convolving Sources with Seeing and/or Defocus profile produce a new Source,
 which brightness profile corresponds to that of an source which is affected by
@@ -21,21 +21,25 @@ corresponds to a defocused point source in ideal seeing (no seeing effects) etc
 The module also provides a light wrapper around plotting utilities in
 matplotlib (but this is by no means extensive).
 
-    Usage
----------------
->>> from lfd.analysis import profiles
+Examples
+--------
 
->>> point = profiles.PointSource(100)
->>> seeing = profiles.GausKolmogorov(profiles.SDSSSEEING)
->>> defocus = profiles.FluxPerAngle(100, *profiles.SDSS)
+.. code-block:: python
 
->>> a = profiles.convolve(point, seeing, defocus)
+     from lfd.analysis import profiles
 
->>> import matplotlib.pyplot as plt
->>> fig, ax = plt.subplots(1, 1)
->>> profiles.plot_profiles(ax, (point, seeing, defocus, a))
->>> plt.legend()
->>> plt.show()
+     point = profiles.PointSource(100)
+     seeing = profiles.GausKolmogorov(profiles.SDSSSEEING)
+     defocus = profiles.FluxPerAngle(100, *profiles.SDSS)
+
+     a = profiles.convolve(point, seeing, defocus)
+
+     import matplotlib.pyplot as plt
+     fig, ax = plt.subplots(1, 1)
+     profiles.plot_profiles(ax, (point, seeing, defocus, a))
+     plt.legend()
+     plt.show()
+
 """
 
 

@@ -1,3 +1,10 @@
+"""A slight missnomer of the module hides the fact that seeing contains both
+the 1D seeing profiles that reproduce the effects of atmospheric seeing on a
+object integrated brightness profile but also the defocus function as used and
+described in::
+
+  Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223)
+"""
 import numpy as np
 
 from .convolutionobj import ConvolutionObject
@@ -11,12 +18,15 @@ class GausKolmogorov(ConvolutionObject):
     """Simple Gaus-Kolmogorov seeing. Convolving with this function has the
     effect of blurring the original object.
 
-        init params
-    ------------------
-    fwhm  - FWHM of the GK 
-    scale - if scale is given then GK will be evaluated over it
-    res   - if it is not given a scale will be created from the estimated width
-            of the GK and resolution res
+    Parameters
+    ----------
+    fwhm : float
+      FWHM of the Gaus-Kolmogorov profile
+    scale : list, tuple or np.array
+      if scale is given then GK will be evaluated over it
+    res : float
+      if scale is not given one will be created from the estimated width of the
+      GK profile and resolution in arcseconds
     """
     def __init__(self, fwhm, scale=None, res=0.001):
 
@@ -54,18 +64,25 @@ class GausKolmogorov(ConvolutionObject):
 
 
 class FluxPerAngle(ConvolutionObject):
-    """The defocusing model as given by Equation (6) in
+    """The defocusing model as given by Equation (6) in::
+
         Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223)
 
-        init params
-    ------------------
-    d     - the width of the object 
-    Ro    - the diameter of the primary mirror of used instrument
-    Ri    - the diameter of secondary mirror of the used instrument
-    scale - if scale is not given, appropriate scale will be created from d, Ro
-            and Ri, otherwise provided scale is used
-    units - in arcseconds by default
-    res   - desired resoltion if scale is not given
+    Parameters
+    ----------
+    d : float
+      the width of the object, in meters(?)
+    Ro : float
+      the diameter of the primary mirror of used instrument, in milimeters
+    Ri : float
+      the diameter of secondary mirror of the used instrument, in milimeters
+    scale : list, tuple or np.array
+      if scale is not given, appropriate scale will be created from d, Ro and
+      Ri
+    units : str
+      in arcseconds by default - not very well supported
+    res : float
+      desired resolution in arcseconds, if scale is not given 
     """
     def __init__(self, d, Ro, Ri, scale=None, units="arcsec", res=0.001):
 

@@ -5,20 +5,21 @@ from lfd.gui.utils import multi_getattr
 class TopRight(Frame):
     """Top right part of the right frame. Used to display the data on currently
     selected Event.
+
+    Contains several customizable attributes such as:
+
+    * unverified_color- the color to display when the Event's verified flag
+      is False (DarkGoldenrod1 by default)
+    * falsepositive_color - the color to display when the Event is verified as
+      false positive (red by default)
+    * positive_color - color to display when the Event is verified as a
+      positive detection (DarkOliveGreen3)
+    * displayKeys - keys that will be displayed in the information table of the
+      Event. Any valid column name of Event is accepted, by default will be:
+      `[run, camcol, filter, field, frame.t.iso]`
+
     """
     def __init__(self, parent):
-        """Contains several customizable attributes such as:
-        unverified_color    - the color to display when the Event's verified
-                              flag is False (DarkGoldenrod1)
-        falsepositive_color - the color to display when the Event is verified
-                              as false positive (red)
-        positive_color      - color to display when the Event is verified as a
-                              positive detection (DarkOliveGreen3)
-        displayKeys         - keys that will be displayed in the information
-                              table of the Event. Any valid column name of Event
-                              is accepted, by default will be:
-                                  [run, camcol, filter, field, frame.t.iso]
-        """
         Frame.__init__(self, width=300)
         self.pack(side=TOP, fill=BOTH)
         #self.grid_propagate(False)
@@ -37,6 +38,7 @@ class TopRight(Frame):
         displaying the data of currently loaded Event. If there is no Event
         currently loaded, raises an IndexError (since the index of current
         Event is None).
+
         """
         # This is repeated in the failedEventLoadScreen and here so that the
         # order of the calls to these two functions would not matter

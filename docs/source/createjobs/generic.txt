@@ -1,0 +1,71 @@
+#!/usr/bin/ksh
+#PBS -N JOBNAME
+#PBS -S /usr/bin/ksh
+#PBS -q QUEUE
+#PBS -l nodes=NODEFLAG:ppn=PPN
+#PBS -l walltime=WALLCLOCK,cput=CPUTIME
+#PBS -m e
+#QSUB -eo -me
+
+SAVEFOLDER=RESULTSPATH
+
+cd ~
+user=`whoami`
+hss=`hostname`
+
+if  [ "$PBS_ENVIRONMENT" != "" ] ; then
+ TMPJOB_ID=$PBS_JOBID.$$
+ JOB_ID=${TMPJOB_ID%%[!0-9]*}.$$
+ ARC=`uname`
+fi
+
+nodefile=$PBS_NODEFILE
+if [ -r $nodefile ] ; then
+    nodes=$(sort $nodefile | uniq)
+else
+    nodes=localhost
+fi
+
+##Export paths user has to change as instructed by help(createjobs)
+##fitsdm is the fits unpack path, can be anywhere
+##BOSS should point to root boss folder with the files
+##that copies the sdss tree:
+##    boss/photo/redux/runList.par
+##    boss/photoObj/301/..... photoObj files
+##    boss/photoObj/frames/301/..... frames files
+export FITSDMP=/scratch/$hss/$user/fits_dump
+export BOSS=/scratch1/fermi-node02/dr10/boss
+export PHOTO_REDUX=$BOSS/photo/redux
+export BOSS_PHOTOOBJ=$BOSS/photoObj
+
+##Make sure we have all the necessary folders in place
+mkdir -p  /scratch/$hss/$user
+mkdir -p  /scratch/$hss/$user/test_trails
+mkdir -p /scratch/$hss/$user/fits_dump
+mkdir -p /home/fermi/$user/$SAVEFOLDER/
+mkdir -p /home/fermi/$user/$SAVEFOLDER/$JOB_ID
+
+cd /scratch/$hss/$user/test_trails
+mkdir -p  /scratch/$hss/$user/test_trails/$JOB_ID
+
+cd $JOB_ID
+echo $nodes >nodes #contains node identifier
+echo $PBS_EXEC_HOST >aaa2 #contains various host parameters
+set >aaa3 #contains host parameters
+
+cp /home/fermi/$user/run_detect/*.py* /scratch/$hss/$user/test_trails/$JOB_ID/
+mkdir sdss
+cp -r /home/fermi/$user/run_detect/sdss/* sdss/
+
+source ~/.bashrc #get the right python interp.
+
+COMMAND
+
+##Copy the results back to fermi, delete what you don't need anymore
+cp *.txt /home/fermi/$user/$SAVEFOLDER/$JOB_ID
+#cp nodes /home/fermi/$user/$SAVEFOLDER/$JOB_ID
+#cp a*   /home/fermi/$user/$SAVEFOLDER/$JOB_ID
+
+##Remove everything
+rm a* nodes *py*
+rm -rf sdss

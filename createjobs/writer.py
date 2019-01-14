@@ -2,7 +2,8 @@ import os
 
 def get_node_with_files(job, run):
     """
-                     ***DEPRECATED***
+    .. deprecated:: 1.0
+
     Reads lst-lnk file to retrieve nodes on which fits files
     of run are stored. Returns the node number. In cases where
     error occured while reading node number returns the first,
@@ -18,13 +19,20 @@ def get_node_with_files(job, run):
     return "01"
 
 def writeJob(job, verbose=True):
-    """
-    Writes the job#.dqs files. Takes in a Jobs instance and processes the
+    """Writes the job#.dqs files. Takes in a Jobs instance and processes the
     "generic" template replacing any/all keywords using values from Jobs
     instance.
     For each entry in runlst it creates a new job#.dqs file, which contains
     commands to execute detecttrails processing for each entry of entry in
     runlst.
+
+    Parameters
+    ----------
+    job : lfd.createjobs.Job
+       Job object from which job scripts are to be created.
+    verbose : bool
+       deprecated to alleviate clutter
+
     """
     runlst = job.makeRunlst()
     for i in range(0, len(runlst)):

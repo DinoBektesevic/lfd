@@ -1,3 +1,11 @@
+"""Data Browsers are classes that maintain index consistency between two
+Indexers and provide the functionality required to browse two indexers
+simultaneously. Since the source databases for results and images could be
+completely disjointed this means one of the Indexers is designated as a primary
+indexer. Browsing follows primary indexer while the secondary indexer is
+queried for the corresponding item.
+
+"""
 import os
 
 from .indexers import ImageIndexer, EventIndexer
@@ -6,12 +14,15 @@ from .imagedb import session_scope
 class GenericBrowser(type):
     """GenericBrowser metaclass offers the ability to rename the values of
     attributes being browsed through into something more appropriate. In the
-    case of an EventBrowser for example that would be:
-    primary --> Event
-    secondary --> Images
+    case of an EventBrowser for example that would be::
+
+      primary --> Event
+      secondary --> Images
+
     and the other way around for ImageBrowser. This is completely superfluous
     and here more because I wanted to tr something out than out of any real
     neccessity.
+
     """
     def __new__(cls, name, bases, attrs):
         if len(bases) > 0 and "rename" in attrs.keys():
@@ -26,28 +37,33 @@ class Browser(metaclass=GenericBrowser):
     consistency of the browsing index between the two indexers. For example, if
     we wanted to browse to the next value of primary indexer the following
     actions are performed:
-    1) invokes the next method of the primary indexer
-    2) identifies that item
-    3) invokes the get method of the secondary indexer.
+
+     1) invokes the next method of the primary indexer
+     2) identifies that item
+     3) invokes the get method of the secondary indexer.
 
     This is neccessary since the sets of items indexed by primary and secondary
     can be completely disjoint.
 
-    init parameters
-    ----------------
-    primaryIndexer    - the primary Indexer to use (EventIndexer, ImageIndexer)
-    secondaryIndexer  - the secondary Indexer to use
-
     The attributes and methods of this class are mainly private or hidden. By
     inheriting this class and declaring a dictionary class attribute "rename"
     on that class it is possible to rename the methods of this class into
-    something more appropriate. F.e. primary-->images, secondary-->events or
-    vice-versa, or something else entirely.
+    something more appropriate such as assigning the name 'images' to
+    '_primary' when dealing with ImageBrowser class etc.
+
+    Parameters
+    ----------
+    primaryIndexer : lfd.gui.imagechecker.Indexer
+      the primary Indexer (EventIndexer or ImageIndexer)
+    secondaryIndexer : lfd.gui.imagechecker.Indexer
+      the secondary Indexer
+
     """
     def __init__(self, primaryIndexer=None, secondaryIndexer=None):
         """Identify primary and secondary indexer classes. To instantiate the
         actual indexers one of the _initPrimary or _initSecondary methods has
         to be called.
+
         """
         self.primaryIndexer = None if primaryIndexer is None else primaryIndexer
         self.secondaryIndexer = None if secondaryIndexer is None else secondaryIndexer
@@ -55,7 +71,7 @@ class Browser(metaclass=GenericBrowser):
         self.__secondary = None
 
     def _initPrimary(self, URI):
-        """Instantiate the primary indexer"""
+        """Instantiate the primary indexer."""
         self.__primary = self.primaryIndexer(URI)
         run    = self.__primary.item.run
         camcol = self.__primary.item.camcol
@@ -65,7 +81,7 @@ class Browser(metaclass=GenericBrowser):
             self.__secondary.get(run, camcol, filter, field)
 
     def _initSecondary(self, URI):
-        """Instantiate the secondary indexer"""
+        """Instantiate the secondary indexer."""
         self.__secondary = self.secondaryIndexer(URI)
         run    = self.__primary.item.run
         camcol = self.__primary.item.camcol
@@ -76,6 +92,7 @@ class Browser(metaclass=GenericBrowser):
     def getNext(self):
         """Advance the index of the primary by a step and then find if the
         secondary contains the newly selected object.
+
         """
         if self.__primary is not None:
             self.__primary.next()
@@ -85,6 +102,7 @@ class Browser(metaclass=GenericBrowser):
     def getPrevious(self):
         """Regress the index of the primary by a step and then find if the
         secondary contains the newly selected object.
+
         """
         if self.__primary is not None:
             self.__primary.previous()
@@ -97,6 +115,7 @@ class Browser(metaclass=GenericBrowser):
         advance both indexers to the item if possible. Relationship from
         primary to secondary indexer can be many to one, so providing 'which'
         allows selection on a particular secondary of interest.
+
         """
         self.__primary.get(run=run, camcol=camcol, filter=filter, field=field,
                         which=which)
@@ -129,22 +148,13 @@ class EventBrowser(Browser):
     Browser guarantees that all Events will be Browsed, but not all indexed
     images will be browsed through.
 
-      init params
-    ----------------
-    resdbURI    - URI of the database of Events (i.e. results)
-    imgdbURI    - URI of the database of Images
+    Parameters
+    ----------
+    resdbURI : str
+      URI of the database of Events (i.e. results)
+    imgdbURI : str
+      URI of the database of Images
 
-        Attributes
-    ----------------
-    events    - list of all indexed events and their ids
-    images    - list of all indexed images and their ids
-    event     - Event pointed to by the current index
-    item      - Image pointed to by the current index
-
-       methods
-    ----------------
-    initEvents    - connects to the database of Events pointed to by the URI
-    initImages    - connects to the database of Images pointed to by the URI 
     """
     rename = {"_primary":"events", "_secondary":"images", "_pitem":"event",
               "_sitem":"image", "_initPrimary":"initEvents",
@@ -167,22 +177,13 @@ class ImageBrowser(Browser):
     Browser guarantees that all Images will be browsed, but not all indexed
     events will be browsed through.
 
-      init params
-    ----------------
-    resdbURI    - URI of the database of Events (i.e. results)
-    imgdbURI    - URI of the database of Images
+    Parameters
+    ----------
+    resdbURI : str
+      URI of the database of Events (i.e. results)
+    imgdbURI : str
+      URI of the database of Images
 
-        Attributes
-    ----------------
-    events    - list of all indexed events and their ids
-    images    - list of all indexed images and their ids
-    event     - Event pointed to by the current index
-    item      - Image pointed to by the current index
-
-       methods
-    ----------------
-    initEvents    - connects to the database of Events pointed to by the URI
-    initImages    - connects to the database of Images pointed to by the URI 
     """
     rename = {"_primary":"images", "_secondary":"events", "_pitem":"image",
               "_sitem":"event", "_initPrimary":"initImages",
@@ -197,95 +198,3 @@ class ImageBrowser(Browser):
 
         if resdbURI is not None:
             self.initEvents(resdbURI)
-
-
-
-
-#class ImageBrowser:
-#    def __init__(self, resdbURI=None, imgdbURI=None):
-#        self.events = None
-#        self.images = None
-#
-#        if resdbURI is not None:
-#            self.initEvents(resdbURI) #EventIndexer(resdbURI)
-#
-#        if imgdbURI is not None:
-#            self.initImages(imgdbURI)
-#
-#    def initEvents(self, URI):
-#        self.events = EventIndexer(URI)
-#
-#    def initImages(self, URI):
-#        self.images = ImageIndexer(URI)
-#
-#    def getNext(self):
-#        if self.image is not None:
-#            self.images.next()
-#            tmp = self.images.image
-#            self.events.get(run=tmp.run, camcol=tmp.camcol, filter=tmp.filter,
-#                            field=tmp.field)
-#    def getPrevious(self):
-#        if self.image is not None:
-#            self.images.previous()
-#            tmp = self.images.image
-#            self.events.get(run=tmp.run, camcol=tmp.camcol, filter=tmp.filter,
-#                            field=tmp.field)
-#
-#    def get(self, run, camcol, filter, field, which=0):
-#        self.events.get(run=run, camcol=camcol, filter=filter, field=field,
-#                        which=which)
-#        self.images.get(run=run, camcol=camcol, filter=filter, field=field)
-#
-#    @property
-#    def image(self):
-#        return self.images.image
-#
-#    @property
-#    def event(self):
-#        return self.events.event
-
-
-
-#class EventBrowser:
-#    def __init__(self, resdbURI=None, imgdbURI=None):
-#        self.events = None
-#        self.images = None
-#
-#        if resdbURI is not None:
-#            self.initEvents(resdbURI)
-#
-#        if imgdbURI is not None:
-#            self.initImages(imgdbURI)
-#
-#    def initEvents(self, URI):
-#        self.events = EventIndexer(URI)
-#
-#    def initImages(self, URI):
-#        self.images = ImageIndexer(URI)
-#
-#    def getNext(self):
-#        if self.event is not None:
-#            self.events.next()
-#            tmp = self.events.event #images.image
-#            self.images.get(run=tmp.run, camcol=tmp.camcol, filter=tmp.filter,
-#                            field=tmp.field)
-#    def getPrevious(self):
-#        if self.event is not None:
-#            self.events.previous()
-#            tmp = self.events.event
-#            self.images.get(run=tmp.run, camcol=tmp.camcol, filter=tmp.filter,
-#                            field=tmp.field)
-#
-#    def get(self, run, camcol, filter, field, which=0):
-#        self.events.get(run=run, camcol=camcol, filter=filter, field=field,
-#                        which=which)
-#        self.images.get(run=run, camcol=camcol, filter=filter, field=field)
-#
-#    @property
-#    def image(self):
-#        return self.images.image
-#
-#    @property
-#    def event(self):
-#        return self.events.event
-#

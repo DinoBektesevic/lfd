@@ -11,17 +11,16 @@ class LeftFrame(Frame):
     the image is displayed and additional functionality that allows the users
     to chage the line parameters, and persist those changes to the DB. The
     following mouse actions are bound to the canvas:
-    <Button-1> - on click of the left mouse button will bind the coordinates of
-                 the mouse pointer to its position on canvas at the click time
-                 and convert the on-canvas coordinates to the frame-coordinate
-                 system of the fits Frame om which the Event was registered by
-                 using the resize_x and resize_y resizing reduction factors
-                 defined in the root class of the app. These converted coordi-
-                 nates are then set as a new x1, y1 coordinates of the p1 Point
-                 of the Event.
-    <Button-3> - on right mouse button click records the coordinates of the
-                 pointer, scales them to frame coord. sys. and persists the
-                 change as the x2, y2 coordinates of p2 Point of the Event.
+
+    * <Button-1> - on click of the left mouse button (LMB) will bind the
+      current coordinates of the mouse pointer and convert the on-canvas
+      coordinates to the frame-coordinate system using the resize_x and
+      resize_y resizing reduction factors defined in the root class of the app.
+      These converted coordinates are then set as a new x1, y1 coordinates of
+      the p1 Point of the Event.
+    * <Button-3> - on right mouse button (RMB) click records the coordinates of
+      the pointer, scales them to frame coord. sys. and persists the change as
+      the x2, y2 coordinates of p2 Point of the Event.
     """
     def __init__(self, parent):
         Frame.__init__(self, relief=RAISED, borderwidth=1)
@@ -91,12 +90,15 @@ class LeftFrame(Frame):
         It is important that the resize scaling factors used in the App are
         correct if the output is to be trusted.
 
-            Params
-        --------------
-        sx    - x coordinate in canvas coordinate system
-        sy    - y coordinate in canvas coordinate system
-        which - used to determine whether the coordinates belong to point 1 or
-                point 2 of the Event. A string, either '1' or '2'.
+        Parameters
+        ----------
+        sx : int
+          x coordinate in canvas coordinate system
+        sy : int
+          y coordinate in canvas coordinate system
+        which : str
+          used to determine whether the coordinates belong to point 1 or point
+          2 of the Event. Either '1' or '2'.
         """
         #y2 = self.data.event.y2
         x = sx*self.root.resize_x

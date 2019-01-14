@@ -1,3 +1,5 @@
+"""Indexers establish order amongs items 
+"""
 import sqlalchemy as sql
 
 from lfd import results as res
@@ -13,17 +15,23 @@ class Indexer:
     sequentiall or non-sequential manner while loading the currently pointed
     to object dynamically from the database.
 
-      init parameters
-    -------------------
-    items    - list of unique ids of the objects from the db
+    Parameters
+    ----------
+    items : list, tuple
+      list of unique ids of the objects from the db
 
-      attributes
-    -------------------
-    current    - current position of the index
-    maxindex   - the maximal value of the index
-    items      - list of unique ids of db rows, the item[current] points to the
-                 currently selected row of the db
-    item       - currently selected object, dynamically loaded from the database
+    Attributes
+    ----------
+    current : int
+      current position of the index
+    maxindex : int
+      the maximal value of the index
+    items : list
+      unique ids of DB rows, the item[current] points to the currently selected
+      row of the DB
+    item : object
+      currently selected dynamically loaded from the DB as an object
+
     """
     def __init__(self, items=None):
         self.item = None
@@ -46,6 +54,7 @@ class Indexer:
     def __step(self, step):
         """Makes a positive (forward) or negative (backwards) step in the list
         of items and loads the newly pointed to object.
+
         """
         if self.current == None:
             self.current = None
@@ -69,7 +78,9 @@ class Indexer:
 
     def skip(self, steps):
         """Skips 'steps' number of steps. Value of 'steps' can be positive or
-        negative indicating forward or backward skip respectively."""
+        negative indicating forward or backward skip respectively.
+
+        """
         tmpnext = self.current + steps
         if 0 <= tmpnext and tmpnext <= self.maxindex:
             self.__step(steps)
@@ -78,6 +89,7 @@ class Indexer:
         """If an 'index' is provided jumps to the given index. If 'itemid' is
         given, jumps to the index of the provided item id. If neither are given
         reloads the current item.
+
         """
         steps = 0
         if index is not None:
@@ -89,9 +101,9 @@ class Indexer:
 
     def _getFromFrameId(self, *args, **kwargs):
         """Given a frame identifier (run, camcol, filter, field), and possibly
-        `which`, queries the database for the object and returns it.
-        Should be implementation specific perogative of classes that inehrit
-        from Indexer.
+        `which`, queries the database for the object and returns it. Should be
+        implementation specific perogative of classes that inehrit from Indexer
+
         """
         raise NotImplementedError(("Implementation needs to be defined by a "
                                    "specific child class."))
@@ -100,6 +112,7 @@ class Indexer:
         """Given an unique object id queries the database for the row and
         returns it as an appropriate object. The returned object is expunged
         from the database session.
+
         """
         raise NotImplementedError(("Implementation needs to be defined by a "
                                    "specific child class."))
@@ -117,6 +130,22 @@ class Indexer:
         it possible to select a particular item from the returned set.
 
         The selected item is expunged from the session.
+
+        Parameters
+        -----------
+        run : int
+          run identifier
+        camcol : int
+          camcol identifier
+        filter : str
+          string identifier
+        field : int
+          field identifier
+        which : int
+          if multiple items are returned, which one in particular is wanted
+        itemid : int
+          unique id of the desired item
+
         """
         if all([run, camcol, filter, field]):
             item = self._getFromFrameId(run, camcol, filter, field, which)
@@ -139,6 +168,7 @@ class Indexer:
 class EventIndexer(Indexer):
     """Indexes Events database providing a convenient way to establish order
     among the items.
+
     """
     def __init__(self,  URI=None):
         super().__init__()
@@ -147,17 +177,32 @@ class EventIndexer(Indexer):
             self.initFromDB(URI)
 
     def initFromDB(self, uri):
+        """Connects to a database and indexes all Events therein."""
         res.connect2db(uri)
         with res.session_scope() as session:
             events = [id for id, in session.query(Event.id).all()]
         super().__init__(items=events)
 
     def _getFromFrameId(self, run, camcol, filter, field, which=0):
-        """Given a frame identifier (run, camcol, filter, field), and possibly
-        `which`, queries the database for the object and returns it.
-        In case multiple objects correspond to the same frame identifier, which
-        selects which one of the returned results are desired.
-        The returned object is expunged from the database session.
+        """Queries the database for the Event and returns it. In case multiple
+        Events correspond to the same frame identifier, supplying  which
+        selects one of the returned results.
+
+        The returned Event is expunged from the database session.
+
+        Parameters
+        -----------
+        run : int
+          run identifier
+        camcol : int
+          camcol identifier
+        filter : str
+          string identifier
+        field : int
+          field identifier
+        which : int
+          if multiple Events are returned, which one in particular is wanted
+
         """
         with res.session_scope() as session:
             query = session.query(Event).filter(Event.run==run,
@@ -173,13 +218,19 @@ class EventIndexer(Indexer):
                 return None
 
             session.expunge(event.frame)
-            session.expunge(event)
+#                session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON EXPUNGE HAPPEN?!
         return event
 
     def _getFromItemId(self, eventid):
-        """Given an unique evet id queries the database for the row and
+        """Given an unique Event id queries the database for the row and
         returns it as an appropriate object.
         The returned object is expunged from the database session.
+
+        Parameters
+        -----------
+        eventid : int
+          unique id of the desired Event
+
         """
         with res.session_scope() as session:
             q = session.query(Event)
@@ -187,7 +238,7 @@ class EventIndexer(Indexer):
             event = q.first()
             if event is not None:
                 session.expunge(event.frame)
-                session.expunge(event)
+#                session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON EXPUNGE HAPPEN?!
         return event
 
     @property
@@ -206,25 +257,41 @@ class EventIndexer(Indexer):
 class ImageIndexer(Indexer):
     """Indexes Image database providing a convenient way to establish order
     among the items.
+
     """
     def __init__(self,  URI=None):
         super().__init__()
-    
+
         if URI is not None:
             self.initFromDB(URI)
 
     def initFromDB(self, uri):
+        """Connects to a database and indexes all Images therein."""
         imagedb.connect2db(uri)
         with imagedb.session_scope() as session:
             images = [id for id, in session.query(Image.id).all()]
         super().__init__(items=images)
 
     def _getFromFrameId(self, run, camcol, filter, field, which=0):
-        """Given a frame identifier (run, camcol, filter, field), and possibly
-        `which`, queries the database for the object and returns it.
-        In case multiple objects corimagedbpond to the same frame identifier, which
-        selects which one of the returned imagedbults are desired.
-        The returned object is expunged from the database session.
+        """Queries the database for the Image and returns it. In case multiple
+        Imagess correspond to the same frame identifier, supplying  which
+        selects one of the returned results.
+
+        The returned Image is expunged from the database session.
+
+        Parameters
+        -----------
+        run : int
+          run identifier
+        camcol : int
+          camcol identifier
+        filter : str
+          string identifier
+        field : int
+          field identifier
+        which : int
+          if multiple items are returned, which one in particular is wanted
+
         """
         with imagedb.session_scope() as session:
             query = session.query(Image).filter(Image.run==run,
@@ -243,9 +310,15 @@ class ImageIndexer(Indexer):
         return image
 
     def _getFromItemId(self, imageid):
-        """Given an unique evet id queries the database for the row and
+        """Given an unique image id queries the database for the row and
         returns it as an appropriate object.
         The returned object is expunged from the database session.
+
+        Parameters
+        -----------
+        eventid : int
+          unique id of the desired Event
+
         """
         with imagedb.session_scope() as session:
             query = session.query(Image)
