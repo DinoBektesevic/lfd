@@ -1,7 +1,48 @@
+"""Contains various utilities that expand and suplement the results module
+functionality and make it easier to work with.
+"""
+
 from contextlib import contextmanager
 import sqlalchemy
 
-__all__ = ["from_file", "create_test_sample", "session_scope", "pprint"]
+__all__ = ["from_file", "create_test_sample", "session_scope", "pprint",
+           "deep_expunge", "deep_expunge_all"]
+
+
+def deep_expunge(item, session):
+    """For a given item, expunges all first order sql relationships from given
+    session.
+
+    Parameters
+    ----------
+    item : object
+      any OO mapped sqlalchemy ORM object to be expunged completely (Event,
+      Frame etc..)
+    session : sql.Session()
+      active session from which we want to expunge the item from
+
+    """
+    insp = sqlalchemy.inspect(item)
+    relationships = insp.mapper.relationships.keys()
+    for relative in relationships:
+        session.expunge(getattr(item, relative))
+    session.expunge(item)
+
+def deep_expunge_all(items, session):
+    """For a given list of items, expunges all first order sql
+    relationships from given session.
+
+    Parameters
+    ----------
+    items : list(object) or tuple(object)
+      set of OO mapped sqlalchemy ORM object to be expunged completely (Event,
+      Frame etc..)
+    session : sql.Session()
+      active session from which we want to expunge the items from
+
+    """
+    for item in items:
+        deep_expunge(item, session)
 
 @contextmanager
 def session_scope():
@@ -25,6 +66,7 @@ def session_scope():
 def create_test_sample():
     """Creates a test sample of mock Events for testing, demonstration and
     learning purposes.
+
     """
     from . import Frame, Event, BasicTime, LineTime
 
@@ -99,15 +141,19 @@ def __pprintFrames(frames):
 def pprint(objlist, *args, **kwargs):
     """Pretty-prints a list of Frame or Event objects in a table-like format.
 
-        Optional
-    ------------------
-    short : True by default. The shortened format corresponds to:
-            run camcol filter field time x1 y1 x2 y2
-        if short is false, the long table format is printed:
-            run camcol filter field time x1 y1 x2 y2 cx1 cy1 cx2 cy2
-        Valid only for Event.
-    digits: 2 by default. Controls the number of printed digits, when
-        applicable.
+    Parameters
+    ----------
+    short : bool
+      True by default. The shortened format corresponds to::
+
+        run camcol filter field time x1 y1 x2 y2
+
+      if short is false, the long table format is printed::
+
+        run camcol filter field time x1 y1 x2 y2 cx1 cy1 cx2 cy2
+    
+    digits : int
+      2 by default. Controls the number of printed significant digits,
     """
     if not isinstance(objlist, list):
         raise ValueError("Can only pretty-print lists of Events and Frames.")
@@ -125,7 +171,8 @@ def pprint(objlist, *args, **kwargs):
 def parse_result_row(string):
     """Parse a single row of a space separated CSV file formatted to the output
     standard of detecttrails package (see detecttrails package for details) and
-    return a dictionary with the column names as keys.
+    returns a dictionary with the column names as keys.
+
     """
     s = string.split(" ")
 

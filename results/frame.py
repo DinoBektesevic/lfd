@@ -1,3 +1,15 @@
+"""Frame represents a single SDSS image. On a single CCD there can be up to 3
+such frames simultaneously, slightly overlapped on top and bottom edges. It is
+not clear to me how to resolve a Frame's position within a CCD due to the SDSS'
+drift-scan method.
+
+Frames can only exist within a CCD and CCD's are placed in an fiter x camcol
+grid in the CCD plane where the distance between camcols is only slightly less
+than the size of the CCD itself so that the gaps can be filled in by another
+run.
+
+A single Frame can contain many Events. 
+"""
 import sqlalchemy as sql
 from sqlalchemy.orm import relationship
 
@@ -8,44 +20,63 @@ from . import __query_aliases as query_aliases
 from .basictime import BasicTime
 from .utils import session_scope
 
-
 __all__ = ["Frame"]
 
 
 class Frame(Base):
     """Class Frame maps table 'frames'. Corresponds to an SDSS frame. A frame
     is uniquely defined by the set (run, camcol, filter, field). For in-depth
-    datamodel: https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html
+    see datamodel: https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html
 
-      Attributes
-    ----------------
-    run    - run id (Integer, composite PrimaryKey)
-    camcol - camcol id (Integer, composite PrimaryKey)
-    filter - filter id (Char, composite PrimaryKey)
-    field  - field id (Integer, composite PrimaryKey)
-    crpix1 - frame coordinate x of the reference central pixel
-    crpix2 - frame coordinate y of the reference central pixel
-    crval1 - RA on-sky coordinates of the reference pixel (Degrees)
-    crval2 - DEC on-sky coordinate of the reference pixel
-    cd11   - change of RA per column pixel
-    cd12   - change of RA per row pixel
-    cd21   - change of DEC per column pixel
-    cd22   - chage of DEC per row pixel
-    t      - time of start of frame exposure
-    events - list of all event(s) registered on this frame, a one to many
-             relationship to events
+    Parameters
+    ----------
+    run : int
+      run id (composite PrimaryKey)
+    camcol : int
+      camcol id (composite PrimaryKey)
+    filter : str
+      filter id (composite PrimaryKey)
+    field : int
+      field id (composite PrimaryKey)
+    crpix1 : int
+      x frame coordinate of the reference central pixel
+    crpix2 : int
+      y frame coordinate of the reference central pixel
+    crval1 : float
+      RA on-sky coordinates of the reference pixel (degrees)
+    crval2 : float
+      DEC on-sky coordinate of the reference pixel
+    cd11 : float
+      change of RA per column pixel
+    cd12 : float
+      change of RA per row pixel
+    cd21 : float
+      change of DEC per column pixel
+    cd22 : float
+      chage of DEC per row pixel
+    t : BasicTime
+      time of start of frame exposure
+    events : sql.relationship
+      list of all event(s) registered on this frame, a one to many
+      relationship to events
 
-      Usage
-    ----------------
+    Example
+    -------
+
     Almost everything is not nullable so supply everything:
-        foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1, crval2,
+
+    >>> foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1, crval2,
                     cd11, cd21, cd22, t)
+
     i.e.
-        foo = Frame(2888, 1, 'i', 139, 741, 1024, 119.2131, 23.3212, 1, 1, 1,
+
+    >>> foo = Frame(2888, 1, 'i', 139, 741, 1024, 119, 23, 1, 1, 1,
                     4575925956.49)
-    Time can be given as Astropy Time Object, SDSS TAI format or any of the
-    formats supported by Astropy Time object. In the DB itself it is always
-    forced to the SDSS TAI time format.
+
+    Time can be given as SDSS TAI or any of the other formats supported by
+    Astropy Time Object. In the DB itself it is always forced to the SDSS TAI
+    time format.
+
     """
 
     __tablename__ = "frames"
@@ -68,20 +99,26 @@ class Frame(Base):
 
     #http://docs.sqlalchemy.org/en/latest/orm/cascades.html
     events = relationship("Event", back_populates="frame", passive_updates=False,
-                          cascade="save-update,delete,expunge")
-    #, lazy="joined", innerjoin=True)
+                          cascade="save-update,delete,expunge", lazy="joined",
+                          innerjoin=True)
 
     def __init__(self, run, camcol, filter, field, crpix1, crpix2, crval1, crval2,
                  cd11, cd12, cd21, cd22, t, **kwargs):
         """Supply everything:
-            foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1,
+
+        >>> foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1,
                         crval2, cd11, cd21, cd22, t)
+
         i.e.:
-            foo = Frame(2888, 1, 'i', 139, 741, 1024, 119.211, 23.321, 1, 1, 1,
+
+        >>> foo = Frame(2888, 1, 'i', 139, 741, 1024, 119.211, 23.321, 1, 1, 1,
                         4575925956.49)
-    Time can be given as Astropy Time Object, SDSS TAI format or any of the
-    formats supported by Astropy Time object.
-    """
+
+        Time can be given as Astropy Time Object, SDSS TAI format or any of the
+        formats supported by Astropy Time object.
+
+        """
+
         self.run    = run
         self.camcol = camcol
         self.filter = filter
@@ -130,12 +167,14 @@ class Frame(Base):
         suffiecient to use mapped class names and their attributes as the
         translation to table and column names will be automaticall performed.
 
-          Examples
-        ------------
+        Example
+        -------
         Frame.query("Frame.run > 2").first()
         Frame.query("field == 1 and filter == 'i'").all()
         Frame.query("Event.y1 > 2).all()
+
         """
+
         if condition is None:
             with session_scope() as s:
                 return s.query(cls).join("events")

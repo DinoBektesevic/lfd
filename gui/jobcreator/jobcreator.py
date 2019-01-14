@@ -20,7 +20,7 @@ class SetupPopUp:
     again.
 
     Without those paths the createjobs module will likely not be able to create
-    jobs. 
+    jobs.
     """
     def __init__(self, parent):
         self.top = Toplevel(parent)
@@ -50,18 +50,17 @@ class SetupPopUp:
 
 
 class JobCreator(Tk):
-    """Class for the GUI that interfaces createjobs package. Not all options
-    are seamlessly supported. To execute it instantiate the class and run its
-    mainloop method:
+    """GUI interface to createjobs package. Not all options are seamlessly
+    supported. To execute it instantiate the class and run its mainloop method
+    or invoke run function located in this module. At startup time app will
+    verify if the minimal environment for job creation is in place and if not
+    it will allow user to set the required environmental variable.
 
-    >>> app = JobCreator()
-    >>> app.mainloop()
+    Consists two frames:
 
-    or invoke run function located in this module.
-
-    Consists two frames - left and right.
-    leftFrame contains most of the adjustable parameters for the jobs.
-    rightFrame contains the used template from which dqs files will be created.
+    * LeftFrame contains most of the adjustable parameters for the jobs.
+    * RightFrame contains the used template from which dqs files will be
+      created.
 
     Contains the Job object from the createjobs module so that all Frames that
     belong to the same appication can access its settings.
@@ -99,6 +98,7 @@ class JobCreator(Tk):
         If the toplevel directory $BOSS variable is set up and $PHOTO_REDUX is
         not it is assumed that the SDSS convention is followed and $PHOTO_REDUX
         is set to $BOSS/photo/redux.
+
         """
         if ("BOSS" in os.environ) and not ("PHOTO_REDUX" in os.environ):
             cj.setup()
@@ -110,6 +110,7 @@ class JobCreator(Tk):
         """Changes the state of the Job instance of the application to write
         the new settings, read from the values in the right and left frames,
         and creates the jobs.
+
         """
         conf = self.leftFrame.getConf()
         tmplt = self.rightFrame.getTemplate()

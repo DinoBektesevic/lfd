@@ -10,6 +10,7 @@ class BottomRight(Frame):
     all the active elements of the app, such as Buttons for selecting the DB,
     directory of images, moving to the next or previous image or changing the
     DB entries by verifying their truthfulness.
+
     """
     def __init__(self, parent):
         Frame.__init__(self)
@@ -60,6 +61,7 @@ class BottomRight(Frame):
         """Callback that sets the false_positive attribute of the current Event
         to False, persists the change to the DB, moves the current data index
         to the following data instance and updates the whole GUI.
+
         """
         self.data.event.false_positive = False
         self.data.events.commit()
@@ -69,6 +71,7 @@ class BottomRight(Frame):
         """Callback that sets the false_positive attribute of the current Event
         to True, persists the change to the DB, moves the current data index to
         the following data instance and updates the whole GUI.
+
         """
         self.data.event.false_positive = True
         self.data.events.commit()
@@ -77,6 +80,7 @@ class BottomRight(Frame):
     def selectimages(self):
         """Re-initializes the apps selection of directory containing images and
         refreshes the whole GUI.
+
         """
         self.parent.root.initImages()
         self.parent.root.update()
@@ -84,6 +88,7 @@ class BottomRight(Frame):
     def selectresults(self):
         """Re-initializes the apps selection of the Event database and
         refreshes the whole GUI.
+
         """
         self.parent.root.initResults()
         self.parent.root.update()
@@ -94,7 +99,8 @@ class BottomRight(Frame):
         search will jump to the first Event with the correct Frame designation.
 
         As there can be multiple Events on the same Frame, user can provide the
-        ordinal number of the Event they are interested in. 
+        ordinal number of the Event they are interested in.
+
         """
         top = Toplevel()
         top.geometry(utils.centerWindow(self, 270, 120))
@@ -125,6 +131,7 @@ class BottomRight(Frame):
     def _find(self, window, run, camcol, filter, field, which):
         """Callback function that will read the required information from the
         search window, skip to (load) that data instance and update the GUI.
+
         """
         run = int(run.get())
         camcol = int(camcol.get())

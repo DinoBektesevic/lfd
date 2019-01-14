@@ -10,6 +10,7 @@ class RightFrame(Frame):
     split into two sub-frames one used to display the Event in question and the
     other one containing all the action elements (next, true, false, previous,
     find, change data source etc.)
+
     """
     def __init__(self, parent):
         Frame.__init__(self, relief=RAISED, borderwidth=1)
@@ -23,6 +24,7 @@ class RightFrame(Frame):
     def update(self):
         """Calls the update methods of each subframe in the correct order and
         handles failures.
+
         """
         # in this case it's only the top right frame, displaying the data, that
         # needs to be updated as the action elements need to stay put.
@@ -34,6 +36,7 @@ class RightFrame(Frame):
     def failedEventLoadScreen(self):
         """Redraws the right frame displaying appropriate error messages in
         case of failure.
+
         """
         # realistically this consists only of clearing the table displaying the
         # prvious Event information and setting a label with error message.

@@ -16,13 +16,16 @@ class LeftFrame(Frame):
     """LeftFrame of the jobcreator gui. Contains 3 subframes: top, mid and bot.
     In order they control the folowing settings for job creation:
 
-    Top - glob. exec. settings for the jobs (f.e. wallclock, cputime, ppn...)
-    Mid - invocation settings (f.e. from all runs, lists, results...)
-    Bot - glob. env. settings (f.e. template, save paths, copy paths...)
+    * Top - global execution settings for the jobs (f.e. wallclock, cputime,
+      ppn...)
+    * Mid - invocation settings (f.e. from all runs, lists, results...)
+    * Bot - global environment settings (f.e. template, save paths,
+      copy paths...)
 
     Has to inherit from the root frame because job access is required.
     Will spawn additional windows promting user for settings for any
     particularily complex configurations.
+
     """
     def __init__(self, parent):
         Frame.__init__(self, parent, relief=RAISED, borderwidth=1)

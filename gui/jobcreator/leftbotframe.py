@@ -11,6 +11,7 @@ class BotFrame(Frame):
     """Bottom part of the LeftFrame of the GUI. Handles all of the paths
     involved in the creation of a Job and updates the template in RightFrame
     when the template path changes.
+
     """
     def __init__(self, parent, row=2, col=0):
         Frame.__init__(self, parent)
@@ -96,6 +97,7 @@ class BotFrame(Frame):
         template can be selected. See setTemplatePath.
         Will cause an update of the RightFrame to redisplay the newly selected
         template.
+
         """
         initdir = os.path.dirname(self.tmpltpath.get())
         newpath = filedialog.askopenfilename(parent=self,
@@ -112,6 +114,16 @@ class BotFrame(Frame):
         or if the update is called from a callback tied to a StringVar/Entry
         trace methods as a way to silence errors untill the full path has been
         manually inputed.
+
+        Parameters
+        ----------
+        path : str
+          path to the new template
+        showerr : bool
+          if False no error will be raised even if path does not exist, usefull
+          when error needs to be raised later, on a callback initiated by a
+          button click
+
         """
         tmppath = expandpath(path)
         activetmpl = self.parent.root.rightFrame.activetmpl
@@ -133,6 +145,7 @@ class BotFrame(Frame):
     def editTemplate(self):
         """A callback of a Button action that will change the state of the
         RightFrame Text box and make it editable.
+
         """
         self.savetmpbtn.config(state=NORMAL)
         self.activetmpl = self.parent.root.rightFrame.activetmpl
@@ -142,6 +155,7 @@ class BotFrame(Frame):
         """A Button callback that will save the current template to a file.
         Spawns a file dialog to retrieve the save location. Changes the state
         of the RightFrame Text box back to un-editable.
+        
         """
         self.savetmpbtn.config(state=DISABLED)
         self.activetmpl.config(state=DISABLED)

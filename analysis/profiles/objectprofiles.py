@@ -1,3 +1,7 @@
+"""Object profiles contains commonly used profiles of different types of source
+objects such as PointSource, Disk etc...
+
+"""
 import copy
 
 import numpy as np
@@ -13,13 +17,15 @@ class PointSource(ConvolutionObject):
     """Simple point like source. Point-like sources are not resolved, therefore
     regardless of scale and size only a single element of obj will have a value
 
-        init params
-    -------------------
-    h   - height of the object
-    res - desired resolution, the scale (the difference between two
-          neighbouring "x-axis" points is then determined by scaling the
-          appropriate angular size of the object, so that it is still
-          unresolved at the required resolution, by the desired resolution)
+    Parameters
+    ----------
+    h : float
+      height of the object, in meters
+    res : float
+      desired resolution in arcseconds. The scale step (the difference between
+      two neighbouring "x-axis" points) is then determined by scaling the
+      appropriate angular size of the object by the resolution, so that the
+      object remains unresolved at the required resolution.
     """
     def __init__(self, h, res=0.001):
         theta = 1.0/(h*1000.) * RAD2ARCSEC
@@ -63,12 +69,16 @@ class PointSource(ConvolutionObject):
 class GaussianSource(ConvolutionObject):
     """Simple gaussian intensity profile.
 
-         init params
-    -------------------
-    h     - height of the object
-    fwhm  - FWHM of the gaussian profile
-    res   - desired resolution
-    units - spatial units (meters by default)
+    Parameters
+    ----------
+    h : float
+      height of the object, in meters
+    fwhm : float
+      FWHM of the gaussian profile
+    res : float
+      desired resolution, in arcseconds
+    units : string
+      spatial units (meters by default) - currently not very well supported
     """
     def __init__(self, h, fwhm, res=0.001, units="meters"):
 
@@ -95,11 +105,14 @@ class GaussianSource(ConvolutionObject):
 class DiskSource(ConvolutionObject):
     """Brightness profile of a disk-like source.
 
-         init params
-    -------------------
-    h      - height of the object
-    radius - radius of the objects disk
-    res    - desired resolution
+    Parameters
+    ----------
+    h : float
+      height of the object, in meters
+    radius : float
+      radius of the objects disk, in meters
+    res : float
+      desired resolution, in arcseconds
     """
     def __init__(self, h, radius, res=0.001):
         self.r = radius
@@ -149,6 +162,7 @@ class DiskSource(ConvolutionObject):
         width of the object (difference between first and last point with
         brightness above zero) is a more appropriate measure of the size of the
         object.
+
         """
         left = self.scale[np.where(self.obj > 0)[0][0]]
         right = self.scale[np.where(self.obj > 0)[0][-1]]
@@ -156,9 +170,14 @@ class DiskSource(ConvolutionObject):
 
 
 class RabinaSource(ConvolutionObject):
-    """Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223) Eq. (9)
-    a 1D integrated projection of the fiducial 3D meteor head model as given by
-        Rabina J., et al. 2016, J. Quant. Spectrosc. Radiat. Transf,178, 295
+    """::
+
+      Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223) Eq. (9)
+
+    a 1D integrated projection of fiducial 3D meteor head model as given by::
+
+      Rabina J., et al. 2016, J. Quant. Spectrosc. Radiat. Transf,178, 295
+
     The integration of this profile is complicated and depends on variety of
     parameters, such as the angle of the observer linesight and meteor
     direction of travel. It is not practical to preform the integration every
@@ -173,10 +192,14 @@ class RabinaSource(ConvolutionObject):
     The default profile is then scaled appropriately to the desired height and
     any missing brightness values are then interpolated between the points.
 
-         init params
-    -------------------
-    h       - height of the object
-    imgpath - path to the image of the 2D integrated profile
+    Parameters
+    ----------
+    h : float
+      height of the object, in meters
+    imgpath : str
+      path to the image of the 2D integrated profile, the precalculated
+      profiles can be found in lfd/analysis/profiles/rabina alongside with the
+      code required to generate new ones.
     """
     xmin, xmax = -5., 5.
     ymin, ymax = -5., 5.
@@ -239,7 +262,16 @@ class RabinaSource(ConvolutionObject):
 
 def exp_fwhms(tau, n, duration):
     """Generates series of n exponentially smaller FWHM values depending on the
-    scale time tau for the desired temporal duration. 
+    scale time tau for the desired temporal duration.
+
+    Parameters
+    ----------
+    tau : float
+      scale time of the decay
+    n : int
+      number of generated FWHM values
+    duration : float
+      total duration in which n FWHMs will be equaly spaced
     """
     times = np.linspace(0, duration, n)
     fwhms = np.exp(times/tau)

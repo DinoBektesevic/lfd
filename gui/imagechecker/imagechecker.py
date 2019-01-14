@@ -13,41 +13,46 @@ from .databrowser import ImageBrowser, EventBrowser
 
 class ImageChecker(Tk):
     """GUI app that allows for visual inspection of Events. To run the app
-    instantiate the class and run its mainloop method:
+    instantiate the class and run its mainloop method or invoke run function
+    located in this module.
 
-    >>> app = JobCreator()
-    >>> app.mainloop()
-
-    or invoke run function located in this module. The App itself does not
-    manage the data. Data loading and management is handled by the EventBrowser
-    class (self.data attribute).
+    The App itself does not manage the data. Data loading and management is
+    handled by the EventBrowser class stored in self.data attribute.
 
     The GUI consits of 2 Frames - left and right. Left frame is used to display
     information on the Event and the right hand side displays the image
     representation of the Event if availible. GUI binds the following shortcut
     keys:
-   <Left>  - move to previous image without saving any changes
-   <Right> - continue to the next image without saving any changes
-   <Up>    - continue to the next image but set the verified and false_positive
-             flags of the current Event to True and False respectively and
-             persist the change to the DB
-   <Down>  - continue to the next image but set the verified and false_positive
-             flags of the current Event to True and True respectively and
-             persist the change to the DB
+
+    * <Left> - move to previous image without saving any changes
+    * <Right> - continue to the next image without saving any changes
+    * <Up> - continue to the next image but set the verified and false positive
+      flags of the current Event to True and False respectively. Persist the
+      changes to the DB
+    * <Down> - continue to the next image but set the verified and false
+      positive flags of the current Event to True and True respectively and
+      persist the change to the DB
+    * <LMB> - when clicked on the image will move the first point of the linear
+      feature to that location and persist the changes to the database
+    * <RMB> - when clicked on the image will move the second point of the
+      linear feature to that location and persist the changes to the database
 
     The colors in the data table on the right frame indicate the following:
-    Yellow - the Event was never visually inspected
-    Green  - the Event was visually inspected and confirmed as true
-    Red    - the Event was visually inspected and was determined to be a false
-             detection
+
+    * Yellow - the Event was never visually inspected
+    * Green - the Event was visually inspected and confirmed as true
+    * Red - the Event was visually inspected and was determined to be a false
+      detection
+
     """
     def __init__(self):
         """There are several configurable parameters that are imporant for this
         class:
-            resize_x - the reduction factor describing how much has the width
-                       been reduced from the original to the displayed image.
-            resize_y - the reduction factor describing how much has the height
-                       reduced between the original and displayed image.
+
+        * resize_x - the reduction factor describing how much has the width
+          been reduced from the original to the displayed image.
+        * resize_y - the reduction factor describing how much has the height
+          reduced between the original and displayed image.
 
         Optionally you can rebind the key functionality or change the color
         scheme of the table in the top right by editing the TopRight Frame of

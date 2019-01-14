@@ -1,3 +1,9 @@
+"""Job class is the interface to the writer which stores all parameters
+required to sucessfully populate the templte. It also wraps additional
+functionality such as directory and script IO that will try and prevent
+overwriting of previously created scripts.
+
+"""
 import os
 import warnings
 
@@ -22,94 +28,54 @@ def expandpath(path):
 
 
 class Jobs:
-    """
-    Class that holds all the important functions for making Qsub jobs.
+    """Class that holds all the important functions for making Qsub jobs.
 
-    init parameters
-    -----------------
-    Keywords:
-        n: number of jobs you want to start.
+    Template is located inside this package in "createjobs"  folder under the
+    name "generic". Location where final results are saved on Fermi cluster by
+    default is::
 
-    Optional:
-        save_path:
-	        path to directory where you want your jobs to be stored.
-            A default path is currently set to ~/Desktop/createjobs
-        res_path:
-            path to a directory on cluster master where results will
-            be copied once the job is finished.
-        template_path:
-            path to the desired template. Template should contain all
-            necessary parameters described bellow. Template parameters
-            have to be uppercase single words.
-        template:
-            a full template text as a string
-        queue:
-            sets the QSUB queue type: serial, standard or parallel.
-            Default: standard.
-            Notice that your local QSUB setup will limit wallclock,
-            and cputime based on queue you selected.
-        wallclock:
-            set jobs maximum time allowed to be on the job wall in
-            hours.
-            default: 24:00:00
-        cputime:
-            set jobs maximum time allowed to be running on a CPU in
-            hours.
-            default: 48:00:00
-        ppn:
-            maximum allowed processors per node.
-            Default: 3
-        command:
-             command that runs detecttrails process function. Default:
-                 python -c "import detect_trails as dt;" +\
-             "dt.DetectTrails($).process()"
-             where "$" gets expanded depending on kwargs.
-        **kwargs:
-            it's possible create jobs with commands different than
-            just processing the whole runs. F.e. it's possible to
-            create jobs that will process all runs, all runs but
-            just their 1st camcol and/or a filter. The only true way
-            of generating jobs per frames is to send in a list of Event
-            or Frame instances. See results package help for those
-            objects. See this module's help for examples of different
-            possible combinations - the usage is the same as with DetectTrails.
-        runs:
-            if runs are not specified, all sdss runs found in
-              runlist.par file will be used.
-            if runs is a list of runs only those runs will be sorted
-              into jobs
-            if runs is a list of Event or Frame instances, only those frames
-              will be sorted into jobs.
-
-    In "save_path" a folder "jobs" will be created, if it doesn't exist
-    already. In "jobs" folder, files "job#.dqs" will be stored.
-
-    Template is located inside this package in "createjobs"  folder
-    under the name "generic".
-    Location where final results are saved on Fermi cluster by default
-    is
         /home/fermi/$user/$res_path/$JOB_ID.
 
-     methods
-    -----------
-    _runlstAll():
-        don't use this. It just reads in runslit.par and creates jobs
-        for every run in there that has a rerun set to 301.
-    _createBatch(runlst):
-        creates a batch.sh file that starts all the qsub jobs at once.
-    create(runlst):
-        creates jobs, then batch.
-    makeRunlst(list_of_runs):
-        creates a runlst from a list of runs. I.e.
-            (2881, 2882, 2883, 2884)
-        is converted to:
-            list(  (2881, 2882)
-                   (2883, 2884)
-                )
-        if chosen number of jobs n=2.
-     _findKwargs():
-        internal logic to work out what kwargs were sent, if any, to
-        expand command to appropriate form.
+    Can be changed by editing the template or providing a new one. One can also
+    be provided in string format as a kwargs named "template". 
+
+    Parameters
+    ----------
+    n : int
+      number of jobs you want to start.
+    save_path : str
+	  path to directory where jobs will be stored. By default set to
+      ~/Desktop/createjobs
+    res_path : str
+      path to subdirectory on cluster master where results will be copied once
+      the job is finished.
+    template_path : str
+      path to the desired template
+    template : str
+      a full template text as a string
+    queue : str
+      sets the QSUB queue type: serial, standard or parallel. Defaults to
+      standard. Your local QSUB setup will limit wallclock, cputime and queue
+      name differently than assumed here.
+    wallclock : str
+      set maximum wallclock time allowed for a job in hours. Default: 24:00:00
+    cputime : str
+      set maximum cpuclock time allowed for a job in hours. Default: 48:00:00
+    ppn : str
+      maximum allowed processors per node. Default: 3
+    command : str
+      command that will be invoked by the job. Default:
+      python -c "import detect_trails as dt; dt.DetectTrails($).process()"
+      where "$" gets expanded depending on kwargs.
+    **kwargs : dict
+      named parameters that will be forwarded to command. Allow for different
+      targeting of data. See documentation for examples
+    runs:
+      if runs are not specified, all SDSS runs found in runlist.par file will
+      be used. If runs is a list of runs only those runs will be sorted into
+      jobs. If runs is a list of Event or Frame instances, only those frames
+      will be sorted into jobs. See docs on detailed usage.
+
     """
     def __init__(self, n, runs=None, template_path=None, save_path=None,
                  queue="standard", wallclock="24:00:00", ppn="3",
@@ -143,6 +109,7 @@ class Jobs:
         """Creates the createjobs folder at the given location, the current
         directory by default. In createjobs folder a new directory is opened
         for each set of jobs produced to avoid overwriting each other.
+
         """
         # this will be the location of invocation, not the dir of this file
         curpath = os.path.abspath(os.path.curdir)
@@ -164,9 +131,8 @@ class Jobs:
     def __init__template(self, template_path, template):
         """Verifies if the provided path to template is correct or not and
         loads the template. If the provided template path is incorrect it loads
-        the default template provided with this module.
-        If a whole template is provided as a string, it will use that string as
-        the template.
+        the default template provided with this module. If a whole template is
+        provided as a string, it will use that string as the template.
         """
         # this will be the dir of this file
         default_path = os.path.split(__file__)[0]
@@ -198,25 +164,30 @@ class Jobs:
         return rl["run"]
 
     def makeRunlst(self, runs=None):
-        """
-        Create a runlst from a list of runs or Results instance. Recieves a
-        list of runs: [N1,N2,N3,N4,N5...] and returns a runlst:
-        [   (N1, N2...N( n_runs / n_jobs)) # idx = 0
+        """ Create a runlst from a list of runs or Results instance. Recieves a
+        list of runs: [N1,N2,N3,N4,N5...] and returns a runlst::
+
+          [
+            (N1, N2...N( n_runs / n_jobs)) # idx = 0
             ...
             (N1, N2...N( n_runs / n_jobs)) # idx = n_jobs
-        ]
+          ]
 
         Runlst is a list of lists. Inner lists contain runs that will be
         executed in a single job. Lenght of outter list matches the number of
-        jobs that will be started i.e.
-            runls = list(  (2888, 2889, 2890)
-                           (3001, 3002, 3003)
-                        )
+        jobs that will be started, f.e.::
+
+          runls = list(
+                        (2888, 2889, 2890)
+                        (3001, 3002, 3003)
+                      )
+
         will start 2 jobs (job0.dqs, job1.dqs), where job0.dqs will call
         DetectTrails.process on 3 runs: 2888, 2889, 2890.
 
         If (optionally) a list of runs is supplied a run list will be produced
         fom that list, instead of the runs attribute.
+
         """
         runs = self.runs if runs is None else runs
 
@@ -230,6 +201,7 @@ class Jobs:
         """ Writes a batch.sh script that contians qsub job#.dqs for each job
         found in runlst. Created automatically if you use create or createAll
         methods.
+
         """
         newbatch = open(self.save_path+"/batch.sh", "w")
 
@@ -249,6 +221,7 @@ class Jobs:
         This avoids potential problems, i.e. if the user sets runs
         attribute after initialization but makes it impossible to determine
         the 'pick' attribute value untill execution.
+
         """
         kwargs = self.kwargs
 

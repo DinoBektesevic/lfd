@@ -14,22 +14,39 @@ class ConvolutionObject:
     method 'f' such that it returns the value of the analytical expression at
     a given coordinate.
 
-        Attributes
-    ------------------
-    obj                   - brightness values of the object, its profile
-    scale                 - the "x" coordinates against which obj was evaluated
-    __guessf              - the function used for interpolation in case
-                            analytical form is unknown
-    scaleleft, scaleright - left and rightmost points of the scale
-    objleft, objright     - left and rightmost points at which the obj > 0
-    step                  - the difference between two scale points (fineness
-                            of the coordinates)
-    name                  - by default assigned to the class name instantiating
-                            this object. Useful to keep track of the function
-                            it represents but also for plotting.
+    Attributes
+    ----------
+    obj : list, tuple or np.array
+      brightness values of the object, its profile
+    scale : list, tuple or np.array
+       the "x" coordinates against which obj was evaluated, note that objects
+       "center" (central maximal value) is generally centered on the 0 of the
+       scale
+    __guessf : np.interp1d
+       the function used for interpolation in case analytical form is unknown
+    scaleleft : float
+      leftmost points of the scale
+    scaleright : float
+      rightmost points of the scale
+    objleft : float
+      rightmost points at which obj>0
+    objright : float
+      rightmost points at which obj>0
+    step : float
+      the difference between two scale points (fineness of the coordinates)
+    name : str
+      by default assigned to the class name instantiating this object. Useful
+      to keep track of the function it represents but also for plotting.
 
-    The scale is always relative to the object - i.e. the object's peak value
-    (its "center") will be at the scale coordinate of 0.
+    Parameters
+    ----------
+    obj : list, tuple or np.array
+      brightness values of the object, its profile
+    scale : list, tuple or np.array
+       the "x" coordinates against which obj was evaluated, note that objects
+       "center" (central maximal value) is generally centered on the 0 of the
+       scale
+
     """
     @classmethod
     def fromConvolution(cls, obj, scale, name=None):

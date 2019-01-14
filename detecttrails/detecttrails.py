@@ -1,3 +1,10 @@
+"""Detecttrails module is the SDSS oriented wrapper that will call the correct
+order of operations on the targeted data to succesfully run LFD. The module also
+handles the IO operations required to succesfully store results and wraps the
+required functionality for easier debugging.
+
+"""
+
 import os
 import traceback
 
@@ -9,6 +16,8 @@ from cv2 import RETR_LIST, RETR_EXTERNAL, RETR_CCOMP, RETR_TREE
 from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_L1,
                  CHAIN_APPROX_TC89_KCOS)
 
+import bz2
+
 from .removestars import * #remove_stars
 from .processfield import * #process_field_bright, process_field_dim
 from .processfield import setup_debug
@@ -18,27 +27,88 @@ __all__ = ["DetectTrails", "process_field"]
 
 def process_field(results, errors, run, camcol, filter, field, params_bright,
                   params_dim, params_removestars):
-    """Function that calls the correct order of actions needed to detect trails per
-    frame. Writes  "results.txt" and "errors.txt".
-    Please use the class!
+    """Calls the correct order of actions needed to detect trails per frame.
+    Writes  "results.txt" and "errors.txt".
 
     Order of operations:
-      1) Unpack .tar.bz2 fits files to FITS_DUMP path
-         (env. var. in start.sh)
-      2) Remove Stars
-      3) process field bright
-      4) if bright detection is not made:
-            4.1) process field dim is called
-         4.2) else: write results.
-      5) clean-up (remove unpacked fits, close files, dump silenced
-         errors)
+
+      1. Check if .fits file exists
+
+         a. If it doesn't see a compressed .bz2 version exists. If it does
+         b. uncompress it to $FITS_DUMP env. var location. If the env. var.
+            was not set, decompress to the fits_dump folder in the package
+
+      2. Remove known object from the image by drawing squares over them
+      3. Try detecting a bright trail (very fast). If successful write results
+         and stop.
+      4. if bright detection is not made, try detecting a dim trail. If found
+         write results and stop, otherwise just stop.
+      5. clean-up (remove unpacked fits, close files, dump silenced errors)
+
+    Parameters
+    ----------
+    results : file
+        a file object, a stream or any such counterpart to which results
+        will be written
+    errors : file
+        a file object, stream, or any such counterpart to which errors will be
+        written
+    run : int
+        run designation
+    camcol : int
+        camcol designation, 1 to 6
+    filter : str
+        filter designation, one of ugriz
+    params_bright : dict
+        dictionary containing execution parameters required by process_bright
+    params_dim : dict
+        dictionary containing execution parameters required by process_dim
+    params_removestars : dict
+        dictionary containing execution parameters required by remove_stars
     """
+    removefits = False
     try:
-        origPathName = files.filename('frame', run=run, camcol=camcol,
+        origfitspath = files.filename('frame', run=run, camcol=camcol,
                                       field=field, filter=filter)
 
-        img = fitsio.read(origPathName)
-        h   = fitsio.read_header(origPathName)
+        # downright sadness that fitsio doesn't support bz2 compressed fits'
+        # if there is no .fits, but only .fits.bz2 you have to open, decompress,
+        # save, and reopen with fitsio. We also don't want to delete existing
+        # unpacked fits files so we set the removefits flag to True only when
+        # *we* created a file by unpacking
+        if not os.path.exists(origfitspath):
+
+            bzpath = origfitspath+".bz2"
+            if not os.path.exists(bzpath):
+                raise FileNotFoundError(("File {0} or its bz2 compressed "
+                "version not found. Are you sure they exist?"))
+
+            with open(bzpath, "rb") as compressedfits:
+                fitsdata = bz2.decompress(compressedfits.read())
+
+                # see if user uncompressed fits dumping location is set
+                try:
+                    fitsdmp = os.environ["FITS_DUMP"]
+                except KeyError:
+                    # if not default to the fits_dump dir in the package
+                    modloc = os.path.split(__file__)[0]
+                    fitsdmp = os.path.join(modloc, "fits_dump/")
+
+                fitspath = os.path.join(fitsdmp, os.path.split(origfitspath)[-1])
+
+                # save the uncompressed fits
+                with open(fitspath, "wb") as decompressed:
+                    decompressed.write(fitsdata)
+
+                # setting the flag here, after we have certainly written and
+                # closed the file succesfully helps escape any errors later on
+                # in case we try to remove unexsiting file
+                removefits = True
+        else:
+            fitspath = origfitspath
+
+        img = fitsio.read(fitspath)
+        h   = fitsio.read_header(fitspath)
 
         printit = (
             "{} {} {} {} {} {} {} {} {} {} {} {} {} "
@@ -46,13 +116,8 @@ def process_field(results, errors, run, camcol, filter, field, params_bright,
                      h['CRPIX2'], h['CRVAL1'],   h['CRVAL2'], h['CD1_1'],
                      h['CD1_2'],  h['CD2_1'],    h['CD2_2'])
 
-#        printit = (str(run)+" "+str(camcol)+" "+filter+" "+str(field)+" "
-#                   +str(h['TAI'])+" "+str(h['CRPIX1'])+" "+str(h['CRPIX2'])+" "
-#                   +str(h['CRVAL1'])+" "+str(h['CRVAL2'])+" "+str(h['CD1_1'])+" "
-#                   +str(h['CD1_2'])+" "+str(h['CD2_1'])+" "+str(h['CD2_2'])+" ")
-
         img = remove_stars(img, run, camcol, filter, field,
-                             **params_removestars)
+                           **params_removestars)
 
         #WARNING mirror the image vertically
         #it seems CV2 and FITSIO set different pix coords
@@ -78,69 +143,66 @@ def process_field(results, errors, run, camcol, filter, field, params_bright,
         pass
 
     finally:
-        try: os.remove(unpackedfits)
-        except: pass
+        if removefits:
+            os.remove(fitspath)
 
 
 
 class DetectTrails:
-    """
-    (run={all} , camcol={1-6}, field={all], filter={all})
+    """Convenience class that processes targeted SDSS frames.
 
-    Defines a convenience class that processes frames.
-    Use with caution when processing large number of frames due to
-    possible long execution times.
-    Use cases:
-        foo = DetectTrails(run=2888)
-        foo = DetectTrails(camcol=1)
-        foo = DetecTrails(filter="i")
-        foo = DetectTrails(run=2888, camcol=1)
-        foo = DetectTrails(run=2888, camcol=1, filter='i')
-        foo = DetectTrails(run=2888, camcol=1, filter='i', field=139)
+    Example usage
+
+    .. code-block:: python
+
+       foo = DetectTrails(run=2888)
+       foo = DetectTrails(run=2888, camcol=1, filter='i')
+       foo = DetectTrails(run=2888, camcol=1, filter='i', field=139)
+       foo.process()
+
     At least 1 keyword has to be sent!
-    Detection and execution parameters are optional, i.e.:
-        foo.params_bright["debug"] = True
-        foo.params_removestars["filter_caps"]["i"] = 20
-    See module help for full list of optional parameters and explanations.
-    To start detection routine call:
-        foo.process()
-    All errors are silenced and dumped to error file.  Results are dumped to
-    results file. Default file location is the package home folder.
 
-    init parameters
-    ----------------
-    Keywords:
+    See documentation for full details on detection parameters. Like results
+    and errors file paths, detection parameters are optional too and can be set
+    after instantiation through provided dictionaries.
 
-        run:
-            run ID
+    .. code-block:: python
 
-    Optional:
+       foo.params_dim
+       foo.params_bright["debug"] = True
+       foo.params_removestars["filter_caps"]["i"] = 20
 
-        camcol:
-            camera column ID {1,2,3,4,5,6}
-        field:
-            frame ID
-        filter:
-            filter ID {u,g,r,i,z}
-        params_dim:
-            optional detection parameters for detecting dim trails. See
-            detecttrails module help for full list and explanations.
-        params_bright:
-            optional detection parameters for detecting bright trails. See
-            detecttrails module help for full list.
-        params_removestars:
-            optional detection parameters for tuning star removal. See
-            detecttrails module help for full list.
-        debug:
-            optional parameter for verbose output and step-by-step image
-            output to visualize the processing. Make sure there is a "DEBUGPATH"
-            environmental variable set otherwise error will be reported.
+    All errors are silenced and dumped to error file. Results are dumped to
+    results file.
+
+    Parameters
+    ----------
+    run : int
+        run designation
+    camcol : int
+        camcol designation, 1 to 6
+    filter : str
+        filter designation, one of ugriz filters
+    field : int
+        field designation
+    params_dim : dict
+         detection parameters for detecting dim trails. See docs for details.
+    params_bright : dict
+         detection parameters for bright trails. See docs for details.
+    params_removestars : dict
+         detection parameters for tuning star removal. See docs for details.
+    debug : bool
+         turns on verbose and step-by-step image output visualizing the
+         processing steps for all steps simultaneously. If $DEBUGPATH env. var.
+         is not set errors will be raised.
+    results : str
+         path to file where results will be saved
+    errors : str
+         path to file where errors will be stored
     """
 
     def __init__(self, **kwargs):
         savepth = (kwargs["savepath"] if "savepath" in kwargs else ".")
-        self.results = os.path.join(savepth, 'results.txt')
-        self.errors  = os.path.join(savepth, 'errors.txt')
         self.kwargs=kwargs
         self.params_bright = {
             "lwTresh": 5,
@@ -181,27 +243,38 @@ class DetectTrails:
             "debug": False
             }
 
+        if "results" in kwargs:
+            self.results = kwargs["results"]
+        else:
+            self.results = os.path.join(savepth, 'results.txt')
+
+        if "errors" in kwargs:
+            self.errors = kwargs["errors"]
+        else:
+            self.errors  = os.path.join(savepth, 'errors.txt')
+
         if "params_bright" in kwargs:
             self.params_bright = kwargs["params_bright"]
         if "params_dim" in kwargs:
             self.params_bright = kwargs["params_dim"]
         if "params_removestars" in kwargs:
             self.params_bright = kwargs["params_removestars"]
+
         if "debug" in kwargs:
             self.debug = kwargs.pop("debug")
             self.params_bright["debug"] = self.debug
             self.params_dim["debug"] = self.debug
-            self.params_removestars = self.debug
-        if any([self.params_removestars,self.params_bright["debug"],
+            self.params_removestars["debug"] = self.debug
+        if any([self.params_removestars["debug"], self.params_bright["debug"],
                 self.params_dim["debug"]]):
             setup_debug()
 
         self._load()
 
     def _runInfo(self):
-        """
-        Reads runlist.par file and extracts startfield and endfield
-        of a run. Runs are gotten from self._run attribute of instance
+        """Reads runlist.par file and extracts startfield and endfield of a
+        run. Runs are retrieved from self._run attribute of instance.
+
         """
         rl = files.runlist()
         w, = _np.where(rl['run'] == self._run)
@@ -212,9 +285,7 @@ class DetectTrails:
         return startfield, endfield
 
     def _getRuns(self):
-        """
-        Reads runlist.par file and returns a list of all runs.
-        """
+        """Reads runlist.par file and returns a list of all runs."""
         rl = files.runlist()
         runs = rl["run"]
         if runs is None:
@@ -222,16 +293,17 @@ class DetectTrails:
         return runs
 
     def _load(self):
-        """
-        Parses the send kwargs to determine what selection users
-        wants to process. Currently supported options are:
-        run
-        run-camcol
-        run-filter
-        run-filter-camcol
-        camcol-filter
-        camcol-frame
-        field (full specification run-filter-camcol-frame)
+        """Parses the send kwargs to determine what selection users  wants to
+        process. Currently supported options are:
+
+        * run
+        * run-camcol
+        * run-filter
+        * run-filter-camcol
+        * camcol-filter
+        * camcol-frame
+        * field (full specification run-filter-camcol-frame)
+
         """
         self._run, self._camcol, self._field = int(0), int(0), int(0)
         self._filter, self._pick = str(0), str(0)
@@ -277,10 +349,10 @@ class DetectTrails:
 
 
     def process(self):
-        """
-        Convenience function that runs process_field() for
-        various inputs. Not using this function will void majority of
-        error and exception handling.
+        """Convenience function that runs process_field() for various inputs.
+        Not using this function will void majority of error and exception
+        handling in processing.
+
         """
         with open(self.results, "a") as results, \
              open(self.errors, "a") as errors:
@@ -346,5 +418,3 @@ class DetectTrails:
                 process_field(results, errors, self._run, self._camcol,
                               self._filter, self._field, self.params_bright,
                               self.params_dim, self.params_removestars)
-
-
