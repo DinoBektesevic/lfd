@@ -1,20 +1,21 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-astropy==2.0.1
-matplotlib==2.0.2
 numpy==1.13.1
+matplotlib==2.0.2
 scipy==0.19.1
-opencv-python==3.4.1.15
-fitsio==0.9.11
-numpydoc==0.8.0
-Pillow==5.1.0
-pycairo==1.17.0
-qtconsole==4.3.1
 scikit-learn==0.19.0
+SQLAlchemy==1.2.11
+astropy==2.0.1
+fitsio==0.9.11
+pycairo==1.17.0
+tk==8.5.182
+qtconsole==4.3.1
+Pillow==5.1.0
+opencv-python==3.4.1.15
 Sphinx==1.8.3
 sphinx-rtd-theme==0.4.2
 sphinxcontrib-napoleon==0.7
 sphinxcontrib-websupport==1.1.0
-SQLAlchemy==1.2.11
-tk==8.5.182
+numpydoc==0.8.0
+
