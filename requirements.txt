@@ -1,12 +1,12 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-python==3.6.20
+python==3.6
 astropy==2.0.1
 matplotlib==2.0.2
 numpy==1.13.1
 scipy==0.19.1
-opencv==3.1.0
+opencv-python==3.4.1.15
 sqlite==3.13.0
 fitsio==0.9.11
 numpydoc==0.8.0
