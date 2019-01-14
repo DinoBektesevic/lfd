@@ -17,7 +17,8 @@ import os
 import sys
 on_rtd = bool(os.environ.get("READTHEDOCS", False))
 if on_rtd:
-    sys.path.insert(0, os.path.abspath("../../"))
+    pth = __file__.split("lfd/")[0]
+    sys.path.insert(0, os.path.abspath(pth))
 else:
     dsktppath = os.path.expanduser("~/Desktop")
     sys.path.insert(0, os.path.abspath(dsktppath))
