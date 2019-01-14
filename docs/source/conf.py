@@ -12,21 +12,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
 import os
 import sys
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = bool(os.environ.get("READTHEDOCS", False))
 if on_rtd:
-    # I think it should be twice, once for docs, second because library
-    sys.path.insert(0, os.path.abspath('../../'))
+    sys.path.insert(0, os.path.abspath("../../"))
 else:
     dsktppath = os.path.expanduser("~/Desktop")
-    sys.path.insert(0, os.path.abspath(dsktppath)
+    sys.path.insert(0, os.path.abspath(dsktppath))
+
 #sys.path.insert(0, os.path.abspath("/home/dino/Desktop/lfd"))
 #sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
-
 project = 'lfd'
 copyright = '2019, Dino Bektesevic'
 author = 'Dino Bektesevic'
