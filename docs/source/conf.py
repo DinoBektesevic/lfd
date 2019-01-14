@@ -16,7 +16,8 @@ import os
 import sys
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
-    sys.path.insert(0, os.path.abspath('../'))
+    # I think it should be twice, once for docs, second because library
+    sys.path.insert(0, os.path.abspath('../../'))
 else:
     dsktppath = os.path.expanduser("~/Desktop")
     sys.path.insert(0, os.path.abspath(dsktppath)
