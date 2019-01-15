@@ -15,7 +15,6 @@ setup(
        'SQLAlchemy',
        'astropy',
        'fitsio',
-       'opencv-python',
        'Pillow',
    ],
 )
