@@ -209,8 +209,9 @@ can be generated as described in::
      plt.show()
 
 All of this is, of course, just a quick overview of all functionalities. There
-are many more details describing this and other useful utilities provided by LFD
-availible in the documentation. 
+are many more details describing this and other useful utilities, including
+Graphical User Interfaces to common functionality, provided by LFD availible in
+the documentation.
 
 License
 -------
