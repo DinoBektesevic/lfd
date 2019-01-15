@@ -15,14 +15,22 @@ Python 3 and OpenCv 3.0. You can find the old LFDS code  here_.
 
 .. _here: https://github.com/DinoBektesevic/LFDA
 
-# Installation
+Installation
+------------
 
-Use the requirements.txt to create a new environment into which you can
+Install from pip by running
+
+.. code-block:: bash
+
+   pip install lfd
+
+or clone it locally and use `requirements.txt` to create an environment from
+which you can run lfd
 
 .. code-block:: bash
 
    git clone https://github.com/DinoBektesevic/lfd.git
-
+    
 Import lfd and be on your merry way. 
 
 Requirements
@@ -42,13 +50,6 @@ Major requirements are as follows
 .. _esutil: https://github.com/esheldon/sdsspy/
 .. _sdsspy: https://github.com/esheldon/esutil
 
-Installation
-------------
-
-Install from pip by runnin
-
-.. code-block:: bash
-   pip install lfd
 
 
 Running the code
