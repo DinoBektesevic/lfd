@@ -139,8 +139,7 @@ a database for which an SQLAlchemy ORM is provided.
      # equivalent to
      e.cx1 = 100
 
-     # find the points where the line corsses the individual CCD edges again and
-     # go there
+     # find the points where the line corsses the individual CCD edges again and go there
      e.snap2ccd()
 
      # persist the changes to the DB
@@ -227,9 +226,9 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this
-program.  If not, see gnu.org/licenses/gpl-3.0.en__
+program.  If not, see gnu.org__
 
-.. __gnu.org/licenses/gpl-3.0.en: https://www.gnu.org/licenses/gpl-3.0.en.html
+.. __gnu.org: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 
 .. |docs| image:: https://readthedocs.org/projects/linear-feature-detector/badge/?version=latest
