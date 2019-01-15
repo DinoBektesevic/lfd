@@ -151,7 +151,7 @@ def pprint(objlist, *args, **kwargs):
       if short is false, the long table format is printed::
 
         run camcol filter field time x1 y1 x2 y2 cx1 cy1 cx2 cy2
-    
+
     digits : int
       2 by default. Controls the number of printed significant digits,
     """
