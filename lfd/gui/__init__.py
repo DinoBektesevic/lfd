@@ -1,2 +1,2 @@
-from .imagechecker import imagechecker
-from .jobcreator import jobcreator
+from lfd.gui.imagechecker import imagechecker
+from lfd.gui.jobcreator import jobcreator

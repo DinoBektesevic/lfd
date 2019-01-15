@@ -4,9 +4,9 @@ from tkinter import *
 from tkinter.ttk import *
 from tkinter import messagebox
 
-from .lefttopframe import TopFrame
-from .leftmidframe import MidFrame
-from .leftbotframe import BotFrame
+from  lfd.gui.jobcreator.lefttopframe import TopFrame
+from  lfd.gui.jobcreator.leftmidframe import MidFrame
+from  lfd.gui.jobcreator.leftbotframe import BotFrame
 
 import lfd.createjobs as cj
 

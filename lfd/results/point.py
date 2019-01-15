@@ -70,8 +70,8 @@ warnings.simplefilter('always', SyntaxWarning)
 
 from sqlalchemy.ext.mutable import MutableComposite
 
-from .coord_conversion import (convert_ccd2frame, convert_frame2ccd,
-                               CoordinateConversionError)
+from lfd.results.coord_conversion import (convert_ccd2frame, convert_frame2ccd,
+                                          CoordinateConversionError)
 
 __all__ = ["Point"]
 

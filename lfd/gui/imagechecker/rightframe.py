@@ -1,8 +1,8 @@
 from tkinter import *
 from tkinter.ttk import *
 
-from .topright import TopRight
-from .botright import BottomRight
+from lfd.gui.imagechecker.topright import TopRight
+from lfd.gui.imagechecker.botright import BottomRight
 
 class RightFrame(Frame):
     """Represents the right part of the frame containing all the action buttons

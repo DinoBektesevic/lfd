@@ -8,8 +8,8 @@ queried for the corresponding item.
 """
 import os
 
-from .indexers import ImageIndexer, EventIndexer
-from .imagedb import session_scope
+from lfd.gui.imagechecker.indexers import ImageIndexer, EventIndexer
+from lfd.gui.imagechecker.imagedb import session_scope
 
 class GenericBrowser(type):
     """GenericBrowser metaclass offers the ability to rename the values of

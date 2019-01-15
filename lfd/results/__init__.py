@@ -44,13 +44,13 @@ __query_aliases = {
 
 Base = _declarative_base()
 
-from .event import *
-from .frame import *
-from .point import *
+from lfd.results.event import *
+from lfd.results.frame import *
+from lfd.results.point import *
 
-from .basictime import *
-from .ccd_dimensions import *
-from .coord_conversion import *
+from lfd.results.basictime import *
+from lfd.results.ccd_dimensions import *
+from lfd.results.coord_conversion import *
 
 Session, engine = None, None
 def connect2db(uri, echo=False):
@@ -78,7 +78,7 @@ def connect2db(uri, echo=False):
     # create a Session object so transactions can be made
     Session = _sessionmaker(bind=engine)
 
-from .utils import *
+from lfd.results.utils import *
 
 del event, frame, point, basictime
 del ccd_dimensions, coord_conversion

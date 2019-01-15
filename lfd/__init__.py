@@ -42,10 +42,10 @@ PHOTO_REDUX = None
 BOSS_PHOTOOBJ = None
 
 
-from . import detecttrails
-from . import createjobs
-from . import gui
-from . import results
+from lfd import detecttrails
+from lfd import createjobs
+from lfd import gui
+from lfd import results
 
 def setup_detecttrails(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ,
                        photoreduxpath=PHOTO_REDUX, debugpath=None):

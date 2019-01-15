@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import os
 
-from .leftframe import LeftFrame
-from .rightframe import RightFrame
+from  lfd.gui.jobcreator.leftframe import LeftFrame
+from  lfd.gui.jobcreator.rightframe import RightFrame
 from lfd.gui.utils import utils
 
 from tkinter import *

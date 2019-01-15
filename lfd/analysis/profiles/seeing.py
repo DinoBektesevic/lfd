@@ -7,8 +7,8 @@ described in::
 """
 import numpy as np
 
-from .convolutionobj import ConvolutionObject
-from .consts import *
+from lfd.analysis.profiles.convolutionobj import ConvolutionObject
+from lfd.analysis.profiles.consts import *
 
 import copy
 

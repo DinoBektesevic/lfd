@@ -18,4 +18,4 @@ times. For fastest possible verification it is best to run ImageChecker
 locally. ImageChecker was designed to facilitate fast verification and
 correction of results and was not intended to be, yet another, FITS viewer.
 """
-from . import imagechecker
+from lfd.gui.imagechecker import imagechecker

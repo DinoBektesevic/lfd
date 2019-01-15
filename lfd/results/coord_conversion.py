@@ -1,4 +1,4 @@
-from . import ccd_dimensions as ccd
+from lfd.results import ccd_dimensions as ccd
 
 
 __all__ = ["convert_ccd2frame", "convert_frame2ccd",

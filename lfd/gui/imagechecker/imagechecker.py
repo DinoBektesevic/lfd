@@ -9,7 +9,7 @@ from tkinter import ttk
 from tkinter import Label
 from tkinter import filedialog
 
-from .databrowser import ImageBrowser, EventBrowser
+from lfd.gui.imagechecker.databrowser import ImageBrowser, EventBrowser
 
 class ImageChecker(Tk):
     """GUI app that allows for visual inspection of Events. To run the app

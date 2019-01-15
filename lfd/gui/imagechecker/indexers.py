@@ -5,8 +5,8 @@ import sqlalchemy as sql
 from lfd import results as res
 from lfd.results import Event
 
-from . import imagedb
-from .imagedb import Image
+from lfd.gui.imagechecker import imagedb
+from lfd.gui.imagechecker.imagedb import Image
 
 class Indexer:
     """Generic indexer of items in a database. Given a list of items or a

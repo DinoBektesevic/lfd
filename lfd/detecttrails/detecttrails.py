@@ -18,10 +18,10 @@ from cv2 import (CHAIN_APPROX_NONE , CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_L1,
 
 import bz2
 
-from .removestars import * #remove_stars
-from .processfield import * #process_field_bright, process_field_dim
-from .processfield import setup_debug
-from .sdss import files
+from lfd.detecttrails.removestars import * #remove_stars
+from lfd.detecttrails.processfield import * #process_field_bright, process_field_dim
+from lfd.detecttrails.processfield import setup_debug
+from lfd.detecttrails.sdss import files
 
 __all__ = ["DetectTrails", "process_field"]
 

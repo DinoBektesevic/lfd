@@ -66,6 +66,6 @@ def setup(bosspath, photoobjpath, photoreduxpath, debugpath):
     lfd.PHOTO_REDUX   = photoreduxpath
 
 
-from .removestars import *
-from .processfield import *
-from .detecttrails import *
+from lfd.detecttrails.removestars import *
+from lfd.detecttrails.processfield import *
+from lfd.detecttrails.detecttrails import *

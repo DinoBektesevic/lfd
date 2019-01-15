@@ -11,11 +11,11 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from astropy.time import Time
 
-from . import Base
-from . import __query_aliases as query_aliases
-from .point import Point
-from .basictime import BasicTime, LineTime
-from .utils import session_scope
+from lfd.results import Base
+from lfd.results import __query_aliases as query_aliases
+from lfd.results.point import Point
+from lfd.results.basictime import BasicTime, LineTime
+from lfd.results.utils import session_scope
 
 __all__ = ["Event"]
 

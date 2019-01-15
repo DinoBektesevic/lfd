@@ -2,7 +2,7 @@ import os.path as path
 import glob
 
 import lfd.results as res
-from . import imagedb
+from lfd.gui.imagechecker import imagedb
 
 
 def frameId2Filename(run, camcol, filter, field, type=".png"):

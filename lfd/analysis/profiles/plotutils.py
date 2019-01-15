@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 
-from .convolutionobj import ConvolutionObject
-from .convolution import convolve
-from .objectprofiles import *
-from .seeing import *
+from lfd.analysis.profiles.convolutionobj import ConvolutionObject
+from lfd.analysis.profiles.convolution import convolve
+from lfd.analysis.profiles.objectprofiles import *
+from lfd.analysis.profiles.seeing import *
 
 __all__ = ["plot_profiles"]
 
@@ -18,7 +18,7 @@ def plot_profiles(ax, profiles, *args, normed=True, **kwargs):
     normed to False if normalization is not desired. Lables are determined from
     the name attribute of the profile. `*args` and `**kwargs` are forwarded to
     the matplotlib plot function.
-    
+
     """
     for profile in profiles:
         if normed:
@@ -35,14 +35,14 @@ def plot_profiles(ax, profiles, *args, normed=True, **kwargs):
 #        d = FluxPerAngle(h, *sdss)
 #
 #        ofwhm = o.calc_fwhm()
-#        
+#
 #        c = convolve(o, d)
 #        dfwhm1 = c.calc_fwhm()
 #
 #        o = o = RabinaProfile("Rabina/img15_r.png", h)
 #        s = GausKolmogorov(sdssseeing)
 #        d = FluxPerAngle(h, *sdss)
-#        
+#
 #        c = convolve(o, s, d)
 #        obsfwhm1 = c.calc_fwhm()
 #
@@ -57,7 +57,7 @@ def plot_profiles(ax, profiles, *args, normed=True, **kwargs):
 #        o = RabinaProfile("Rabina/img15_r.png", h)
 #        s = GausKolmogorov(lsstseeing)
 #        d = FluxPerAngle(h, *lsst)
-#        
+#
 #        c = convolve(o, s, d)
 #        obsfwhm2 = c.calc_fwhm()
 #

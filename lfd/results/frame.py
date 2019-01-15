@@ -15,10 +15,10 @@ from sqlalchemy.orm import relationship
 
 from astropy.time import Time
 
-from . import Base
-from . import __query_aliases as query_aliases
-from .basictime import BasicTime
-from .utils import session_scope
+from lfd.results import Base
+from lfd.results import __query_aliases as query_aliases
+from lfd.results.basictime import BasicTime
+from lfd.results.utils import session_scope
 
 __all__ = ["Frame"]
 

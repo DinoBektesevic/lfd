@@ -8,8 +8,8 @@ import numpy as np
 from scipy import stats
 import cv2
 
-from .convolutionobj import ConvolutionObject
-from .consts import *
+from lfd.analysis.profiles.convolutionobj import ConvolutionObject
+from lfd.analysis.profiles.consts import *
 
 __all__ = ["PointSource", "GaussianSource", "DiskSource", "RabinaSource"]
 
