@@ -1,12 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
    name='lfd',
    version='1.0',
    description='Linear Feature Detector for Astronomical images',
    author='Dino Bektesevic',
-    author_email='ljetibo@gmail.com',
-   packages=['lfd'],  #same as name
+   author_email='ljetibo@gmail.com',
+   packages=find_packages(),  #same as name
    install_requires=[
        'numpy',
        'matplotlib',
