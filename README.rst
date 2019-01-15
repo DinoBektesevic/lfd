@@ -31,7 +31,10 @@ which you can run lfd
 
    git clone https://github.com/DinoBektesevic/lfd.git
     
-Import lfd and be on your merry way. 
+Import lfd and be on your merry way. One issue can occur when using conda or
+miniconda virtual environments where `numpy` can not be found. In that case it
+is neccessary to run `conda install numpy` and repeat the pip install for the
+lfd to install properly.
 
 Requirements
 ------------
