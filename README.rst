@@ -1,3 +1,8 @@
+Linear Feature Detector
+=======================
+
+|docs|
+
 Linear Feature Detector (LFD) library is a collection of packages that enable
 user to detect and analyze linear features on astronomical images. The code was
 designed to be run interactively, or at scale on a cluster and specifically
@@ -10,14 +15,23 @@ Python 3 and OpenCv 3.0. You can find the old LFDS code  here_.
 
 .. _here: https://github.com/DinoBektesevic/LFDA
 
-# Installation
+Installation
+------------
 
-Use the requirements.txt to create a new environment into which you can
+Install from pip by running
+
+.. code-block:: bash
+
+   pip install lfd
+
+or clone it locally and use `requirements.txt` to create an environment from
+which you can run lfd
 
 .. code-block:: bash
 
    git clone https://github.com/DinoBektesevic/lfd.git
-
+    
+>>>>>>> master
 Import lfd and be on your merry way. 
 
 Requirements
@@ -37,10 +51,13 @@ Major requirements are as follows
 .. _esutil: https://github.com/esheldon/sdsspy/
 .. _sdsspy: https://github.com/esheldon/esutil
 
+
+
 Running the code
 ----------------
 
-Read the docs!
+Read the docs! They contain many examples.
+>>>>>>> master
 
 By default lfd is setup to work with SDSS files and directory structure. This
 can be altered significantly, although complete departure from SDSS file and
@@ -82,15 +99,57 @@ a database for which an SQLAlchemy ORM is provided.
 
 .. code-block:: python
 
-     lfd.results.connect2db("foo.db")
-     lfd.results.from_file("results.txt")
+     from lfd.results import Event, Frame, Point
+     from lfd import results
 
+     # create or connect to a database
+     results.connect2db("foo.db")
+
+     # populate it with data either from output of detecttrails
+     results.from_file("results.txt")
+
+     # or create mock data to play with
+     results.utils.create_test_sample()
+
+     # query on Event or Frame parameters fo a single or a collection of items
      with results.session_scope() as s:
-         s.query(Event).filter(Event.run=2888).all()
+         # returns all Events found on run 2888, but pick only one
+         e = s.query(Event).filter(Event.run=2888).first()
+         results.utils.deep_expunge(e)
 
-        fquery = query.filter(lfd.results.Frame.t.iso > '2009-09-27 10:06:10.430')
-        f = fquery.all()
-        lfd.results.deep_expunge_all(f, s)
+         # get a collection of frames 
+         fquery = query.filter(Frame.t.iso > '2009-09-27 10:06:10.430')
+         f = fquery.all()
+         lfd.results.deep_expunge_all(f, s)
+
+     # create table like output
+     results.utils.pprint(f)
+
+     # manipulate them as OO objects and commit the changes back, f.e. move one
+     # of the points of the line somewhere else
+     e.p1 = Point(10, 10, camcol=5, filter='r')
+
+     # or just move one of P1(x1, y1), P2(x2, y2) line coordinates
+     e.y2 = 10
+
+     # see and work with the coordinates values in reference to the origin of
+     # the entire CCD array and not just individual CCDs within
+     e.p1.x
+     e.p1.switchCoordSys()
+     e.p1.x
+
+     # equivalent to
+     e.cx1 = 100
+
+     # find the points where the line corsses the individual CCD edges again and go there
+     e.snap2ccd()
+
+     # persist the changes to the DB
+     with results.session_scope() as s:
+         s.add(e)
+         s.commit()
+
+>>>>>>> master
 
 LFD was designed to be able to handle processing large ammounts of data, in fact
 it was used to process the entire SDSS database of images by using the Fermi
@@ -153,12 +212,15 @@ can be generated as described in::
      plt.show()
 
 All of this is, of course, just a quick overview of all functionalities. There
-are many more details describing this and other useful utilities provided by LFD
-availible in the documentation. 
+are many more details describing this and other useful utilities, including
+Graphical User Interfaces to common functionality, provided by LFD availible in
+the documentation.
 
-# License
+License
+-------
 
-Copyright (C) 2018  Dino Bektesevic
+GNU GPLv3 Copyright (C) 2018  Dino Bektesevic
+>>>>>>> master
 
 This program is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software Foundation,
@@ -169,6 +231,13 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this
-program.  If not, see <http://www.gnu.org/licenses/>.
+program.  If not, see gnu.org/licenses__
 
+.. __licenses: https://www.gnu.org/licenses/gpl-3.0.en.html
+
+
+.. |docs| image:: https://readthedocs.org/projects/linear-feature-detector/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://linear-feature-detector.readthedocs.io/en/latest/?badge=latest
 

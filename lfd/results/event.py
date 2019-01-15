@@ -56,7 +56,7 @@ class Event(Base):
       x ccd coordinate of point 2 of the linear feature
     cy2 :
       y ccd coordinate of point 2 of the linear feature
-    p1 : 
+    p1 :
       see class Point composite Column mapping of x1, y1 to a point p1
     p2 :
       see class Point,composite Column mapping of x2, y2 to a point p2
@@ -238,8 +238,6 @@ class Event(Base):
         t_format = kwargs.pop("format", "sdss-tai")
         self.start_t = self.__init_t(start_t, t_format)
         self.end_t   = self.__init_t(end_t, t_format)
-
-
 
     def __init_t(self, t, format):
         # It might not be possible to determine the times of the linear
