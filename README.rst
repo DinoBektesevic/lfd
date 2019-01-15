@@ -231,3 +231,7 @@ program.  If not, see gnu.org/licenses/gpl-3.0.en__
 .. __gnu.org/licenses/gpl-3.0.en: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 
+.. |docs| image:: https://readthedocs.org/projects/linear-feature-detector/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://linear-feature-detector.readthedocs.io/en/latest/?badge=latest
