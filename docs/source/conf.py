@@ -33,7 +33,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['cv2']
+MOCK_MODULES = ['cv2', 'opencv-python', 'fitsio']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
