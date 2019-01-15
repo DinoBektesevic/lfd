@@ -29,7 +29,7 @@ class LeftFrame(Frame):
         self.data = parent.data
 
         tmppath = os.path.split(__file__)[0]
-        failimg = Image.open(os.path.join(tmppath, "noimage.png"))
+        failimg = Image.open(os.path.join(tmppath, "lfd_noimage.png"))
         self.img = failimg
         self.drawnline = None
 
