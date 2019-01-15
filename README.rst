@@ -31,7 +31,6 @@ which you can run lfd
 
    git clone https://github.com/DinoBektesevic/lfd.git
     
->>>>>>> master
 Import lfd and be on your merry way. 
 
 Requirements
@@ -57,7 +56,7 @@ Running the code
 ----------------
 
 Read the docs! They contain many examples.
->>>>>>> master
+
 
 By default lfd is setup to work with SDSS files and directory structure. This
 can be altered significantly, although complete departure from SDSS file and
@@ -149,7 +148,6 @@ a database for which an SQLAlchemy ORM is provided.
          s.add(e)
          s.commit()
 
->>>>>>> master
 
 LFD was designed to be able to handle processing large ammounts of data, in fact
 it was used to process the entire SDSS database of images by using the Fermi
@@ -220,7 +218,7 @@ License
 -------
 
 GNU GPLv3 Copyright (C) 2018  Dino Bektesevic
->>>>>>> master
+
 
 This program is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software Foundation,
