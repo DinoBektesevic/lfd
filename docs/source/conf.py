@@ -24,19 +24,6 @@
 #sys.path.insert(0, os.path.abspath("/home/dino/Desktop/lfd"))
 #sys.path.insert(0, os.path.abspath('.'))
 
-
-import sys
-from unittest.mock import MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-MOCK_MODULES = ['cv2', 'opencv-python', 'fitsio']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-
-
 # -- Project information -----------------------------------------------------
 project = 'lfd'
 copyright = '2019, Dino Bektesevic'
