@@ -215,7 +215,7 @@ availible in the documentation.
 License
 -------
 
-GNU GPLv3_ Copyright (C) 2018  Dino Bektesevic
+GNU GPLv3 Copyright (C) 2018  Dino Bektesevic
 
 This program is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software Foundation,
@@ -226,9 +226,9 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this
-program.  If not, see gnu.org__
+program.  If not, see gnu.org/licenses__
 
-.. __gnu.org: https://www.gnu.org/licenses/gpl-3.0.en.html
+.. __licenses: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 
 .. |docs| image:: https://readthedocs.org/projects/linear-feature-detector/badge/?version=latest
