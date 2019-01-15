@@ -13,12 +13,12 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-import os
-import sys
+#import os
+#import sys
 
-pth = __file__.split("lfd/")[0]
-print("ROOT PATH SET TO ", pth)
-sys.path.insert(0, os.path.abspath(pth))
+#pth = __file__.split("lfd/")[0]
+#print("ROOT PATH SET TO ", pth)
+#sys.path.insert(0, os.path.abspath(pth))
 
 
 #sys.path.insert(0, os.path.abspath("/home/dino/Desktop/lfd"))
