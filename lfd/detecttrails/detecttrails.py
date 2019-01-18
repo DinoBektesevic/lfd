@@ -20,7 +20,6 @@ import bz2
 
 from lfd.detecttrails.removestars import * #remove_stars
 from lfd.detecttrails.processfield import * #process_field_bright, process_field_dim
-from lfd.detecttrails.processfield import setup_debug
 from lfd.detecttrails.sdss import files
 
 __all__ = ["DetectTrails", "process_field"]
@@ -238,6 +237,9 @@ class DetectTrails:
             "pixscale": 0.396,
             "defaultxy": 20,
             "maxxy": 60,
+            "filter_caps": {'u': 22.0, 'g': 22.2,'r': 22.2, 'i':21.3, 'z': 20.5},
+            "magcount": 3,
+            "maxmagdiff": 3,
             "debug": False
             }
 
@@ -263,9 +265,6 @@ class DetectTrails:
             self.params_bright["debug"] = self.debug
             self.params_dim["debug"] = self.debug
             self.params_removestars["debug"] = self.debug
-        if any([self.params_removestars["debug"], self.params_bright["debug"],
-                self.params_dim["debug"]]):
-            setup_debug()
 
         self._load()
 
