@@ -238,9 +238,6 @@ class DetectTrails:
             "pixscale": 0.396,
             "defaultxy": 20,
             "maxxy": 60,
-            "filter_caps": {'u': 22.0, 'g': 22.2,'r': 22.2, 'i':21.3, 'z': 20.5},
-            "magcount": 3,
-            "maxmagdiff": 3,
             "debug": False
             }
 

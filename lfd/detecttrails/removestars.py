@@ -61,118 +61,126 @@ def remove_stars_CSV(img, _run, _camcol, _filter, _field):
     return img
 
 
+
+class ResolveStatus:
+    """Defines resolver flag values. See
+    https://www.sdss.org/dr15/algorithms/bitmasks/#RESOLVE_STATUS
+    """
+    RUN_PRIMARY 	= 0
+    RUN_RAMP        = 1
+    RUN_OVERLAPONLY = 2
+    RUN_IGNORE 	    = 3
+    RUN_EDGE        = 4
+    RUN_DUPLICATE 	= 5
+    SURVEY_PRIMARY 	= 8
+    SURVEY_BEST 	= 9
+    SURVEY_SECONDARY= 10
+    SURVEY_BADFIELD = 11
+    SURVEY_EDGE 	= 12
+
+
+def is_set(bitmask, flag):
+    """Check whether desired flag is set in the bitmask.
+
+    Parameters
+    ----------
+    bitmask : bin, hex, int
+        bitmask to check (f.e. 0b10000000001, 0x401, 1025)
+    flag : int
+        what flag position to check
+    """
+    return bitmask >> flag & 1
+
+
 def read_photoObj(path_to_photoOBJ):
-    """Function that reads photoObj headers and returns following lists:
+    """Function that reads photoObj headers and returns read parameters as
+    Python builtin types. 
 
-   Returns
-   -------
-   row : list(dict)
-       y coordinate of an object on the image. Each entry is a dictionary
-       where keys are the filter designations and values the coordinates
-   col : list(dict)
-       x coordinate of an object on the image. Each entry is a dictionary
-       where keys are the filter designations and values the coordinates
-   psfMag : list(dict)
-       Each entry is a dictionary where keys are the filter designations and
-       values the magnitudes. See: http://www.sdss3.org/dr10/algorithms/magnitudes.php#mag_psf
-   nObserve : list(int)
-       Number of times that object was imaged by SDSS.
-   objctype : list(int)
-       SDSS type identifier, see cas.sdss.org/dr7/de/help/browser/enum.asp?n=ObjType
-   petro90 : list(dict)
-       This is the radius, in arcsec, from the center of the object that
-       contains 90% of its Petrosian flux. Each entry is a dictionary where
-       keys are the filter designations and values the radii. See: http://www.sdss3.org/dr10/algorithms/magnitudes.php#mag_petro
-       and http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/RERUN/RUN/CAMCOL/photoObj.html
+    Returns
+    -------
+    row : list(dict)
+        y coordinate of an object on the image. Each entry is a dictionary
+        where keys are the filter designations and values the coordinates
+    col : list(dict)
+        x coordinate of an object on the image. Each entry is a dictionary
+        where keys are the filter designations and values the coordinates
+    petro90 : list(dict)
+        This is the radius, in arcsec, from the center of the object that
+        contains 90% of its Petrosian flux. Each entry is a dictionary where
+        keys are the filter designations and values the radii. See:
+        http://www.sdss3.org/dr10/algorithms/magnitudes.php#mag_petro and
+        http://data.sdss3.org/datamodel/files/BOSS_PHOTOOBJ/RERUN/RUN/CAMCOL/photoObj.html
+    nObserve : list(int)
+        Number of times an area containing that object was imaged by SDSS.
+    nDetect : list(int)
+        Number of times the object was detected by SDSS.
+    resflags : list(hex)
+        Hexadecimal bitmask produced by the SDSS resolver. See
+        https://www.sdss.org/dr15/algorithms/bitmasks/#RESOLVE_STATUS
+        https://www.sdss.org/dr14/algorithms/resolve/ and
+        https://www.sdss.org/dr15/algorithms/bitmasks/
+        Only really used for debugging after this point.
 
-   Parameters
-   ----------
-    path_to_photoOBJ : str
-        string type system path to a photoObj*.fits file
-
+    Parameters
+    ----------
+     path_to_photoOBJ : str
+         path to a photoObj*.fits file
+ 
     """
     header1, header2 = fitsio.read(path_to_photoOBJ, header="True")
 
-    #variable names are lowercase fits field names, optionally an "s" is added
-    #at the end to mark a collection of another data set (dictionary/list)
-    objctype = header1['OBJC_TYPE']
-    types = header1['TYPE']
-    rows = header1['ROWC']
-    cols = header1['COLC']
-    petro90s = header1['PETROTH90']
-    psfMags = header1['PSFMAG']
-    nObserve = header1["NOBSERVE"]
-    nDetect = header1["NDETECT"]
-
-    #names of fits field names with an f at the end signalizing "final"
-    #these are the lists that get returned
     rowf = list()
     colf = list()
     petro90f = list()
-    psfMagf = list()
-    for i in range (0, len(rows)):
-        #names are current object data structures, singular to mark 1 object
-        row = rows[i]
-        rowf.append({'u':math.ceil(row[0]), 'g':math.ceil(row[1]),
-                     'r':math.ceil(row[2]), 'i':math.ceil(row[3]),
-                     'z':math.ceil(row[4])})
-        col = cols[i]
-        colf.append({'u':math.ceil(col[0]), 'g':math.ceil(col[1]),
-                     'r':math.ceil(col[2]), 'i':math.ceil(col[3]),
-                     'z':math.ceil(col[4])})
-        psfMag = psfMags[i]
-        psfMagf.append({'u':math.ceil(psfMag[0]), 'g':math.ceil(psfMag[1]),
-                        'r':math.ceil(psfMag[2]), 'i':math.ceil(psfMag[3]),
-                        'z':math.ceil(psfMag[4])})
-        petro90 = petro90s[i]
-        petro90f.append({'u':math.ceil(petro90[0]), 'g':math.ceil(petro90[1]),
-                         'r':math.ceil(petro90[2]), 'i':math.ceil(petro90[3]),
-                         'z':math.ceil(petro90[4])})
+    resflags = list()
 
-    return rowf, colf, psfMagf, petro90f, objctype, types, nObserve, nDetect
+    nObserve = header1["NOBSERVE"]
+    nDetect = header1["NDETECT"]
+
+    for obj in header1:
+        resolve_flags = hex(obj["RESOLVE_STATUS"])
+        resflags.append(resolve_flags)
+
+        # does the same as is_set function, except slightly faster
+        is_set = lambda flag: int(resolve_flags, 16) >> flag & 1
+
+        # I have no idea how these conditions make sense, but here we are
+        bad = (is_set(ResolveStatus.RUN_PRIMARY) and
+               is_set(ResolveStatus.SURVEY_BEST))
+        not_good = (is_set(ResolveStatus.RUN_PRIMARY) and
+                    is_set(ResolveStatus.SURVEY_PRIMARY))
+
+        if not bad and not not_good:
+            row = obj['ROWC']
+            col = obj['COLC']
+            petro90 = obj['PETROTH90']
+            psfMag = obj['PSFMAG']
+
+           #names are current object data structures, singular to mark 1 object
+            rowf.append({'u':math.ceil(row[0]), 'g':math.ceil(row[1]),
+                         'r':math.ceil(row[2]), 'i':math.ceil(row[3]),
+                         'z':math.ceil(row[4])})
+
+            colf.append({'u':math.ceil(col[0]), 'g':math.ceil(col[1]),
+                         'r':math.ceil(col[2]), 'i':math.ceil(col[3]),
+                         'z':math.ceil(col[4])})
+
+            petro90f.append({'u':math.ceil(petro90[0]), 'g':math.ceil(petro90[1]),
+                             'r':math.ceil(petro90[2]), 'i':math.ceil(petro90[3]),
+                             'z':math.ceil(petro90[4])})
+
+    return rowf, colf, petro90f,  nObserve, nDetect, resflags
 
 
-
-def fill(array, tuple_val):
-    """.. deprecated:: 1.0
-    Used to colorize the image for debugging purposes.
-    """
-    if np.shape(array)[-1] != len(tuple_val):
-        raise ValueError("Tuple len is not the same as array element len")
-
-    for i in range(len(array)):
-        for j in range(len(array[i])):
-            array[i,j] = tuple_val
-    return array
-
-
-def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
-                 maxxy, pixscale, magcount, maxmagdiff, debug):
+def remove_stars(img, run, camcol, filter, field, defaultxy, maxxy, pixscale,
+                 debug):
     """Removes all stars found in coordinate file from a given image by
-    "blottings" out black squares at objects coordinats.
+    "blottings" out black circles at objects coordinates.
 
-    Size of the square is, if possible, determined according to its petrosian
-    magnitude. The square is up/down-scaled by a scaling factor converting the
-    object size from arcsec to pixel size. If the calculated radius is less
-    than zero or bigger than maximal allowed size, a default square size is
-    used.
-
-    Aditionally to determining size of the blocked out square, function tries to
-    discriminate actual sources from false ones.
-
-    Squares will only be drawn:
-
-    * if there is a valid psfMag value.
-    * for those psfMag values that are under a certain user-set cap.
-    * if differences in measured magnitudes of all filters are less maxmagdiff
-      in more than or equal to magcount filters. F.e. for maxmagdiff=5 magcount=3
-
-      | won't pass: [2,8,8,8,8], [2,2,8,8,8], [1,1,7,8,9]
-      | will pass: [5,6,7,8,9], [3,6,7,8,9], [3,3,7,8,9]
-
-    Idea is that psfMag values that contain only "opposite" extreme values
-    (very bright/very dim) are  most likely a false detection, they exist in
-    one of the filters but not in any others. Such objects are not removed.
+    Radius of the circle is, if possible, determined according to its petrosian
+    magnitude. The radius is converted from arcsec to pixel size by scaling it
+    by pixscale value. If the calculated radius is less than zero or bigger
+    than maximal allowed size, a default radius is used.
 
     Parameters
     ----------
@@ -204,30 +212,50 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
         maximal allowed difference between two magnitudes.
 
     """
+    rows, cols, petro90, nObserve, nDetect, resflags = \
+        read_photoObj(files.filename("photoObj", run=run, camcol=camcol,
+                                     field=_field))
 
-    rows, cols, psfMag, petro90, objctype, types, nObserve, nDetect = \
-        read_photoObj(files.filename("photoObj", run=_run, camcol=_camcol,
-                                    field=_field))
+    if debug:
+        # we really don't want to trample on original data at this point yet
+        # so we make a copy and make objects in it more visible
+        img2 = img.copy()
+        img2[img2<0.02]=0
+        img2[img2>0]+=0.5
+
+        img2 = cv2.convertScaleAbs(img2)
+        img2 = cv2.equalizeHist(img2)
+        # reduce the img brightness so text is more readable
+        img2[img2>0] -= 125
 
     for i in range(len(rows)):
         x = int(cols[i][_filter])
         y = int(rows[i][_filter])
 
-        if psfMag[i] and psfMag[i][_filter] < filter_caps[_filter]:
-            diffs = []
-            a = [val for key, val in psfMag[i].items()]
-            for j in range(len(a)):
-                for k in range(j+1, len(a)):
-                    diffs.append(a[j]-a[k])
-            diffs = np.absolute(diffs)
+        dxy = defaultxy
+        if petro90[i][_filter] > 0:
+            dxy = int(petro90[i][_filter]/pixscale) + 10
+        if dxy > maxxy:
+            dxy = defaultxy
 
-            if magcount >= np.count_nonzero(diffs>maxmagdiff):
-                dxy = defaultxy
-                if petro90[i][_filter] > 0:
-                    dxy = int(petro90[i][_filter]/pixscale) + 10
-                if dxy > maxxy:
-                    dxy = defaultxy
-                if nObserve[i] == nDetect[i]:
-                    img[x-dxy:x+dxy, y-dxy:y+dxy].fill(0.0)
+        if nObserve[i] == nDetect[i]:
+            img = cv2.circle(img, (x, y), 2*dxy, 0, thickness=cv2.FILLED)
+            if debug:
+                img2 = cv2.circle(img2, (x, y), dxy, 255, thickness=1)
+
+                bottomLeftCornerOfText = (x,y)
+                fontFace = cv2.FONT_HERSHEY_SIMPLEX
+                fontScale = 0.5
+                fontColor = (255, 255, 255)
+
+                cv2.putText(img2,
+                            str(resflags[i]), 
+                            bottomLeftCornerOfText, 
+                            fontFace, 
+                            fontScale,
+                            fontColor)
+                
+    if debug:
+        cv2.imwrite("/home/dino/Desktop/test.png", img2)
 
     return img
