@@ -61,9 +61,10 @@ def setup(bosspath, photoobjpath, photoreduxpath, debugpath):
     # if the paths were changed through the function call signature, update the
     # global vars here
     lfd.BOSS          = bosspath
-    lfd.DEBUG_PATH    = debugpath
     lfd.BOSS_PHOTOOBJ = photoobjpath
     lfd.PHOTO_REDUX   = photoreduxpath
+    global DEBUG_PATH
+    DEBUG_PATH        = debugpath
 
 
 from lfd.detecttrails.removestars import *

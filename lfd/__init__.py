@@ -73,7 +73,7 @@ def setup_detecttrails(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ,
     if bosspath is None:
         bosspath = _os.path.join(_os.path.expanduser("~"), "Desktop/boss")
     else:
-        bosspath = _os.path.expandser(bosspath)
+        bosspath = _os.path.expanduser(bosspath)
     if photoobjpath is None:
         photoobjpath = _os.path.join(bosspath, "photoObj")
     else:

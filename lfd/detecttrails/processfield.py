@@ -12,23 +12,9 @@ import cv2
 import numpy as np
 import os as os
 
-__all__ = ["process_field_bright", "process_field_dim", "pathBright"]
+import lfd.detecttrails as dt
 
-pathBright = None
-pathDim = None
-
-def setup_debug():
-    """Sets up the module global variables - paths to where the debug output is
-    saved. Invoked when 'debug' key is set to True for any of the detection
-    steps. Generally there would be no need to call this function otherwise.
-    """
-    try:
-        global pathBright
-        global pathDim
-        pathBright = os.environ["DEBUG_PATH"]
-        pathDim = os.environ["DEBUG_PATH"]
-    except:
-        pass
+__all__ = ["process_field_bright", "process_field_dim"]
 
 def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
     """
@@ -99,54 +85,59 @@ def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
             pass
 
     if debug:
-        print ("RO: "                                                 )
-        print ("Ro_tresh:    ", dro                                   )
-        print ("  PROCESED IMAGE: "                                   )
-        print ("    ro1:    ", ro1.tolist()                           )
-        print ("    avg(ro1):    ", np.average(ro1)                   )
-        print ("  MINAREARECT IMAGE: "                                )
-        print ("    ro2:    ", ro2.tolist()                           )
-        print ("    avg(ro2):    ", np.average(ro2)                   )
-        print ("------------------------------------------"           )
-        print ("avg1-avg2:    ", abs(np.average(ro1)-np.average(ro2)) )
+        drostr = f"""
+        ====================  Ro Test   ===================
+        Set dro treshold: {dro}
+            Processed Image Measured Values:
+                ro1:      {ro1.ravel()}
+                avg(ro1): {np.average(ro1)}
+            MinAreaRect Image Measured Values:
+                ro2:      {ro2.ravel()}
+                avg(ro2): {np.average(ro2)}
+            ---------------------------------------
+            avg1-av2: {abs(np.average(ro1)-np.average(ro2))}
+        """
+        print(drostr)
 
     if abs(np.average(ro1)-np.average(ro2))>dro:
-        if debug: print("Ro test:    FAILED")
+        if debug: print("        Ro test:    FAILED")
         return True
 
-
     if debug:
-        print ("\nTHETA: "                                                 )
-        print ("Theta_tresh:    ", thetaTresh                              )
-        print ("Lineset_tresh    ", lineSetTresh                           )
-        print ("  PROCESED IMAGE: "                                        )
-        print ("    theta1    ", theta1.tolist()                           )
-        print ("    max1-min1    ", abs(theta1.max()-theta1.min())         )
-        print ("  MINAREARECT IMAGE: "                                     )
-        print ("    theta2    ", theta2.tolist()                           )
-        print ("    max2-min2    ", abs(theta2.max()-theta2.min())         )
-        print ("------------------------------------------"                )
-        print ("Average(theta1-theta2):    ",abs(np.average(theta1-theta2)))
+        thetastr = f"""
+        ====================  Theta Test   ===================
+        Set individual theta treshold: {thetaTresh}
+        Set line set theta treshold:   {lineSetTresh}
+            Processed Image Measured Values:
+                theta1:                   {theta1.ravel()}
+                max(theta1)-min(theta1):  {abs(theta1.max()-theta1.min())}
+            MinAreaRect Image Measured Values:
+                theta2:                   {theta2.ravel()}
+                max(theta2)-min(theta2):  {abs(theta2.max()-theta2.min())}
+            ---------------------------------------
+            average(theta1-theta2): {np.average(abs(theta1-theta2))}
+        """
+        print(thetastr)
 
     dtheta1=abs(theta1.max()-theta1.min())
     if dtheta1> thetaTresh:
-        if debug: print("Theta1 tresh test:    FAILED")
+        if debug: print("        Theta1 tresh test:    FAILED")
         return True
 
     dtheta2=abs(theta2.max()-theta2.min())
     if dtheta2> thetaTresh:
-        if debug: print ("Theta2 tresh test:    FAILED")
+        if debug: print ("        Theta2 tresh test:    FAILED")
         return True
 
 
     dtheta = abs(theta1-theta2)
     if np.average(dtheta)> lineSetTresh:
-        if debug: print ("Lineset tresh test:    FAILED")
+        if debug: print ("        Lineset tresh test:    FAILED")
         return True
 
 
 
-def draw_lines(hough, image, nlines, name, path=pathDim,
+def draw_lines(hough, image, nlines, name, path=dt.DEBUG_PATH,
                 compression=0, color=(255,0,0)):
     """
     Draws hough lines on a given image and saves it as a png.
@@ -173,6 +164,7 @@ def draw_lines(hough, image, nlines, name, path=pathDim,
     #convert to color image so that you can see the lines
     draw_im = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
+    # this is again change opencv4 from [1, N, 2] to [N, 1, 2]
     for houghparams in hough[:nlines]:
         try:
             rho, theta = houghparams[0]
@@ -330,6 +322,8 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
         treshold for maximal allowed distance between the average x-axis
         intersection coordinates of the two sets of lines
     """
+    if debug:
+        print("Detecting if BRIGHT trail is present in the image.\n")
     img[img<0] = 0
 
     #FITS files are usually 1 channel 32 bit float images, we need
@@ -338,44 +332,50 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
     equ = cv2.equalizeHist(gray_image)
 
     if debug:
-        cv2.imwrite(os.path.join(pathBright, "1equBRIGHT.png"), equ,
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, "1equBRIGHT.png"), equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 3])
-        print("BRIGHT: saving EQU with removed stars")
+        print("  Saving histogram equalized image with removed stars.")
 
     equ = cv2.dilate(equ, dilateKernel)
 
     if debug:
-            cv2.imwrite(os.path.join(pathBright, "2dilateBRIGHT.png"), equ,
+            cv2.imwrite(os.path.join(dt.DEBUG_PATH, "2dilateBRIGHT.png"), equ,
                         [cv2.IMWRITE_PNG_COMPRESSION, 3])
-            print("BRIGHT: saving dilated image.")
+            print("  Saving dilated image.")
 
 
     detection, box_img = fit_minAreaRect(equ, contoursMode, contoursMethod,
                                          minAreaRectMinLen, lwTresh, debug)
 
     if debug:
-        cv2.imwrite(os.path.join(pathBright, "3contoursBRIGHT.png"), box_img,
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, "3contoursBRIGHT.png"), box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 3])
-        print ("BRIGHT: saving contours")
+        print ("  Saving image of fitted and accepted minimal area rectangles.")
 
+    # check if any boxes were found in the image
     if detection:
         equhough = cv2.HoughLines(equ, houghMethod, np.pi/180, 1)
         boxhough = cv2.HoughLines(box_img, houghMethod, np.pi/180, 1)
 
         if debug:
             draw_lines(equhough, equ, nlinesInSet, "5equhoughBRIGHT",
-                        path=pathBright)
+                        path=dt.DEBUG_PATH)
             draw_lines(boxhough, box_img,  nlinesInSet, "4boxhoughBRIGHT",
-                        path=pathBright)
-            print("BRIGHT!")
+                        path=dt.DEBUG_PATH)
+            print("  Saving images of fitted lines.")
 
         if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
                         lineSetTresh, debug):
+            if debug:
+                print("FAILED to detect BRIGHT lines!")
             return (False, None)
         else:
+            if debug:
+                print("SUCCESS: BRIGHT lines were detected in this image!")
             return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print("BRIGHT: no boxes found")
+        if debug:
+            print("  No minimal area rectangles could be fitted!")
         return (False, None)
 
 
@@ -441,6 +441,9 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
         treshold for maximal allowed distance between the average x-axis
         intersection coordinates of the two sets of lines
     """
+    if debug:
+        print("Detecting if DIM trail is present in the image.\n")
+
     img[img<minFlux]=0
     img[img>0]+=addFlux
 
@@ -448,22 +451,22 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
     equ = cv2.equalizeHist(gray_image)
 
     if debug:
-        print("DIM: saving EQU with stars removed")
-        cv2.imwrite(os.path.join(pathDim, "6equDIM.png"), equ,
+        print("  Saving histogram equalized image with removed stars.")
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, "6equDIM.png"), equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     opening = cv2.erode(equ, erodeKernel)
 
     if debug:
-        print("DIM: saving eroded EQU with stars removed")
-        cv2.imwrite(os.path.join(pathDim, '7erodedDIM.png'), opening,
+        print("  Saving eroded image.")
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, '7erodedDIM.png'), opening,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     equ = cv2.dilate(opening, dilateKernel)
 
     if debug:
-        print("DIM: saving dilated eroded EQU with stars removed")
-        cv2.imwrite(os.path.join(pathDim, '8openedDIM.png'), equ,
+        print("  Saving dilated image.")
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, '8openedDIM.png'), equ,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     detection, box_img = fit_minAreaRect(equ, contoursMode,
@@ -471,26 +474,32 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
                                           minAreaRectMinLen, lwTresh,
                                           debug)
     if debug:
-        cv2.imwrite(os.path.join(pathDim, "9contoursDIM.png"), box_img,
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, "9contoursDIM.png"), box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
-        print("DIM: saving contours")
+        print("  Saving image of fitted and accepted minimal area rectangles.")
 
+    # this is just checking if any rectangles were found and accepted
     if detection:
         equhough = cv2.HoughLines(equ, houghMethod, np.pi/180, 1)
         boxhough = cv2.HoughLines(box_img, houghMethod, np.pi/180, 1)
 
         if debug:
             draw_lines(equhough, equ, nlinesInSet, "10equhoughDIM",
-                        compression=4, path=pathDim)
+                        compression=4, path=dt.DEBUG_PATH)
             draw_lines(boxhough, box_img, nlinesInSet, "11boxhoughDIM",
-                        compression=4, color=(0,0,255), path=pathDim)
-            print("DIM!")
+                        compression=4, color=(0,0,255), path=dt.DEBUG_PATH)
+            print("  Saving images of fitted lines.")
 
         if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
                         lineSetTresh, debug):
+            if debug:
+                print("FAILED to detect DIM lines!")
             return (False, None)
         else:
+            if debug:
+                print("SUCCESS: DIM lines were detected in this image!")
             return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print("DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!")
+        if debug:
+            print("  No minimal area rectangles could be fitted!")
         return (False, None)

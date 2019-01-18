@@ -211,7 +211,7 @@ class DetectTrails:
             "contoursMode": RETR_LIST, #CV_RETR_EXTERNAL
             "contoursMethod": CHAIN_APPROX_NONE, #CV_CHAIN_APPROX_SIMPLE
             "minAreaRectMinLen": 1, ##HAS A BIG IMPACT ON FOUND COUNTOURS!
-            "houghMethod": 20, #CV_HOUGH_STANDARD
+            "houghMethod": 1, #CV_HOUGH_STANDARD
             "nlinesInSet": 3,
             "lineSetTresh": 0.15,
             "dro": 25,
@@ -227,7 +227,7 @@ class DetectTrails:
             "contoursMode": RETR_LIST, #CV_RETR_EXTERNAL
             "contoursMethod": CHAIN_APPROX_NONE, #CV_CHAIN_APPROX_SIMPLE
             "minAreaRectMinLen": 1,
-            "houghMethod": 20, #CV_HOUGH_STANDARD
+            "houghMethod": 1, #CV_HOUGH_STANDARD
             "nlinesInSet": 3,
             "lineSetTresh": 0.15,
             "dro": 20,
@@ -237,9 +237,6 @@ class DetectTrails:
             "pixscale": 0.396,
             "defaultxy": 20,
             "maxxy": 60,
-            "filter_caps": {'u': 22.0, 'g': 22.2,'r': 22.2, 'i':21.3, 'z': 20.5},
-            "magcount": 3,
-            "maxmagdiff": 3,
             "debug": False
             }
 

@@ -11,55 +11,13 @@ import math
 
 import numpy as np
 import fitsio
+import cv2
 
-from .sdss import astrom
-from .sdss import files
+import lfd.detecttrails as dt
+from lfd.detecttrails.sdss import astrom
+from lfd.detecttrails.sdss import files
 
 __all__ = ["read_photoObj", "remove_stars"]
-
-
-def CSV_read(path_to_CAS):
-    """ .. deprecated:: 1.0
-    Defines a function that reads CSV file given by path into a list of
-    dictionaries. Function is deprecated in favor of photoObjRead.
-
-    Returned list is arranged as
-        {[ra:, dec:, u:, g:, r:, i:, z:],
-            ...}.
-
-    """
-    labels=['ra', 'de', 'u', 'g', 'r', 'i', 'z']
-    read = csv.DictReader(open(path_to_CAS), labels,
-                          delimiter=',', quotechar='"')
-    lines = list()
-    for line in read:
-        lines.append(line)
-    return lines
-
-def remove_stars_CSV(img, _run, _camcol, _filter, _field):
-    """.. deprecated:: 1.0
-    Function that removes all stars found in coordinates file from a given
-    image. Requires the use of edited sdssFileTypes.par located in
-    detect_trails/sdss/share. Function was deprecated in favor of RemoveStars.
-
-    """
-    Coord = CSVRead(files.filename('CSVCoord', run=_run,
-                                          camcol=_camcol, field=_field))
-    Coord = Coord[1:]
-    conv = astrom.Astrom(run=_run, camcol=_camcol)
-
-    for star in Coord:
-        try:
-            if (float(star[_filter])<23):
-                ra = float(star['ra'])
-                de = float(star['de'])
-                xy = conv.eq2pix(_field, _filter, ra, de)
-                x, y=xy[0], xy[1]
-                img[x-30:x+30, y-30:y+30].fill(0.0)
-        except ValueError as err:
-            pass
-    return img
-
 
 
 class ResolveStatus:
@@ -186,13 +144,13 @@ def remove_stars(img, run, camcol, filter, field, defaultxy, maxxy, pixscale,
     ----------
     img : np.array
         grayscale 8 bit image
-    _run : int
+    run : int
         run identifier
-    _camcol : int
+    camcol : int
         camera column identifier 1-6
-    _filter : str
+    filter : str
         filter identifier (u,g,r,i,z)
-    _field : int
+    field : int
         field identifier
     defaultxy : int
         default length of half of the total length of square sides
@@ -214,11 +172,11 @@ def remove_stars(img, run, camcol, filter, field, defaultxy, maxxy, pixscale,
     """
     rows, cols, petro90, nObserve, nDetect, resflags = \
         read_photoObj(files.filename("photoObj", run=run, camcol=camcol,
-                                     field=_field))
+                                     field=field))
 
     if debug:
         # we really don't want to trample on original data at this point yet
-        # so we make a copy and make objects in it more visible
+        # so we make a copy and his eq it to make obj more visible
         img2 = img.copy()
         img2[img2<0.02]=0
         img2[img2>0]+=0.5
@@ -229,12 +187,12 @@ def remove_stars(img, run, camcol, filter, field, defaultxy, maxxy, pixscale,
         img2[img2>0] -= 125
 
     for i in range(len(rows)):
-        x = int(cols[i][_filter])
-        y = int(rows[i][_filter])
+        x = int(cols[i][filter])
+        y = int(rows[i][filter])
 
         dxy = defaultxy
-        if petro90[i][_filter] > 0:
-            dxy = int(petro90[i][_filter]/pixscale) + 10
+        if petro90[i][filter] > 0:
+            dxy = int(petro90[i][filter]/pixscale) + 10
         if dxy > maxxy:
             dxy = defaultxy
 
@@ -256,6 +214,8 @@ def remove_stars(img, run, camcol, filter, field, defaultxy, maxxy, pixscale,
                             fontColor)
                 
     if debug:
-        cv2.imwrite("/home/dino/Desktop/test.png", img2)
+        print("Saving image with reoved object mask.\n")
+        img2 = cv2.flip(img2, 0)
+        cv2.imwrite(os.path.join(dt.DEBUG_PATH, "0removeObjects.png"), img2)
 
     return img
