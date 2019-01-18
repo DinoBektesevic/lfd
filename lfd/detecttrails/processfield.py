@@ -89,10 +89,12 @@ def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
     theta2 = np.zeros((navg,1))
     for i in range(0, navg):
         try:
-            ro1[i] = hough1[0][i][0]
-            ro2[i] = hough2[0][i][0]
-            theta1[i] = hough1[0][i][1]
-            theta2[i] = hough2[0][i][1]
+            # changed with opencv 3, the shape is (N, 1, 2) where N is number
+            # of detected lines, 1 is just cause, and 2 for (ro, theta pairs)
+            ro1[i] = hough1[i][0][0]
+            ro2[i] = hough2[i][0][0]
+            theta1[i] = hough1[i][0][1]
+            theta2[i] = hough2[i][0][1]
         except:
             pass
 
@@ -171,15 +173,16 @@ def draw_lines(hough, image, nlines, name, path=pathDim,
     #convert to color image so that you can see the lines
     draw_im = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
-    for (rho, theta) in hough[0][:nlines]:
+    for houghparams in hough[:nlines]:
         try:
-             x0 = np.cos(theta)*rho
-             y0 = np.sin(theta)*rho
-             pt1 = ( int(x0 + (n_x+n_y)*(-np.sin(theta))),
-                     int(y0 + (n_x+n_y)*np.cos(theta)) )
-             pt2 = ( int(x0 - (n_x+n_y)*(-np.sin(theta))),
-                     int(y0 - (n_x+n_y)*np.cos(theta)) )
-             cv2.line(draw_im, pt1, pt2, color, 2)
+            rho, theta = houghparams[0]
+            x0 = np.cos(theta)*rho
+            y0 = np.sin(theta)*rho
+            pt1 = ( int(x0 + (n_x+n_y)*(-np.sin(theta))),
+                    int(y0 + (n_x+n_y)*np.cos(theta)) )
+            pt2 = ( int(x0 - (n_x+n_y)*(-np.sin(theta))),
+                    int(y0 - (n_x+n_y)*np.cos(theta)) )
+            cv2.line(draw_im, pt1, pt2, color, 2)
         except:
             pass
 
