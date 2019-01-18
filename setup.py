@@ -24,5 +24,6 @@ setup(
         'astropy',
         'fitsio',
         'Pillow',
+        'opencv-python',
     ],
 )
