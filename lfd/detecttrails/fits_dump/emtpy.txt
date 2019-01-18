@@ -1,0 +1,1 @@
+This directory is used as temporary dumping ground for fits files, do not remove it. This file can be deleted at any time.
