@@ -72,13 +72,21 @@ def setup_detecttrails(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ,
     """
     if bosspath is None:
         bosspath = _os.path.join(_os.path.expanduser("~"), "Desktop/boss")
+    else:
+        bosspath = _os.path.expandser(bosspath)
     if photoobjpath is None:
         photoobjpath = _os.path.join(bosspath, "photoObj")
+    else:
+        photoobjpath = _os.path.expanduser(photoobjpath)
     if photoreduxpath is None:
         photoreduxpath = _os.path.join(bosspath, "photo/redux")
+    else:
+        photoreduxpath = _os.path.expanduser(photoreduxpath)
     if debugpath is None:
         # default to invocation directory
         debugpath = _os.path.abspath(_os.path.curdir)
+    else:
+        debugpath = _os.path.expanduser(debugpath)
 
     detecttrails.setup(bosspath, photoobjpath, photoreduxpath, debugpath)
 

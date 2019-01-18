@@ -80,8 +80,9 @@ def process_field(results, errors, run, camcol, filter, field, params_bright,
 
             bzpath = origfitspath+".bz2"
             if not os.path.exists(bzpath):
-                raise FileNotFoundError(("File {0} or its bz2 compressed "
-                "version not found. Are you sure they exist?"))
+                errmsg = ("File {0} or its bz2 compressed version not found. "
+                          "Are you sure they exist?")
+                raise FileNotFoundError(errmsg.format(origfitspath))
 
             with open(bzpath, "rb") as compressedfits:
                 fitsdata = bz2.decompress(compressedfits.read())

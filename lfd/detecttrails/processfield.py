@@ -5,7 +5,7 @@ source of data, only the ingoing format and type.
 Wrapping the functionality in this module for various different catalog and
 image sources so that the correct order of operations is ensured for different
 directory structures is what makes detecttrails capable of processing variety
-of different images. 
+of different images.
 """
 
 import cv2
@@ -51,7 +51,7 @@ def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
        if  dtheta2> theta_tresh:  return True
 
     Difference of averages of angles in both sets are compared with
-    linesetTresh. If the diff. is larger than linesetTresh a True is returned. 
+    linesetTresh. If the diff. is larger than linesetTresh a True is returned.
 
     .. code-block:: python
 
@@ -223,8 +223,15 @@ def fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
     box_img = np.zeros(img.shape, dtype=np.uint8)
     canny = cv2.Canny(img, 0, 255)
 
-    contoursimg, contours, hierarchy = cv2.findContours(canny, contoursMode,
-                                                        contoursMethod)
+    # in in cv2.8something it was contours, hierarchy
+    # then in 3 it was image, contours, hierarchy, and
+    # then in 4.0 it's again contours, hierarchy....
+    try:
+        contoursimg, contours, hierarchy = cv2.findContours(canny, contoursMode,
+                                                            contoursMethod)
+    except ValueError:
+        contours, hierarchy = cv2.findContours(canny, contoursMode,
+                                               contoursMethod)
 
     boxes = list()
     for cnt in contours:
@@ -341,8 +348,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
 
 
     detection, box_img = fit_minAreaRect(equ, contoursMode, contoursMethod,
-                                          minAreaRectMinLen, lwTresh,
-                                          debug)
+                                         minAreaRectMinLen, lwTresh, debug)
 
     if debug:
         cv2.imwrite(os.path.join(pathBright, "3contoursBRIGHT.png"), box_img,

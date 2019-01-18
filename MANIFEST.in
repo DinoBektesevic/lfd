@@ -1,3 +1,5 @@
+include lfd/detecttrails/sdss/share/sdssFileTypes.par
+include lfd/detecttrails/sdss/share/sdssMaskbits.par
 include lfd/analysis/profiles/rabina/lfd_img0_r.png
 include lfd/analysis/profiles/rabina/lfd_img10_r.png
 include lfd/analysis/profiles/rabina/lfd_img11_r.png

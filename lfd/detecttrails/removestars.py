@@ -210,8 +210,8 @@ def remove_stars(img, _run, _camcol, _filter, _field, defaultxy, filter_caps,
                                     field=_field))
 
     for i in range(len(rows)):
-        x = int(rows[i][_filter])
-        y = int(cols[i][_filter])
+        x = int(cols[i][_filter])
+        y = int(rows[i][_filter])
 
         if psfMag[i] and psfMag[i][_filter] < filter_caps[_filter]:
             diffs = []
