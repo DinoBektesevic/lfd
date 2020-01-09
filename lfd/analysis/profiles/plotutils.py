@@ -1,4 +1,4 @@
-"""A collection of carious miscelaneous functionality that helps visualize the
+"""A collection of various miscelaneous functionality that helps visualize the
 profiles and results of convolutions and their numerical values.
 
 """
@@ -29,39 +29,36 @@ def plot_profiles(ax, profiles, *args, normed=True, **kwargs):
 
 #def create_table()
 
-#def tableRabina():
-#    for h in heights:
-#        o = RabinaProfile("Rabina/img15_r.png", h)
-#        d = FluxPerAngle(h, *sdss)
-#
-#        ofwhm = o.calc_fwhm()
-#
-#        c = convolve(o, d)
-#        dfwhm1 = c.calc_fwhm()
-#
-#        o = o = RabinaProfile("Rabina/img15_r.png", h)
-#        s = GausKolmogorov(sdssseeing)
-#        d = FluxPerAngle(h, *sdss)
-#
-#        c = convolve(o, s, d)
-#        obsfwhm1 = c.calc_fwhm()
-#
-#
-#
-#        o = RabinaProfile("Rabina/img15_r.png", h)
-#        d = FluxPerAngle(h, *lsst)
-#
-#        c = convolve(o, d)
-#        dfwhm2 = c.calc_fwhm()
-#
-#        o = RabinaProfile("Rabina/img15_r.png", h)
-#        s = GausKolmogorov(lsstseeing)
-#        d = FluxPerAngle(h, *lsst)
-#
-#        c = convolve(o, s, d)
-#        obsfwhm2 = c.calc_fwhm()
-#
-#
-#        res = "{0}&\t{1:.2f}&\t{2:.2f}&\t{3:.2f}&\t{4:.2f}&\t{5:.2f}\\\\"
-#        print res.format(int(h), ofwhm, dfwhm1, obsfwhm1, dfwhm2, obsfwhm2)
-#
+def tableRabina():
+    for h in heights:
+        o = RabinaProfile("Rabina/img15_r.png", h)
+        d = FluxPerAngle(h, *sdss)
+
+        ofwhm = o.calc_fwhm()
+
+        c = convolve(o, d)
+        dfwhm1 = c.calc_fwhm()
+
+        o = o = RabinaProfile("Rabina/img15_r.png", h)
+        s = GausKolmogorov(sdssseeing)
+        d = FluxPerAngle(h, *sdss)
+
+        c = convolve(o, s, d)
+        obsfwhm1 = c.calc_fwhm()
+
+        o = RabinaProfile("Rabina/img15_r.png", h)
+        d = FluxPerAngle(h, *lsst)
+
+        c = convolve(o, d)
+        dfwhm2 = c.calc_fwhm()
+
+        o = RabinaProfile("Rabina/img15_r.png", h)
+        s = GausKolmogorov(lsstseeing)
+        d = FluxPerAngle(h, *lsst)
+
+        c = convolve(o, s, d)
+        obsfwhm2 = c.calc_fwhm()
+
+        res = "{0}&\t{1:.2f}&\t{2:.2f}&\t{3:.2f}&\t{4:.2f}&\t{5:.2f}\\\\"
+        print res.format(int(h), ofwhm, dfwhm1, obsfwhm1, dfwhm2, obsfwhm2)
+
