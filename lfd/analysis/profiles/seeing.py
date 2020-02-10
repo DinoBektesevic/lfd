@@ -29,7 +29,7 @@ class GausKolmogorov(ConvolutionObject):
       GK profile and resolution in arcseconds
     """
     def __init__(self, fwhm, scale=None, res=0.001):
-
+        self.seeingfwhm = fwhm
         self.sigma = 1.035/FWHM2SIGMA*fwhm
         self.sigma2 = 2.*self.sigma
 
@@ -41,7 +41,6 @@ class GausKolmogorov(ConvolutionObject):
             obj = self.f(scale)
         ConvolutionObject.__init__(self, obj, scale)
 
-
     def f(self, r, sigma=None):
         """Evaluates the GK at a point r. Providing sigma estimates GK at r for
         a different GK distribution with a FWHM= sigma*2.436/1.035 - for
@@ -49,14 +48,9 @@ class GausKolmogorov(ConvolutionObject):
         """
         if sigma is None:
             sigma = self.sigma
-        sigma2 = sigma
-        gk = lambda x: 0.909*( 1/(2*np.pi*sigma*sigma) * \
-                               np.exp( -1.0 * (x*x / (2*sigma*sigma)) ) + \
-                               0.1*( 1/(2*np.pi*sigma2*sigma2) * \
-                                     np.exp( -1.0 * (x*x / (2*sigma2*sigma2)))
-                                   )
-                              )
-
+        sigma2 = 2*sigma*sigma
+        gk = lambda x: 0.909*(1/(np.pi*sigma2) * np.exp((-x*x)/sigma2) + \
+                         0.1*(1/(np.pi*sigma2) * np.exp((-x*x)/sigma2)))
         try:
             return gk(r)
         except TypeError:
@@ -71,7 +65,7 @@ class FluxPerAngle(ConvolutionObject):
     Parameters
     ----------
     d : float
-      the width of the object, in meters(?)
+      the distance to the object in meters
     Ro : float
       the diameter of the primary mirror of used instrument, in milimeters
     Ri : float
@@ -82,7 +76,7 @@ class FluxPerAngle(ConvolutionObject):
     units : str
       in arcseconds by default - not very well supported
     res : float
-      desired resolution in arcseconds, if scale is not given 
+      desired resolution in arcseconds, if scale is not given
     """
     def __init__(self, d, Ro, Ri, scale=None, units="arcsec", res=0.001):
 
@@ -121,7 +115,7 @@ class FluxPerAngle(ConvolutionObject):
 
         if units.upper() == "ARCSEC":
             rr = rr/RAD2ARCSEC
-        
+
         if not all([d, Ro, Ri]):
             d = self.d
             Ro = self.Ro
@@ -131,13 +125,17 @@ class FluxPerAngle(ConvolutionObject):
         thetai = Ri / (d * 1000000.)
         thetao2 = thetao*thetao
         thetai2 = thetai*thetai
-        defocusf = lambda x: 2./(np.pi*(thetao2 - thetai2)) * \
-                   (
-                        np.nan_to_num(np.sqrt(thetao2-x*x)) -
-                        np.nan_to_num(0.5*(np.sign(thetai-x)+1) * np.sqrt(thetai2-x*x))
-                    )
 
-        return defocusf(rr)
+        # The quicker way to resolve the equation involves sometimes taking a square
+        # root of very small negative numbers, avoiding that is to take a performance
+        # penalty. We need to silence both lines because `thetao2-thetai2` is evaluated
+        # imediately.
+        with np.errstate(invalid='ignore'):
+            defocusf = lambda x: 2./(np.pi*(thetao2 - thetai2)) * \
+                (
+                    np.nan_to_num(np.sqrt(thetao2-x*x)) -
+                    np.nan_to_num(0.5*(np.sign(thetai-x)+1) * np.sqrt(thetai2-x*x))
+                )
+            res = defocusf(rr)
 
-
-        
+        return res

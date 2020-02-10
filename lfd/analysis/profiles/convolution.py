@@ -6,8 +6,10 @@ import numpy as np
 from scipy import misc, signal, interpolate, stats
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject
 
+
 __all__ = ["largest_common_scale", "convolve_seeing", "convolve_defocus",
            "convolve_seeing_defocus", "convolve"]
+
 
 def largest_common_scale(*args):
     """Finds the new appropriate common scale between given objects such that
@@ -36,6 +38,7 @@ def largest_common_scale(*args):
     newscale = np.arange(1.1*left, 1.1*right, step)
     return newscale
 
+
 def convolve_two(obj1, obj2, name="convolved"):
     """Rescales, normalizes and convolves two ConvolutionObjects.
 
@@ -60,6 +63,7 @@ def convolve_two(obj1, obj2, name="convolved"):
 
     conv = signal.fftconvolve(obj1.obj, obj2.obj)
     return ConvolutionObject.fromConvolution(conv, newscale, name)
+
 
 def convolve_three(obj1, obj2, obj3, name="convolved"):
     """Rescales, normalizes and then convolves three ConvolutionObjects.
@@ -110,6 +114,7 @@ def convolve_seeing(obj, seeing, name="seeing-convolved"):
     """
     return convolve_two(obj, seeing, name)
 
+
 def convolve_defocus(obj, defocus, name="defocus-convolved"):
     """Rescales, normalizes and convolves object and defocus.
 
@@ -126,6 +131,7 @@ def convolve_defocus(obj, defocus, name="defocus-convolved"):
 
     """
     return convolve_two(obj, defocus, name)
+
 
 def convolve_seeing_defocus(obj, seeing, defocus, name="seeing-defocus-convolved"):
     """Rescales, normalizes and then convolves object, seeing and defocus.
@@ -146,6 +152,7 @@ def convolve_seeing_defocus(obj, seeing, defocus, name="seeing-defocus-convolved
 
     """
     return convolve_three(obj, seeing, defocus, name)
+
 
 def convolve(*args, name=None):
     """Rescales, normalizes and convolves the provided ConvolutionObjects.
@@ -168,15 +175,14 @@ def convolve(*args, name=None):
     >>> convolve(obj, seeing, defocus)
 
     """
-
     # with the changes on Jan 2018 this achieves 500x speedups over previous
     # recursive convolutions and 2x speedups over specified convolutions
     # as the scales increase speedup increases as previously map depended on N
-    # elements. 
+    # elements.
     if len(args) == 2:
-        return convolve_two(*args, name=None)
+        return convolve_two(*args, name=name)
     if len(args) == 3:
-        return convolve_seeing_defocus(*args, name=None)
+        return convolve_three(*args, name=name)
 
     newscale = largest_common_scale(*args)
 
@@ -188,7 +194,7 @@ def convolve(*args, name=None):
         if index == len(args):
             return result
         else:
-            result = np.convolve(result.obj, args[index].obj)
+            result = signal.fftconvolve(result.obj, args[index].obj)
             result = ConvolutionObject.fromConvolution(result, newscale, name)
             return recursion(index+1, result)
 
