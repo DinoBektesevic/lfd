@@ -111,6 +111,27 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabel="arcsec",
 
 
 def figure4(h=100):
+    """Effects of seeing on the observed intensity profile of a point source
+    located 100km from the imaging instrument. Line types represent results
+    based on different seeing values (as shown in the legend). The profile’s
+    inner structure (a dip in the middle) is reduced or completely lost as
+    the seeing worsens. SDSS is more affected because it has a smaller
+    telescope aperture than LSST. The overall effect is similar even for
+    much smaller distances to the meteor (see also Fig. 23, 24 and 26).
+
+    Parameters
+    ----------
+    h : `int` or `float`
+        Distance to the meteor head from the observer in kilometers. By default
+        a 100km to match the figures in the paper.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
     axes[0].text(-1.2, 1.03,  'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.35, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
@@ -136,6 +157,21 @@ def figure4(h=100):
 
 
 def figure5():
+    """Effects of distance on the observed intensity profile of a point source
+    for a constant seeing (1.48′′for SDSS and 0.67′′for LSST). Line types
+    represent results based on different meteordistances (as shown in the
+    legend). The image shows how smaller distances emphasize the central dip
+    in the profile, until it reaches its extreme value (such as here for LSST)
+    set by the equation (7) dictated by the inner and outer radius of the
+    primary mirror (see also Fig. 23, 24 and 26).
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
     axes[0].text(-1.2, 1.03, 'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.0, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
@@ -163,6 +199,36 @@ def figure5():
 
 
 def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profiles.LSSTSEEING):
+    """Three cases of meteors with \theta_D << \theta_O, \theta_D \approx \theta_O
+    and \thetaD >> \theta_O (see equations 6 and 8) illustrated for the LSST
+    telescope at 100km distance and the seeing of 0.67′′. Meteors are modeled
+    as disks with a uniform surface brightness and the radii of 0.1m, 4m and
+    8m, respectively. The solid line shows how the meteor track looks like when
+    the telescope is focused on the meteor without any seeing, while the dashed
+    line shows what we actually see under defocusing and seeing. For a small
+    disk diameter the defocused profile corresponds to that of a point source.
+    As the meteor diameter approaches the inner diameter of the LSSTs primary
+    mirror, the defocusing profile starts to lose its dip in the middle.
+
+    Parameters
+    ----------
+    h : `int` or `float`
+        Distance to the meteor head in kilometers. By default 100km.
+    rs: `list` or `tuple`
+        Radii of the meteor heads in meters. By default [0.1, 4, 8]
+    instrument : `list` or `tuple`
+        Radii of the inner and outter mirror diameters of the instrument in
+        meters. By default set to `profiles.LSST`
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds. By default `profiles.LSSTSEEING`.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(10, 10))
     axes[0].text(-10., 1.03, r"$D_{meteor} \ll D_{mirror}$",
                  fontsize=rcParams["axes.titlesize"]-8)
@@ -191,6 +257,40 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profile
 
 
 def figures78(rs, instrument, seeingfwhm, xlims, xticks):
+    """Genericized version of plots 7 and 8 representing two cases of meteors
+    with \theta_D \approx \theta_O and \thetaD >> \theta_O at various distances.
+    In effect this is the combination of plots 5 and 6 where we evaluate
+    distance to meteor effect on the observed profile and meteor radius effects
+    on the observed profile.
+    Given the parameters the function creates the whole 2 axes figure with
+    titles, x and y labels, ticks, limits and a legend. Figure 7 and 8 exist
+    only to specify the parameters that recreate the figures from the paper.
+
+    Parameters
+    ----------
+    rs : `tuple` or `list`
+        Radii of the meteor head in meters.
+    instrument : `tuple` or `list`
+        Radii of inner and outter mirror diameters of the instrument.
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds.
+    xlims : `list` or `tuple` of `lists` or `tuples`
+        A list or tuple containing up to two nested lists or tuples. Each
+        nested list or tuple contains two values (xmin, xmax) used to set
+        individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
+    xticks : `list` or `tuple` 
+        A list or tuple containing up to two nested lists or tuples. Each
+        nested list or tuple contains positions at which to mark and label the
+        ticks at. Tick marks will be displayed for other equally spaced values
+        but no labels will be displayed. 
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
     axes[0].text(xlims[0][0]/2.0, 1.03, r"$D_{meteor} \approx D_{mirror}$",
                  fontsize=rcParams["axes.titlesize"]-8)
@@ -218,11 +318,62 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
 
 
 def figure7():
+    """Two cases of uniform brightness disk meteors with \theta_D \approx \theta_O
+    (R_meteor=1m) and \thetaD >> \theta_O (R_meteor=4m) illustrated for the
+    SDSS telescope at various distances (different linetypes) and the seeing of
+    1.48′′. This seeing transforms a point source into an object similar to
+    \theta_D in size, which results in a defocused image with a negligible
+    central drop in the brightness profile. The distinguishing element for a
+    disk observed with SDSS is the very wide peak when the disk is similar in
+    size to the telescope primary mirror and a growing FWHM as the disk becomes
+    much larger than the mirror (compare with fig. 4). Small disk diameter are
+    comparable to point source plots in Fig. 5.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+
+    Notes
+    -----
+    The function calls on figure78 with the following parameters:
+    rs : (1, 4)
+    instrument : `profiles.SDSS`
+    seeingfwhm : `profiles.SDSSSEEING`
+    xlims : [(-6, 6), (-11, 11)]
+    xticks : [range(-30, 30, 6), range(-30, 30, 2)]
+    """
     return figures78(rs=(1, 4), instrument=profiles.SDSS, seeingfwhm=profiles.SDSSSEEING,
                      xlims=((-6, 6), (-11, 11)), xticks=(range(-30, 30, 2),))
 
 
 def figure8():
+    """Two cases of uniform brightness disk meteors with \theta_D \approx \theta_O
+    (R_meteor=4m) and \thetaD >> \theta_O (R_meteor=8m) illustrated for the
+    LSST telescope at various distances (different linetypes) and the seeing of
+    0.67′′. Since the seeing FWHM is much smaller than the apparent angular
+    size \theta_D of the disk in the sky, the brightness profiles are dominated
+    by the defocusing effect. Small disk diameter are comparable to point
+    source plots in Fig. 5.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+
+    Notes
+    -----
+    The function calls on figure78 with the following parameters:
+    rs : (4, 8)
+    instrument : `profiles.LSST`
+    seeingfwhm : `profiles.LSSTSEEING`
+    xlims : [(-18, 18), (-25, 25)]
+    xticks : [range(-30, 30, 6), range(-30, 30, 10)]
+    """
     return figures78(rs=(4, 8), instrument=profiles.LSST,
                      seeingfwhm=profiles.LSSTSEEING,
                      xlims=((-18, 18), (-25, 25)),
@@ -230,6 +381,37 @@ def figure8():
 
 
 def figures1011(seeingfwhm, instrument, xlims, xticks):
+    """Three cases of the fiducial 3D meteor model rotatedby 90, 60 and 0
+    degrees observed with SDSS and LSST telescopes at different distances under
+    the measured and esimated seeing FWHM conditions respectively.
+    A genericized version of plots 10 and 11 that given the parameters creates
+    the whole 2 axes figure with titles, x and y labels, ticks limits and a
+    legend. Figure 10 and 11 exist only to specify the parameters that recreate
+    the figures from the paper.
+
+    Parameters
+    ----------
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds.
+    instrument : `tuple` or `list`
+        Radii of inner and outter mirror diameters of the instrument.
+    xlims : `list` or `tuple` of `lists` or `tuples`
+        A list or tuple containing up to two nested lists or tuples. Each
+        nested list or tuple contains two values (xmin, xmax) used to set
+        individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
+    xticks : `list` or `tuple` 
+        A list or tuple containing up to two nested lists or tuples. Each
+        nested list or tuple contains positions at which to mark and label the
+        ticks at. Tick marks will be displayed for other equally spaced values
+        but no labels will be displayed. 
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(10, 10))
     # xlims[0][0]/2.0
     axes[0].text(xlims[0][0]/2.0, 1.03, r"$\theta_{rot} = 90^\circ$",
@@ -263,17 +445,115 @@ def figures1011(seeingfwhm, instrument, xlims, xticks):
 
 
 def figure10():
+    """Three cases of the fiducial 3D meteor model rotatedby 90, 60 and 0
+    degrees, observed with the SDSS telescope from different distances (line
+    types as shown in the legend) under the seeing FWHM of 1.48”.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+
+    Notes
+    -----
+    The function calls on figures1011 with the following parameters:
+    seeingfwhm : `profiles.SDSSSEEING`
+    instrument : `profiles.SDSS`
+    xlims : [(-7.5, 7.5)]
+    xticks : [range (-25, 26, 5)]
+    """
     return figures1011(profiles.SDSSSEEING, profiles.SDSS, ((-7.5, 7.5),),
                        (range(-25, 26, 5), ))
 
 
 def figure11():
+    """Three cases of the fiducial 3D meteor model rotatedby 90, 60 and 0
+    degrees, observed with the LSST telescope from different distances (line
+    types as shown in the legend) under the seeing FWHM of 1.48”.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+
+    Notes
+    -----
+    The function calls on figures1011 with the following parameters:
+    seeingfwhm : `profiles.LSSTSEEING`
+    instrument : `profiles.LSST`
+    xlims : [(-7.5, 7.5)]
+    xticks : [range (-25, 26, 5)]
+    """
     return figures1011(profiles.LSSTSEEING, profiles.LSST, ((-15.5, 15.5), ),
                        (range(-20, 21, 10), ))
 
 
-def figure1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
+def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
                n=10, duration=2):
+    """A fiducial model of ionized meteor trail evolution as seen by SDSS or
+    LSST at some distance. The top panel is the trail brightness as seen by an
+    telescope without seeing. Different lines show the trail evolution with the
+    peak brightness evolving as exp(t/tau), starting from t=0s, while the total
+    emitted light remains the same (i.e. the surface under the curves remains
+    constant).
+    The middle panel shows those profiles convolved with appropriate seeing and
+    defocusing.
+    The bottom panel is the total time integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+    All panels have the maximum brightness scaled to one for clarity.
+
+    A genericized version of plots 12 and 13 that given the parameters creates
+    the whole 3 axes figure with textboxes, x and y labels, ticks limits and a
+    vertical line. Figure 12 and 13 exist only to specify the parameters that
+    recreate the figures from the paper.
+
+    Parameters
+    ----------
+    tau : `int` or `float`
+        Characteristic time of meteor trail decay.
+    h : `int` or `float`
+        Distance from the telescope to the meteor head
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds.
+    instrument : `tuple` or `list`
+        Radii of inner and outter mirror diameters of the instrument.
+    xlims : `list` or `tuple` of `lists` or `tuples`
+        A list or tuple containing up to three nested lists or tuples. Each
+        nested list or tuple contains two values (xmin, xmax) used to set
+        individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
+    xticks : `list` or `tuple` 
+        A list or tuple containing up to three nested lists or tuples. Each
+        nested list or tuple contains positions at which to mark and label the
+        ticks at. Tick marks will be displayed for other equally spaced values
+        but no labels will be displayed.
+    txtpos : `list` or `tuple`
+        A list or tuple containing three nested lists or tuples. Each nested
+        list or tuple contains positions at which a textbox, that acts as the
+        plot title, will be drawn.
+    n : `int`
+        The number of trail profile samples that will be evaluated and
+        integrated into final profile. Duration and the number of samples
+        effectively set the time step dt between two evaluated trails. By
+        default set to 10 to give time step between to trail profiles of approx
+        0.2 seconds.
+    duration : `int` or `float`
+        The total duration, in seconds, in which the meteor trail is considered
+        to be visible. By default set to 2 seconds giving a time-step between
+        two profiles of 0.2 seconds.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 14))
     axes = set_ax_props(axes, xlims, xticks)
     axes[0].text(*txtpos[0], 'Gaussian trail evolution', fontsize=rcParams["axes.titlesize"])
@@ -320,19 +600,158 @@ def figure1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
 
 
 def figure12():
-    return figure1213(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+    """A fiducial model of ionized meteor trail evolution as seen by SDSS at
+    100km distance. The top panel is the trail brightness as seen by the
+    telescope without seeing. Different lines show the trail evolution with the
+    peak brightness evolving as exp(t/tau), with tau=1s, starting from t=0s,
+    while the total emitted light remains the same (i.e. the surface under the
+    curves remains constant).
+    The middle panel shows those profiles convolved with seeing of 1.48'' and
+    defocusing.
+    The bottom panel is the total time integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+    All panels have the maximum brightness scaled to one for clarity.
+
+    Notes
+    -----
+    The function calls figures1213 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.SDSSSEEING`
+    instrument : `profiles.SDSS`
+    xlims : [(-8.5, 8.5)]
+    xticks : [range(-20, 20, 2)]
+    txtpos : [(2, 0.8), (2, 0.8), (2, 0.8)]
+    n : 10
+    duration : 2s
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """ 
+    return figures1213(1, 100, profiles.SDSSSEEING, profiles.SDSS,
                       xlims=((-8.5,8.5),), xticks=(range(-20, 20, 2),),
                       txtpos=((2,0.8), (2,0.8), (2,0.8)))
 
 
 def figure13():
-    return figure1213(1, 100, profiles.LSSTSEEING, profiles.LSST,
+    """A fiducial model of ionized meteor trail evolution as seen by LSST at
+    100km distance. The top panel is the trail brightness as seen by the
+    telescope without seeing. Different lines show the trail evolution with the
+    peak brightness evolving as exp(t/tau), with tau=1s, starting from t=0s,
+    while the total emitted light remains the same (i.e. the surface under the
+    curves remains constant).
+    The middle panel shows those profiles convolved with seeing of 0.67'' and
+    defocusing.
+    The bottom panel is the total time integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+    All panels have the maximum brightness scaled to one for clarity.
+    Compared to SDSS (figure 12), the defocus effect is much stronger due to a
+    larger telescope aperture and now even meteor trails can have a central dip
+    in the brightness profile.
+
+    Notes
+    -----
+    The function calls figures1213 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.LSSTSEEING`
+    instrument : `profiles.LSST`
+    xlims : [(-15, 15)]
+    xticks : [range(-20, 20, 2)]
+    txtpos : [(2, 0.8), (-5, 0.28), (2, 0.8)]
+    n : 10
+    duration : 2s
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """ 
+
+    return figures1213(1, 100, profiles.LSSTSEEING, profiles.LSST,
                       xlims=((-15,15),), xticks=(range(-20, 20, 2),),
                       txtpos=((2,0.8), (-5,0.28), (2,0.8)))
 
 
-def figure1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
+def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
                n=10, duration=2, nsteps=486):
+    """A fiducial model of ionized meteor trail evolution as seen by an
+    telescope some distance with trail drift, due to atmospheric winds,
+    included. The top panel is the trail brightness as seen without seeing.
+    Different lines show the trail temporal and spatial evolution with the peak
+    brightness evolving as exp(t/tau), with tau=1s, starting from t=0s, while
+    the total emitted light remains the same (i.e. the surface under the curves
+    remains constant). The trail drift motion is modeled from left to right
+    with each step shifting the profile by some number of steps. The vertical
+    dashed line shows the initial position of the meteor trail.
+    The middle panel shows those profiles convolved with appropriate seeing and
+    defocusing.
+    The bottom panel is the total integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+
+    A genericized version of plots 14 and 15 that given the parameters creates
+    the whole 3 axes figure with textboxes, x and y labels, ticks limits and a
+    vertical line. Figure 14 and 15 exist only to specify the parameters that
+    recreate the figures from the paper.
+
+    Parameters
+    ----------
+    tau : `int` or `float`
+        Characteristic time of meteor trail decay.
+    h : `int` or `float`
+        Distance from the telescope to the meteor head
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds.
+    instrument : `tuple` or `list`
+        Radii of inner and outter mirror diameters of the instrument.
+    xlims : `list` or `tuple` of `lists` or `tuples`
+        A list or tuple containing up to three nested lists or tuples. Each
+        nested list or tuple contains two values (xmin, xmax) used to set
+        individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
+    xticks : `list` or `tuple` 
+        A list or tuple containing up to three nested lists or tuples. Each
+        nested list or tuple contains positions at which to mark and label the
+        ticks at. Tick marks will be displayed for other equally spaced values
+        but no labels will be displayed.
+    txtpos : `list` or `tuple`
+        A list or tuple containing three nested lists or tuples. Each nested
+        list or tuple contains positions at which a textbox, that acts as the
+        plot title, will be drawn.
+    n : `int`
+        The number of trail profile samples that will be evaluated and
+        integrated into final profile. Duration and the number of samples
+        effectively set the time step dt between two evaluated trails. By
+        default set to 10 to give time step between to trail profiles of approx
+        0.2 seconds.
+    duration : `int` or `float`
+        The total duration, in seconds, in which the meteor trail is considered
+        to be visible. By default set to 2 seconds giving a time-step between
+        two profiles of 0.2 seconds.
+    nsteps : `int`
+        The total number of rightwards steps each time step will make. The
+        drift velocity depends on duration and number of samples. Defaults to
+        486 steps such that, with the default values, the drift velocity equals
+        2.2''/second.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 14))
     axes = set_ax_props(axes, xlims, xticks)
     axes[0].text(*txtpos[0], 'Gaussian trail drift', fontsize=rcParams["axes.titlesize"]-6)
@@ -405,19 +824,152 @@ def figure1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
 
 
 def figure14():
-    return figure1415(1, 100, profiles.SDSSSEEING, profiles.SDSS,
-                      xlims=((-4.5,12.5),), xticks=(range(-20, 20, 2),),
+    """A fiducial model of ionized meteor trail evolution as seen by SDSS at
+    100km distance with trail drift, due to atmospheric winds, included. The
+    top panel is the trail brightness as seen without seeing. Different lines
+    show the trail temporal and spatial evolution with the peak brightness
+    evolving as exp(t/tau), with tau=1s, starting from t=0s, while the total
+    emitted light remains the same (i.e. the surface under the curves remains
+    constant). The trail drift motion is modeled from left to right with each
+    step shifting the profile by 486 steps. The vertical dashed line shows the
+    initial position of the meteor trail.
+    The middle panel shows those profiles convolved with seeing of 1.37'' and
+    defocusing.
+    The bottom panel is the total integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+
+    Notes
+    -----
+    The function calls figures1415 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.SDSSSEEING`
+    instrument : `profiles.SDSS`
+    xlims : [(-4.5, 12.5)]
+    xticks : [range(-20, 20, 2)]
+    txtpos : [(6, 0.6), (6, 0.06), (6, 0.6)]
+    n : 10
+    duration : 2s
+    nsteps : 486
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
+    return figures1415(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+                      xlims=((-4.5, 12.5),), xticks=(range(-20, 20, 2),),
                       txtpos=((6,0.6), (6,0.6), (6,0.6)))
 
 
 def figure15():
-    return figure1415(1, 100, profiles.LSSTSEEING, profiles.LSST,
+    """A fiducial model of ionized meteor trail evolution as seen by LSST at
+    100km distance with trail drift, due to atmospheric winds, included. The
+    top panel is the trail brightness as seen without seeing. Different lines
+    show the trail temporal and spatial evolution with the peak brightness
+    evolving as exp(t/tau), with tau=1s, starting from t=0s, while the total
+    emitted light remains the same (i.e. the surface under the curves remains
+    constant). The trail drift motion is modeled from left to right with each
+    step shifting the profile by 486 steps. The vertical dashed line shows the
+    initial position of the meteor trail.
+    The middle panel shows those profiles convolved with seeing of 0.67'' and
+    defocusing.
+    The bottom panel is the total integrated trail brightness profile that
+    would actually be observed. This final curve should be added to the meteor
+    head brightness profile in order to reconstruct the overall meteor track
+    seen in the image.
+
+    Notes
+    -----
+    The function calls figures1415 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.LSSTSEEING`
+    instrument : `profiles.LSST`
+    xlims : [(-10.5, 17.5)]
+    xticks : [range(-20, 20, 5)]
+    txtpos : [(9, 0.6), (9, 0.06), (9, 0.6)]
+    n : 10
+    duration : 2s
+    nsteps : 486
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
+    return figures1415(1, 100, profiles.LSSTSEEING, profiles.LSST,
                       xlims=((-10.5,17.5),), xticks=(range(-20, 20, 5),),
                       txtpos=((9,0.6), (9,0.6), (9,0.6)))
 
 
 def figure1617(tau, h, seeingfwhm, instrument, xlims, xticks,
                n=10, duration=2, nsteps=486, loc="upper right"):
+    """An example of the observed meteor track at some distance (solid line) as
+    it would appear in an image from an telescope obtained as a sum of two
+    contributions: from a defocused meteor (dashed line) contributing 80% of
+    the peak brightness and from a defocused meteor trail (dotted line)
+    contributing 20% of the peak brightness. This example illustrate how the
+    meteor trail deforms the pure meteor head brightness profile by deforming
+    dominantly one side of the defocused two-peak meteor head profile.
+
+    A genericized version of plots 16 and 17 that given the parameters creates
+    the whole figure with textboxes, x and y labels, ticks limits and a
+    vertical line. Figure 16 and 17 exist only to specify the parameters that
+    recreate the figures from the paper.
+
+    Parameters
+    ----------
+    tau : `int` or `float`
+        Characteristic time of meteor trail decay.
+    h : `int` or `float`
+        Distance from the telescope to the meteor head
+    seeingfwhm : `int` or `float`
+        Seeing FWHM in arcseconds.
+    instrument : `tuple` or `list`
+        Radii of inner and outter mirror diameters of the instrument.
+    xlims : `list` or `tuple` of `lists` or `tuples`
+        A list or tuple containing a nested list or tuple. The nested list or
+        tuple contains two values (xmin, xmax) used to set individual axis
+        x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
+    xticks : `list` or `tuple` 
+        A list or tuple containing a nested list or tuple. The nested list or
+        tuple contains positions at which to mark and label the ticks at. Tick
+        marks will be displayed for other equally spaced values but no labels
+        will be displayed.
+    n : `int`
+        The number of trail profile samples that will be evaluated and
+        integrated into final profile. Duration and the number of samples
+        effectively set the time step dt between two evaluated trails. By
+        default set to 10 to give time step between to trail profiles of approx
+        0.2 seconds.
+    duration : `int` or `float`
+        The total duration, in seconds, in which the meteor trail is considered
+        to be visible. By default set to 2 seconds giving a time-step between
+        two profiles of 0.2 seconds.
+    nsteps : `int`
+        The total number of rightwards steps each time step will make. The
+        drift velocity depends on duration and number of samples. Defaults to
+        486 steps such that, with the default values, the drift velocity equals
+        2.2''/second.
+    loc : `str`
+        One of the matplotlib recognized legend location strings. By default
+        'upper right'. This reduces the total time it takes to plot the figure
+        by avoiding optimal legend position calculation being done by pyplot.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     fig, ax = plt.subplots(figsize=(12, 10))
     ax = set_ax_props(ax, xlims, xticks)[0]
 
@@ -481,17 +1033,107 @@ def figure1617(tau, h, seeingfwhm, instrument, xlims, xticks,
 
     return fig, ax
 
+
 def figure16():
+    """An example of the observed meteor track (solid line) at 100 km distance
+    as it would appear in an image from the SDSS telescope obtained as a sum of
+    two contributions: from a defocused meteor (dashed line) contributing 80%
+    of the peak brightness and from a defocused meteor trail (dotted line)
+    contributing 20%of the peak brightness. This example illustrate how the
+    meteor trail deforms the pure meteor head brightness profile by deforming
+    dominantly one side of the defocused two-peak meteor head profile.
+
+    Notes
+    -----
+    The function calls figures1617 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.SDSSSEEING`
+    instrument : `profiles.SDSS`
+    xlims : [(-5.5, 10.5)]
+    xticks : [range(-20, 20, 2)]
+    n : 10
+    duration : 2s
+    nsteps : 486
+    loc : 'upper right'
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     return  figure1617(1, 100, profiles.SDSSSEEING, profiles.SDSS,
-                       xlims=((-5.5,10.5),), xticks=(range(-20, 20, 2),))
+                       xlims=((-5.5, 10.5),), xticks=(range(-20, 20, 2),))
 
 
 def figure17():
+    """An example of the observed meteor track (solid line) at 100 km distance
+    as it would appear in an image from the LSST telescope obtained as a sum of
+    two contributions: from a defocused meteor (dashed line) contributing 80%
+    of the peak brightness and from a defocused meteor trail (dotted line)
+    contributing 20%of the peak brightness. In this case the trail’s main
+    disruption to the meteor head brightness is in reducing the depth of the
+    central brightness dip, while the profile asymmetryis not very prominent.
+
+    Notes
+    -----
+    The function calls figures1617 with the following values: 
+    tau : 1s
+    h : 100km
+    seeingfwhm : `profiles.LSSTSEEING`
+    instrument : `profiles.LSST`
+    xlims : [(-11.5, 14.5)]
+    xticks : [range(-20, 20, 5)]
+    n : 10
+    duration : 2s
+    nsteps : 486
+    loc : 'upper right'
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    """
     return figure1617(1, 100, profiles.LSSTSEEING, profiles.LSST, loc="upper center",
                       xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))
 
 
 def param_space_sampler(heights, seeings, source, instrument, **kwargs):
+    """Given of heights and seeings simplistically samples the key meteor
+    profile parameters as an numpy structured array with the following columns:
+        * height - distance, really, to the meteor head
+        * seeing - seeing fwhm
+        * sfwhm  - the calculated seeing fwhm post convolution (good for
+                   verification)
+        * dfwhm  - FWHM of the defocused source profile only (no seeing)
+        * ofwhm  - the observed fwhm
+        * depth  - the percentage value of the difference between a profiles
+                   maximum and the minimum value of the central dip
+
+    The function samples only across different defocusing and seeing effects
+    and can not sample across source parameters, i.e. it can not sample across
+    different radii of DiskSource, or different initial FWHMs of GaussianSource
+    even though it is possible to instantiate sources using different
+    parameters.
+
+    Parameters
+    ----------
+    heights : `list`, `tuple` or `generator`
+        Iterable of integers or floats representing height in kilometers.
+    seeings : `list`, `tuple` or `generator`
+        Iterable of integers or floats representing seeing FWHM in arcseconds.
+    source : `cls`
+        Class to use for meteor profile.
+    instrument : `list` or `tuple`
+        An length two iterable containing ints or floats representing the inner
+        inner and outter mirror radii of the instrument.
+    **kwargs : `dict`
+        Any additional kwargs are passed to the source class instantiation.
+    """
     dt = np.dtype([("height", float), ("seeing", float),
                    ("sfwhm", float), ("dfwhm", float),
                    ("ofwhm", float), ("depth", float)])
@@ -506,12 +1148,12 @@ def param_space_sampler(heights, seeings, source, instrument, **kwargs):
 
             top = C.peak
             mid = C.obj[int(len(C.obj)/2)]
-            diff = (top-mid)*100.0
+            diff = (top-mid)
 
             data["seeing"][i,j] = s
             data['sfwhm'][i,j] = S.calc_fwhm()
             data['ofwhm'][i,j] = C.calc_fwhm()
-            data['depth'][i,j] = diff/top
+            data['depth'][i,j] = (diff/top)*100.0
         # defocusing FWHM will be the same for each seeing FWHM
         C = convolve(P, D)
         data['dfwhm'][i,:] = C.calc_fwhm()
@@ -643,7 +1285,8 @@ def get_or_create_data(datafiles, heights=None, seeings=None, radii=None):
     return data
 
 
-def figure232426(fig, axes, data, contours=[None], plot='ofwhm', sharedcb=True, cbtitle=None, twax=False, xlims=None, ylims=None, **kwargs):
+def figure232426(fig, axes, data, contours=[None], plot='ofwhm', sharedcb=True,
+                 cbtitle=None, twax=False, xlims=None, ylims=None, **kwargs):
     heights = data[0]["height"][:,0]
     seeings = data[0]["seeing"][0,:]
     cbtitle = plot if cbtitle is None else cbtitle
