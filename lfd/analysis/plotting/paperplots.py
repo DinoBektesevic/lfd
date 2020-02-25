@@ -15,8 +15,8 @@ from lfd.analysis.plotting import plotutils
 from lfd.analysis.plotting.plotutils import plot_profile, plot_profiles, get_ls
 
 
-def set_ax_props(axes, xlims=(), xticks=(), xlabel="arcsec",
-                 ylabel="Intensity", ylims =((-0.01, 1.1),)):
+def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylabels=(),
+                 ylims =((-0.01, 1.1),)):
     """Sets the labels, ticks and limits on all pairs of axes,
     ticks and labels provided.
 
@@ -56,15 +56,20 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabel="arcsec",
         the length of prop is different than zero.
         If a prop is shorter than the numerical treshold it will be padded
         to be at least as long (usually longer)."""
+        # catch generators as limit expressions
+        try:
+            len(prop)
+        except TypeError:
+            prop = list(prop)
+
         setprop = False
         if len(prop) != 0:
             setprop = True
             if len(prop) < lentresh:
                 prop *= lentresh
         else:
-            # this is a nonsense prop so that zip doesn't truncate
-            # remaining props, if we're here - this prop shouldn't be set
-            prop = range(len(lentresh))
+            # a fake prop return prevents the zip from truncating valid props
+            prop = (prop,)*lentresh
         return setprop, prop
 
     # padding ticks and lims could be memory expensive
@@ -74,6 +79,7 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabel="arcsec",
         axes = (axes,)
     else:
         axlen = len(axes)
+
     setxticks, xticks = pad_prop(xticks, axlen)
     setxlims, xlims = pad_prop(xlims, axlen)
     setylims, ylims = pad_prop(ylims, axlen)
@@ -85,21 +91,34 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabel="arcsec",
         if setylims:
             ax.set_ylim(ylim)
 
-    # only simple plots that share either x or y axes are used here. If axes
-    # are grouped together then only leftmost and bottommost get markings.
-    xgrouper = [ax for ax in axes[0].get_shared_x_axes()]
-    ygrouper = [ax for ax in axes[0].get_shared_y_axes()]
-    xlabels = False if len(xgrouper) != 0 else True
-    ylabels = False if len(ygrouper) != 0 else True
-    # it should be always safe to label extreme borders
-    axes[0].set_ylabel(ylabel)
-    axes[-1].set_xlabel(xlabel)
+    # labels are complicated since not only do we need to know if we want to
+    # set them, but for which axes we want to set them too.
+    xlbls = (xlabels,) if isinstance(xlabels, str) else xlabels
+    ylbls = (ylabels,) if isinstance(ylabels, str) else ylabels
+    setxlabels, xlbls = pad_prop(xlbls, axlen)
+    setylabels, ylbls = pad_prop(ylbls, axlen)
 
-    for (ax, ticks, xlim, ylim)  in zip(axes, xticks, xlims, ylims):
-        if xlabels:
-            ax.set_xlabel(xlabel)
-        if ylabels:
-            ax.set_ylabel(ylabel)
+    # only clear-cut case happens when labels are given as lists matching the
+    # axes list. Any other case is at least partially ambiguous. Still, attempt
+    # is made to resolve the left/right-most axes only and label only those
+    # when labels are pure strings. If this happens, setflags are left True
+    # only for those axes that are not shared. This will fail if hidden axes,
+    # f.e. such as colorbars, are added to the plot. It should, however, always
+    # be safe to label border axes of the plot.
+    if isinstance(xlabels, str):
+        xgrouper = [ax for ax in axes[0].get_shared_x_axes()]
+        setxlabels = False if len(xgrouper) != 0 else True
+        axes[-1].set_xlabel(xlabels)
+    if isinstance(ylabels, str):
+        ygrouper = [ax for ax in axes[0].get_shared_y_axes()]
+        setylabels = False if len(ygrouper) != 0 else True
+        axes[0].set_ylabel(ylabels)
+
+    for (ax, ticks, xlim, ylim, xlbl, ylbl)  in zip(axes, xticks, xlims, ylims, xlbls, ylbls):
+        if setxlabels:
+            ax.set_xlabel(xlbl)
+        if setylabels:
+            ax.set_ylabel(ylbl)
         if setxticks:
             ax.set_xticks(ticks)
         if setxlims:
@@ -136,7 +155,8 @@ def figure4(h=100):
     axes[0].text(-1.2, 1.03,  'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.35, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
     axes = set_ax_props(axes, xlims =((-5.5, 5.5), (-15.5, 15.5)),
-                        xticks=(range(-25, 26, 5), range(-20, 21, 5)))
+                        xticks=(range(-25, 26, 5), range(-20, 21, 5)),
+                        xlabels="arcsec", ylabels="Intensity")
 
     point = PointSource(h)
     sdssdefocus = FluxPerAngle(h, *profiles.SDSS)
@@ -176,7 +196,8 @@ def figure5():
     axes[0].text(-1.2, 1.03, 'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.0, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
     axes = set_ax_props(axes, xlims =((-5.5, 5.5), (-15.5, 15.5)),
-                        xticks=(range(-25, 26, 5), range(-20, 21, 5)))
+                        xticks=(range(-25, 26, 5), range(-20, 21, 5)),
+                        xlabels="arcsec", ylabels="Intensity")
 
     sdssseeing = GausKolmogorov(profiles.SDSSSEEING)
     lsstseeing = GausKolmogorov(profiles.LSSTSEEING)
@@ -238,7 +259,8 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profile
                  fontsize=rcParams["axes.titlesize"]-8)
     axes = set_ax_props(axes,
                         xlims=((-12, 12), (-15, 16),( -21, 21)),
-                        xticks=(range(-20, 21, 5), range(-21, 21, 7), range(-30, 31, 10)))
+                        xticks=(range(-20, 21, 5), range(-21, 21, 7), range(-30, 31, 10)),
+                        xlabels="arcsec", ylabels="Intensity")
 
     seeing  = GausKolmogorov(seeingfwhm)
     defocus = FluxPerAngle(h, *instrument)
@@ -296,7 +318,7 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
                  fontsize=rcParams["axes.titlesize"]-8)
     axes[1].text(xlims[1][0]/2.0, 1.03, r"$D_{meteor} \gg D_{mirror}$",
                  fontsize=rcParams["axes.titlesize"]-8)
-    axes = set_ax_props(axes, xlims, xticks)
+    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
     seeing = GausKolmogorov(seeingfwhm)
     for h in profiles.HEIGHTS:
@@ -420,7 +442,7 @@ def figures1011(seeingfwhm, instrument, xlims, xticks):
                  fontsize=rcParams["axes.titlesize"]-6)
     axes[2].text(xlims[0][0]/2.0, 1.03, r"$\theta_{rot} = 0^\circ$",
                  fontsize=rcParams["axes.titlesize"]-6)
-    axes = set_ax_props(axes, xlims, xticks)
+    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
     seeing = GausKolmogorov(seeingfwhm)
     for h in profiles.HEIGHTS:
@@ -555,7 +577,7 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
         Axes containing the plot.
     """
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 14))
-    axes = set_ax_props(axes, xlims, xticks)
+    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
     axes[0].text(*txtpos[0], 'Gaussian trail evolution', fontsize=rcParams["axes.titlesize"])
     axes[1].text(*txtpos[1], 'Gaussian trail evolution \n defocused', fontsize=rcParams["axes.titlesize"])
     axes[2].text(*txtpos[2], 'All time-steps integrated', fontsize=rcParams["axes.titlesize"])
@@ -595,8 +617,8 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     plot_profiles(axes[1], conv, color="black", normed=convscale, linewidth=2)
     axes[2].plot(tmpscale, tmpobj/addscale, color="black", linewidth=2)
 
-    plt.subplots_adjust(bottom=0.07, left=0.07, right=0.97, top=0.98, hspace=0.08)
-    return fig, axes #plt.show()
+    plt.subplots_adjust(bottom=0.07, left=0.1, right=0.97, top=0.98, hspace=0.08)
+    return fig, axes
 
 
 def figure12():
@@ -753,7 +775,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
         Axes containing the plot.
     """
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 14))
-    axes = set_ax_props(axes, xlims, xticks)
+    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
     axes[0].text(*txtpos[0], 'Gaussian trail drift', fontsize=rcParams["axes.titlesize"]-6)
     axes[1].text(*txtpos[1], 'Gaussian trail drift\ndefocused', fontsize=rcParams["axes.titlesize"]-6)
     axes[2].text(*txtpos[2], 'All time-steps integrated', fontsize=rcParams["axes.titlesize"]-6)
@@ -819,7 +841,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     for ax in axes:
         ax.plot([0, 0], [-10, 10], color="gray", linewidth=1, linestyle="--")
 
-    plt.subplots_adjust(bottom=0.09, left=0.09, right=0.99, top=0.98, hspace=0.04)
+    plt.subplots_adjust(bottom=0.07, left=0.1, right=0.97, top=0.98, hspace=0.08)
     return fig, axes
 
 
@@ -938,7 +960,7 @@ def figure1617(tau, h, seeingfwhm, instrument, xlims, xticks,
         A list or tuple containing a nested list or tuple. The nested list or
         tuple contains two values (xmin, xmax) used to set individual axis
         x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
-    xticks : `list` or `tuple` 
+    xticks : `list` or `tuple`
         A list or tuple containing a nested list or tuple. The nested list or
         tuple contains positions at which to mark and label the ticks at. Tick
         marks will be displayed for other equally spaced values but no labels
@@ -971,7 +993,7 @@ def figure1617(tau, h, seeingfwhm, instrument, xlims, xticks,
         Axes containing the plot.
     """
     fig, ax = plt.subplots(figsize=(12, 10))
-    ax = set_ax_props(ax, xlims, xticks)[0]
+    ax = set_ax_props(ax, xlims, xticks, xlabels="arcsec", ylabels="Intensity")[0]
 
     # same procedure as for figures 12 and 13, first we create the trail sources
     # by defocusing gaussians and getting them to the same scale; except this
@@ -1045,7 +1067,7 @@ def figure16():
 
     Notes
     -----
-    The function calls figures1617 with the following values: 
+    The function calls figures1617 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.SDSSSEEING`
@@ -1079,7 +1101,7 @@ def figure17():
 
     Notes
     -----
-    The function calls figures1617 with the following values: 
+    The function calls figures1617 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.LSSTSEEING`
@@ -1192,63 +1214,121 @@ def param_space_sampler2(heights, radii, source, seeing, instrument, **kwargs):
     return data
 
 
-def plot_param_space(fig, ax, data, plot, pcollims=None, contours=None, twax=False, **kwargs):
-    heights = data["height"][:,0]
-    seeings = data["seeing"][0,:]
+def plot_param_space(fig, ax, data, xdat, ydat, secydat=None, pcollims=None,
+                     contours=None, **kwargs):
+    """Given some data, equivalent to data produced by parameter space
+    samplers, plots a psuedocolored plot onto the given ax. Optionally will
+    overlay contours at desired values and create a false second y axis which
+    labels will match the left hand side's labels but with values taken from
+    the specified column in the data.
 
+    Parameters
+    ----------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+    data : `numpy.array`
+        A 2D array containing the the data for central color plot.
+    xdat : `list`, `tuple` or `np.array`
+        Data used as the primary x axis.
+    ydat : `list`, `tuple` or `np.array`
+        Data used as the primary y axis.
+    secydat : `list`, `tuple`, `np.array` or `None`
+        Data that, if provided, will be used to create a secondary y axis.
+    pcollims : `tuple`
+        A tuple containing (lower, higher) values of color limits to use when
+        normalizing the plot. Useful if figure contains multiple different axes
+        all of which need to share the same color normalization limits. If not
+        given (0, max(data)) are used as limits.
+    contours : `dict`, `tuple`, `list` or `None``
+        List, tuple or dictionary of values at which contours will be drawn. If
+        None, no contours are drawn. See notes.
+
+    Returns
+    -------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `matplotlib.pyplot.Axes`
+        Axes containing the plot.
+
+
+    Notes
+    -----
+    Matplotlib does not produce nice spacings between inlined contour label and
+    the contour it belongs to, especially for contours nested against large
+    gradients. Problem is avoided if contours are not plotted all together but
+    in batches, each one supplied with it's own, different, spacing. This means
+    that even for just one axis of a simple 2 group contour plot of a figure
+    one needs to specify something verbose like:
+
+    contours = {
+        "batch1" : {"levels" : [1, 2, 3], "spacing" : 7 },
+        "batch2" : {"levels" : [4, 5, 6], "spacing" : 8 }
+    }
+
+    To reduce verbosity required to call the function the contours are instead
+    interpreted as batches per axis, such that each contour in the list is a
+    dictionary of batches or an iterable in which spacing is determined
+    automatically or to "spacing" kwarg, if supplied. F.e. the
+    above example is then shortened to:
+
+    contours = {"levels" : [[1, 2, 3], [4, 5, 6]], "spacings" : [7, 8]}
+    """
     if pcollims is None:
-        pcollims = (0, data[plot].max())
-    pcol = ax.pcolormesh(seeings, heights, data[plot], vmin=pcollims[0], vmax=pcollims[1])
+        pcollims = (0, data.max())
+    pcol = ax.pcolormesh(xdat, ydat, data, vmin=pcollims[0], vmax=pcollims[1])
 
-    def standardize_spacing():
-        resetarg = False
-        resetval = None
-        if  isinstance(contours, dict) and "spacings" in contours:
-            spcs = contours["spacings"]
-        elif "inline_spacing" in kwargs:
-            resetarg = True
-            saveval = kwargs["inline_spacing"]
-            try:
-                spcs = itertools.cycle(saveval)
-            except TypeError:
-                spcs = itertools.cycle([saveval])
-        else:
-            spcs = itertools.cycle([5])
-        spacing = kwargs.pop("spacings", spcs)
-
-        return spacing, (resetarg, resetval)
+    # check if contours are special case of batches or simple flat lists
+    drawcontours = True
+    batched, automaticspcs = False, False
+    cnts, spcs = None, None
+    if contours is None:
+        drawcontours = False
+    elif isinstance(contours, dict):
+        cnts = contours.get("levels", None)
+        spcs = contours.get("spacings", None)
+        batched = True
+    elif isinstance(contours, list) or isinstance(contours, tuple):
+        cnts = contours
+        spcs = kwargs.get("spacing", None)
+    else:
+        raise TypeError("Contour levels must be list or tuples.")
+    if spcs is None:
+        automaticspcs=True
 
     color = kwargs.pop("colors", None)
     fntsize = rcParams["legend.fontsize"]
-    spacing, (resetspacing, resetval) = standardize_spacing()
 
-    def draw_contours(contours, spacings, **kwargs):
-        for cnts, spc in zip(contours, spacings):
-            c = ax.contour(seeings, heights, data[plot], levels=cnts,
-                           colors=color, **kwargs)
-            c.levels = list(map(str, cnts))
-            ax.clabel(c, fontsize=fntsize, inline=True, inline_spacing=spc,
-                      colors=color, **kwargs)
+    def draw_contours(contours, spacing, **kwargs):
+        """Helper function to avoid code duplication when plotting contours."""
+        if not drawcontours:
+            return None
+        c = ax.contour(xdat, ydat, data, levels=contours, colors=color)
+        if automaticspcs:
+            ax.clabel(c, fontsize=fntsize, inline=True, colors=color, fmt="%1.0f",
+                      rightside_up=True, use_clabeltext=True)
+        else:
+            ax.clabel(c, fontsize=fntsize, inline=True, inline_spacing=spacing,
+                      colors=color, fmt="%1.0f", rightside_up=True,
+                      use_clabeltext=True)
 
-    if isinstance(contours, dict):
-        draw_contours(contours["levels"], spacing)
-        if resetspacing:
-            kwargs['inline_spacing'] = resetval
-    elif contours:
-        draw_contours([contours,], spacing)
+    if batched:
+        for c, s in zip(cnts, spcs):
+            draw_contours(c, s)
     else:
-        ax.contour(seeings, heights, data[plot], colors=color, **kwargs)
+        draw_contours(cnts, spcs)
 
-    if twax:
+    if secydat is not None:
         ax2 = ax.twinx()
-        ax2.plot(data['dfwhm'][:,0], heights, linestyle="--", color="white")
-        ax2.set_ylim(min(heights), max(heights))
+        ax2.plot(secydat, ydat, linestyle="--", color="white")
+        ax2.set_ylim(min(ydat), max(ydat))
         # getting ax2.get_xticks and xticklabels gets me nothing sensible! So the
         # matching between defocused FWHM and height has to be done manually. We
         # skip the first tick (40km) via [1:: , grab every 5th defocus fwhm as
         # [1::5 . Data has defocus fwhm per seeing but fwhm changes only with
         # height - we need 1st element of each only. Ergo [1::5,0])
-        labels = [f"${d:.2f}$" for d in data['dfwhm'][1::5,0]]
+        labels = [f"${d:.2f}$" for d in secydat[1::5]]
         # and then because of nonsensical tick values, the first one is -2.0,
         # I don't know why, but we have to skip it because it's not actually marked
         tlabels = [""]
@@ -1285,42 +1365,52 @@ def get_or_create_data(datafiles, heights=None, seeings=None, radii=None):
     return data
 
 
-def figure232426(fig, axes, data, contours=[None], plot='ofwhm', sharedcb=True,
-                 cbtitle=None, twax=False, xlims=None, ylims=None, **kwargs):
-    heights = data[0]["height"][:,0]
-    seeings = data[0]["seeing"][0,:]
-    cbtitle = plot if cbtitle is None else cbtitle
+def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
+                 sharedcb=True, cbtitle=None, xlims=None, ylims=None,
+                 xlabels="", ylabels="", **kwargs):
+    # clean up the arguments. Technically each plot can have completely
+    # arbitrary x, y axis and plot data. Realistically, they will share them so
+    # for brevity we allow simple lists as x and y data but then sanitize them
+    if len(xdat) != len(data):
+        xdat = (xdat,)*len(data)
+    if len(ydat) != len(data):
+        ydat = (ydat,)*len(data)
+    cbtitle = plotcol if cbtitle is None else cbtitle
 
-    # if the colorbar is shared to make sure we are looking at the same color
-    # ranges create a silly colorbar based on data extrema and then use its
+    # shared colorbars need to share color ranges and the same normalization so
+    # create a fake data based on data extrema and use its range and
     # normalization to re-color the data graphs.
     cbaxes = []
     if sharedcb:
-        pcolmax = max([d[plot].max() for d in data])
-        pcolmin = min([d[plot].min() for d in data])
-        pcollims = (pcolmin, pcolmax)
-        pcol = np.linspace(*pcollims, len(heights)*len(seeings))
-        pcol = pcol.reshape(len(heights), len(seeings))
-        pcol = axes[0].pcolormesh(seeings, heights, pcol)
+        pmax = max([np.max(d) for d in data])
+        pmin = min([np.min(d) for d in data])
+        pcollims = (pmax, pmin) 
+        pcol = np.linspace(*pcollims, len(xdat[0])*len(ydat[0]))
+        pcol = pcol.reshape(len(ydat[0]), len(xdat[0]))
+        pcol = axes[0].pcolormesh(xdat[0], ydat[0], pcol)
 
-        # position the colorbar axes on top when shared plots and
-        # plot it with the fake data created above
+        # position the colorbar axes on top when shared
         cax = fig.add_axes([0.12, 0.93, 0.76, 0.01])
-        cax.text(0.5, 3.5, cbtitle, horizontalalignment='center', verticalalignment='center',
-                 fontsize=rcParams["axes.titlesize"], transform=cax.transAxes)
+        cax.text(0.5, 3.5, cbtitle,
+                 horizontalalignment = 'center',
+                 verticalalignment = 'center',
+                 fontsize = rcParams["axes.titlesize"],
+                 transform = cax.transAxes)
         colbar = fig.colorbar(pcol, orientation="horizontal", cax=cax)
         colbar.ax.xaxis.set_ticks_position('top')
         colbar.ax.xaxis.set_label_position('top')
-        adjustvals = {"bottom":0.05, "left":0.12, "right":0.88, "top":0.92, "hspace":0.03}
+        adjustvals = {"bottom":0.05, "left":0.12, "right":0.88, "top":0.92,
+                      "hspace":0.03}
 
     # now plot the parameter space data
     twinx = []
-    for ax, dat, cnt in zip(axes, data, contours):
-        pcol1, ax2 = plot_param_space(fig, ax, dat, plot, contours=cnt,
-                                      colors="white", twax=twax, **kwargs)
+    contours = [None,]*len(axes) if contours is None else contours
+    secydat = [None,]*len(axes) if secydat is None else secydat
+    for ax, d, xax, yax, syd, cnt in zip(axes, data, xdat, ydat, secydat, contours):
+        pcol1, ax2 = plot_param_space(fig, ax, d, xax, yax, sectdat=syd, contours=cnt,
+                                      colors="white", **kwargs)
         twinx.append(ax2)
-        # but if the colorbar was not shared, plot each axis
-        # colorbar individually
+        # if the colorbar was not shared, plot each axis' colorbar individually
         if not sharedcb:
             divider = make_axes_locatable(ax)
             cax = divider.append_axes('top', size='5%', pad=0.1)
@@ -1329,41 +1419,23 @@ def figure232426(fig, axes, data, contours=[None], plot='ofwhm', sharedcb=True,
             colbar.set_label(cbtitle, fontsize=rcParams["axes.titlesize"])
             colbar.ax.xaxis.set_ticks_position('top')
             colbar.ax.xaxis.set_label_position('top')
-            adjustvals = {"bottom":0.05, "left":0.1, "right":0.88, "top":0.96, "hspace":0.25}
+            adjustvals = {"bottom":0.05, "left":0.1, "right":0.88, "top":0.96,
+                          "hspace":0.25}
 
-    # for the radii graphs the x axis changes from plot to plot
-    # this isn't desired for the fake CBs for the triple plots
-    # so this is a bit of hack to get this function to work for both.
-    if xlims is not None:
-        for xlim, ax, ax2 in zip(xlims, axes, twinx):
-            if twax:
-                ax2.set_xlim(*xlim)
-            ax.set_xlim(*xlim)
+    if xlims is None:
+        xmax = [np.max(x) for x in xdat]
+        xmin = [np.min(x) for x in xdat]
+        xlims = zip(xmin, xmax)
+    if ylims is None:
+        ymax = [np.max(y) for y in ydat]
+        ymin = [np.min(y) for y in ydat]
+        ylims = zip(ymin, ymax)
 
-        if len(xlims) < len(axes):
-            i = len(xlims)
-            for dat, ax, ax2 in zip(data[i:], axes[i:], twinx[i:]):
-                seeings = dat["seeing"][0,:]
-                mins, maxs = min(seeings), max(seeings)
-                if twax:
-                    ax2.set_xlim(mins, maxs)
-                ax.set_xlim(mins, maxs)
-
-    if ylims is not None:
-        for ylim, ax, ax2 in zip(ylims, axes, twinx):
-            if twax:
-                ax2.set_ylim(*ylim)
-            ax.set_ylim(*ylim)
-
-        if len(ylims) < len(axes):
-            for dat, ax, ax2 in zip(data[i:], axes[i:], twinx[i:]):
-                heights = dat["height"][:,0]
-                minh, maxh = min(heights), max(heights)
-                if twax:
-                    ax2.set_ylim(minh, maxh)
-                ax.set_ylim(minh, maxh)
-
+    # triple plots are special in that they only label middle plot
+    axes = set_ax_props(axes, xlims=xlims, ylims=ylims, xlabels=xlabels,
+                        ylabels=ylabels)
     plt.subplots_adjust(**adjustvals)
+
     return fig, axes, twinx, cbaxes
 
 
@@ -1380,12 +1452,10 @@ def figure232426(fig, axes, data, contours=[None], plot='ofwhm', sharedcb=True,
 def figure23():
     fig, axes = plt.subplots(3, 1, figsize=(12, 24), sharex=True)
 
+    # if the premade data products are missing, recreate them. Used parameters
+    # match those used in the paper plots, output will be cached if produced. 
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-
-    # if the premade data products are missing we need to recreate them.
-    # The dictionary associated with file-name sets param_space_sampler
-    # arguments to values used in the paper.
     datafiles = (("sdss_point_data.npy",
                   {"source" : profiles.PointSource, "instrument" : profiles.SDSS}),
                  ("sdss_diskeq_data.npy",
@@ -1394,18 +1464,24 @@ def figure23():
                   {"source" : profiles.DiskSource, "radius" : 3, "instrument" : profiles.SDSS}))
     data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
 
-    cnt1 = [2, 3, 4, 5, 8]
-    cnt2 = {"levels" : [[2,3,4], [5,8, 10,]], "spacings":[5, 1]}
-    contours = [cnt1, cnt1, cnt2]
+    # set the contours
+    cnt = {"levels" : [[2,3,4], [5,8]], "spacings" : [5, 3]}
+    cnt2 = {"levels" : [[2,3,4,5], [8,10]], "spacings" : [5, -5]}
+    contours = [cnt, cnt, cnt2]
 
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, data, contours, plot="ofwhm",
-                                               sharedcb=True, cbtitle="Observed FWHM (arcsec)",
-                                               twax=True)
-
+    # heights and seeings can be reconstructed from the data, plus knows in
+    # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
+    plotdata = [d['ofwhm'] for d in data]
+    secydat = [d['dfwhm'][:,0] for d in data]
+    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
+                                               heights, secydat=secydat,
+                                               contours=contours,
+                                               sharedcb=True,
+                                               cbtitle="Observed FWHM (arcsec)")
+    # tidy up axes labels and ticks
     twinaxes[1].set_ylabel("Defocus FWHM (arcsec)")
     axes[1].set_ylabel("Height (km)")
     axes[2].set_xlabel("Seeing FWHM (arcsec)")
-
     axes[0].get_xaxis().set_visible(False)
     axes[1].get_xaxis().set_visible(False)
 
@@ -1415,12 +1491,10 @@ def figure23():
 def figure24():
     fig, axes = plt.subplots(3, 1, figsize=(12, 24), sharex=True)
 
+    # if the premade data products are missing, recreate them. Used parameters
+    # match those used in the paper plots, output will be cached if produced. 
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-
-    # if the premade data products are missing we need to recreate them.
-    # The dictionary associated with file-name sets param_space_sampler
-    # arguments to values used in the paper.
     datafiles = (("lsst_point_data.npy",
                   {"source" : profiles.PointSource, "instrument" : profiles.LSST}),
                  ("lsst_diskeq_data.npy",
@@ -1429,17 +1503,21 @@ def figure24():
                   {"source" : profiles.DiskSource, "radius" : 8, "instrument" : profiles.LSST}))
     data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
 
-    cnt1 = {"levels" : [[4, 5], range(6, 14, 2), [16, 20, 25, 30]],
-            "spacings" : [5, 5, 5]}
-    cnt2 = {"levels" : [[5], range(6, 9, 2), range(12, 17, 2), range(20, 31, 5)],
-            "spacings" : [-10, -10, -20, -20]}
-    cnt3 = {"levels" : [[5], range(6, 9, 2), range(12, 17, 2), range(20, 31, 5)],
-            "spacings": [--5, -10, -20, -20]}
-    contours = [cnt1, cnt2, cnt3]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, data, contours, plot="ofwhm",
-                                               sharedcb=True, cbtitle="Observed FWHM (arcsec)",
-                                               twax=True)
+    # set the contours, more complicated on this plot due to large gradient
+    cnt1 = {"levels" : [[4,5,6,8], [12, 16, 20, 25, 30]], "spacings" : [5, 5]}
+    cnt2 = {"levels" : [[5,6,8], [12, 16, 20, 25, 30]], "spacings" : [-5, -10]}
+    contours = [cnt1, cnt2, cnt2]
 
+    # heights and seeings can be reconstructed from the data, plus known in
+    # advance, but the observed FWHM and defocus FWHM need to be read.
+    plotdata = [d['ofwhm'] for d in data]
+    secydat = [d['dfwhm'][:,0] for d in data]
+    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
+                                               heights, secydat=secydat,
+                                               contours=contours,
+                                               sharedcb=True,
+                                               cbtitle="Observed FWHM (arcsec)")
+    # tidy up axes labels and ticks
     twinaxes[1].set_ylabel("Defocus FWHM (arcsec)")
     axes[1].set_ylabel("Height (km)")
     axes[2].set_xlabel("Seeing FWHM (arcsec)")
@@ -1450,79 +1528,86 @@ def figure24():
     return fig, axes
 
 
+def figure25():
+    fig, axes = plt.subplots(2, 1, figsize=(12, 24))
+
+    # if the premade data products are missing, recreate them using same params
+    # as in the paper and cache the calculation results. This plot is compiled
+    # from two different sources of seeing and radii which is done manually
+    heights1 = np.arange(55, 305, 5)
+    radii1 = np.arange(0.01, 4.1, 0.05)
+    datafiles = (("sdss_radii_data.npy",
+                  {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
+                   "instrument" : profiles.SDSS}), )
+    dat1 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+
+    heights2 = np.arange(55, 305, 5)
+    radii2 = np.arange(0.01, 8.2, 0.103)
+    datafiles = (("lsst_radii_data.npy",
+                  {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
+                   "instrument" : profiles.LSST}), )
+    dat2 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+    data = [dat1[0], dat2[0]]
+
+    # set the contours
+    cnt1 = {"levels" : [[2, 3, 4, 5, 6, 7, 8, 10]],
+            "spacings" : [5]}
+    cnt2 = {"levels" : [[6, 7, 8, 10, 12], [ 14, 18, 24]],
+            "spacings" : [5, 1]}
+    contours = [cnt1, cnt2]
+
+    # this plot is different than previous because heights and seeings are not
+    # shared across all the plots in the figure. Appropriate height and seeing
+    # arrays are required so color mesh can be constricted.
+    plotdata = [d['ofwhm'] for d in data]
+    xdat = [radii1, radii2]
+    ydat = [heights1, heights2]
+    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, xdat, ydat,
+                                               contours=contours, sharedcb=False,
+                                               cbtitle="Observed FWHM (arcsec)",
+                                               xlabels=("Radius (m)",)*2,
+                                               ylabels=("Distance (km)",)*2)
+    return fig, axes
+
+
 def figure26():
     fig, axes = plt.subplots(2, 1, figsize=(12, 24))
 
+    # if the premade data products are missing, recreate them. Used parameters
+    # match those used in the paper plots, output will be cached if produced. 
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-
-    # if the premade data products are missing we need to recreate them.
-    # The dictionary associated with file-name sets param_space_sampler
-    # arguments to values used in the paper.
     datafiles = (("sdss_point_data.npy",
                   {"source" : profiles.PointSource, "instrument" : profiles.SDSS}),
                  ("lsst_point_data.npy",
                   {"source" : profiles.PointSource, "instrument" : profiles.LSST}))
     data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
 
+    # set the contours
     cnt1 = {"levels" : [[5,15,25,35]],
             "spacings" : [5]}
     cnt2 = {"levels" : [[5,15,25,35], [40,42,44,49]],
             "spacings" : [5, 1]}
-
     contours = [cnt1, cnt2]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, data, contours, plot="depth",
-                                               sharedcb=False, cbtitle="Intensity loss (\% of max value)",
-                                               twax=True)
 
+    # heights and seeings can be reconstructed from the data, plus knows in
+    # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
+    plotdata = [d['depth'] for d in data]
+    secydat = [d['dfwhm'][:,0] for d in data]
+    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
+                                               heights, secydat=secydat,
+                                               contours=contours,
+                                               sharedcb=False,
+                                               cbtitle="Intensity loss (\% of max value)",
+                                               xlabels=("Seeing FWHM (arcsec)",)*2,
+                                               ylabels=("Distance (km)",)*2)
+
+    # How I'd love mpl makes it easy to contextualize what is an axis' purpose,
+    # untill then, manually setting axes is the only way.
     for ax, twax in zip(axes, twinaxes):
-        ax.set_xlabel("Seeing FWHM (arcsec)")
-        ax.set_ylabel("Distance (km)")
         twax.set_ylabel("Defocus FWHM (arcsec)")
 
     return fig, axes
-
-
-
-
-
-
-
-
-def figure25():
-    fig, axes = plt.subplots(2, 1, figsize=(12, 24))
-
-    # this plot is compiled from two different sources of seeing and radii
-    # which does have to be stated manually
-    heights = np.arange(55, 305, 5)
-    radii = np.arange(0.01, 4.1, 0.05)
-    datafiles = (("sdss_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
-                   "instrument" : profiles.SDSS}), )
-    dat1 = get_or_create_data(datafiles, heights=heights, radii=radii)
-    heights = np.arange(55, 305, 5)
-    radii = np.arange(0.01, 8.2, 0.103)
-    datafiles = (("lsst_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
-                   "instrument" : profiles.LSST}), )
-    dat2 = get_or_create_data(datafiles, heights=heights, radii=radii)
-    data = [dat1[0], dat2[0]]
-
-    cnt1 = {"levels" : [[2, 3, 4, 5, 6, 7, 8, 10]],
-            "spacings" : [5]}
-    cnt2 = {"levels" : [[6, 7, 8, 10, 12], [ 14, 18, 24]],
-            "spacings" : [5, 1]}
-
-    contours = [cnt1, cnt2]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, data, contours, plot="ofwhm",
-                                               sharedcb=False, cbtitle="Observed FWHM (arcsec)")
-
-    for ax, twax in zip(axes, twinaxes):
-        ax.set_xlabel("Radius (m)")
-        ax.set_ylabel("Distance (km)")
-
-    return fig, axes
-
 
 
 def figure27():
@@ -1530,28 +1615,42 @@ def figure27():
 
     # this plot is compiled from two different sources of seeing and radii
     # which does have to be stated manually
-    heights = np.arange(55, 305, 5)
-    radii = np.arange(0.01, 4.1, 0.05)
+    heights1 = np.arange(55, 305, 5)
+    radii1 = np.arange(0.01, 4.1, 0.05)
     datafiles = (("sdss_radii_data.npy",
                   {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
                    "instrument" : profiles.SDSS}), )
-    dat1 = get_or_create_data(datafiles, heights=heights, radii=radii)
-    heights = np.arange(55, 305, 5)
-    radii = np.arange(0.01, 8.2, 0.103)
+    dat1 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+
+    heights2 = np.arange(55, 305, 5)
+    radii2 = np.arange(0.01, 8.2, 0.103)
     datafiles = (("lsst_radii_data.npy",
                   {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
                    "instrument" : profiles.LSST}), )
-    dat2 = get_or_create_data(datafiles, heights=heights, radii=radii)
+    dat2 = get_or_create_data(datafiles, heights=heights2, radii=radii2)
     data = [dat1[0], dat2[0]]
 
+    # set the contours
     cnt1 = {"levels" : [[1, 5, 10, 15, 18, 20, 23]],
             "spacings" : [5]}
     cnt2 = {"levels" : [[1], range(5, 50, 5)],
             "spacings" : [5, 1]}
-
     contours = [cnt1, cnt2]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, data, contours, plot="depth", xlims=[(0.02, 1.8)], ylims=[(60, 181)],
-                                               sharedcb=False, cbtitle="Intensity loss (\% of max value)")
+
+    # this plot is different than previous because heights and seeings are not
+    # shared across all the plots in the figure. Appropriate height and seeing
+    # arrays are required so color mesh can be constricted.
+    plotdata = [d['depth'] for d in data]
+    ydat = [heights1, heights2]
+    xdat = [radii1, radii2]
+    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, xdat, ydat,
+                                               contours=contours,
+                                               xlims=[(0.02, 1.8), (0.01, 8)],
+                                               ylims=[(60, 181), (55, 300)],
+                                               xlabels=("Radius (m)",)*2,
+                                               ylabels=("Distance (km)",)*2,
+                                               sharedcb=False,
+                                               cbtitle="Intensity loss (\% of max value)")
 
     for ax, twax in zip(axes, twinaxes):
         ax.set_xlabel("Radius (m)")

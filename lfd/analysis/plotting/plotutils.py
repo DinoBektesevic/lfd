@@ -9,8 +9,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
-__all__ = ["plot_profiles", "get_ls", "get_style_path", "LINESTYLES", "CUR_LS"]
-
+__all__ = ["plot_profiles", "get_ls", "get_style_path", "LINESTYLES", "CUR_LS",
+           "get_data_dir", "create_data_file_name", "get_data_file", "paperstyle",
+           "plot_profiles"]
 
 
 """List of linestyles used in plots."""
