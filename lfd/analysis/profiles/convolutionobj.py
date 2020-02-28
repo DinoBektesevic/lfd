@@ -95,11 +95,10 @@ class ConvolutionObject:
             warnings.warn("Required value estimated by interpolation.")
             return self.__guessf(r)
         except ValueError:
-             warnings.warn("Interpolation value outside of range of the scale "
-                          "used to create the object. This can occur when "
-                          "extending profiles far into their tails where it's "
-                          "assumed to be 0. Are you ure you know what you're "
-                          "doing?!")
+             warnings.warn("Interpolation performed for value outside scale range. "
+                          "This can occur when extending profiles into tails of "
+                          "their distribution where they are assumed to be 0. "
+                          "Is this the case?")
              newobj = np.zeros(len(r))
              overlap = (r>self.scaleleft) & (r < self.scaleright)
              newobj[overlap] += self.__guessf(r[overlap])

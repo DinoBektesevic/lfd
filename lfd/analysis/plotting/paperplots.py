@@ -1,6 +1,6 @@
 import os
+import re
 import warnings
-import itertools
 
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
@@ -15,8 +15,12 @@ from lfd.analysis.plotting import plotutils
 from lfd.analysis.plotting.plotutils import plot_profile, plot_profiles, get_ls
 
 
-def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylabels=(),
-                 ylims =((-0.01, 1.1),)):
+__all__ = ["figure4", "figure5", "figure6", "figure7", "figure8", "figure10",
+           "figure11", "figure12", "figure13", "figur1e14", "figure15", "figure16",
+           "figure17", "figure23", "figure24", "figure25", "figure26", "figure27"]
+
+def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
+                 ylabels=(),):
     """Sets the labels, ticks and limits on all pairs of axes,
     ticks and labels provided.
 
@@ -24,31 +28,40 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylabels=(),
     ------
     axes : `matplotlib.pyplot.Axes`
         Axes on which ticks, limits and labels will be set
-    xticks : `list` or `tuple`
-        Nested list or tuple of locations at which ticks and tick
-        marks will be placed. Default: (,)
     xlims : `list` or `tuple`
         Nested list or tuple of x-axis limits of the plots per axis.
         Default: (,).
+    xticks : `list` or `tuple`
+        Nested list or tuple of locations at which ticks and tick marks will be
+        placed. Default: (,)
+    xlabels : `list`, `tuple`, `string` or generator expression
+        List, tuple or an iterable that provide a label for each of the axes
     ylims : `list` or `tuple`
         Nested list or tuple of y-axis limits of the plots per axis.
         Default: (-0.01, 1.1).
+    ylabels : `list`, `tuple`, `string` or generator expression
+        List, tuple or an iterable that provide a label for each of the axes
 
     Note
     ----
-    Ticks and lims that are shorter than the number of axes will
-    begin repeating themselves untill they match the longest given
-    prop.
-
-    Given ticks and lims *NEED* to be nested list or tuples (i.e.
-    list of lists, list of tuples, tuple of lists etc..) in order to
-    work properly. Otherwise only a singular limit can be extracted
-    from them.
+    Ticks and lims that are shorter than the number of axes will begin
+    repeating themselves untill they match the length of axes.
+    Given ticks and lims *NEED* to be nested list or tuples (i.e. list of
+    lists, list of tuples, tuple of lists...) in order to work properly.
+    Otherwise only a singular limit can be extracted from them and the limits
+    can not be set properly.
 
     Ticks and lims can be any iterable that supports Python's
     multiplication trick (i.e. [1, 2]*2 = [1, 2, 1, 2]).
-
     Given ticks and lims that have length zero will not be set.
+
+    The labels are expected to always be given for each axis. When only a
+    string is given an attempt will be made to inspect and ascertain which axes
+    are shared and which ones are on the edge of the figure and only those axes
+    will be labeled. This procedure, however, is susceptible to errors - often
+    in situations where additional axes holding colorbars are given. In that
+    situation best course of action is to provide the labels as expected, one
+    for each axis, even when they are all the same.
     """
     def pad_prop(prop, lentresh):
         """Given a prop and some numerical treshold returns (False,
@@ -266,7 +279,7 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profile
     defocus = FluxPerAngle(h, *instrument)
 
     for r, ax in zip(rs, axes):
-        d = profiles.DiskSource(h, r)
+        d = DiskSource(h, r)
         c = convolve(d, seeing, defocus)
         plot_profiles(ax, (d, c), color="black", linestyles=('-', '--'),
                       labels=('Object', 'Observed'))
@@ -300,11 +313,11 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
         A list or tuple containing up to two nested lists or tuples. Each
         nested list or tuple contains two values (xmin, xmax) used to set
         individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
-    xticks : `list` or `tuple` 
+    xticks : `list` or `tuple`
         A list or tuple containing up to two nested lists or tuples. Each
         nested list or tuple contains positions at which to mark and label the
         ticks at. Tick marks will be displayed for other equally spaced values
-        but no labels will be displayed. 
+        but no labels will be displayed.
 
     Returns
     -------
@@ -577,7 +590,7 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
         Axes containing the plot.
     """
     fig, axes = plt.subplots(3, 1, sharex=True, figsize=(12, 14))
-    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
+    axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels=("Intensity",)*3)
     axes[0].text(*txtpos[0], 'Gaussian trail evolution', fontsize=rcParams["axes.titlesize"])
     axes[1].text(*txtpos[1], 'Gaussian trail evolution \n defocused', fontsize=rcParams["axes.titlesize"])
     axes[2].text(*txtpos[2], 'All time-steps integrated', fontsize=rcParams["axes.titlesize"])
@@ -638,7 +651,7 @@ def figure12():
 
     Notes
     -----
-    The function calls figures1213 with the following values: 
+    The function calls figures1213 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.SDSSSEEING`
@@ -931,7 +944,7 @@ def figure15():
                       txtpos=((9,0.6), (9,0.6), (9,0.6)))
 
 
-def figure1617(tau, h, seeingfwhm, instrument, xlims, xticks,
+def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
                n=10, duration=2, nsteps=486, loc="upper right"):
     """An example of the observed meteor track at some distance (solid line) as
     it would appear in an image from an telescope obtained as a sum of two
@@ -1086,7 +1099,7 @@ def figure16():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return  figure1617(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+    return  figures1617(1, 100, profiles.SDSSSEEING, profiles.SDSS,
                        xlims=((-5.5, 10.5),), xticks=(range(-20, 20, 2),))
 
 
@@ -1120,7 +1133,7 @@ def figure17():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return figure1617(1, 100, profiles.LSSTSEEING, profiles.LSST, loc="upper center",
+    return figures1617(1, 100, profiles.LSSTSEEING, profiles.LSST, loc="upper center",
                       xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))
 
 
@@ -1188,7 +1201,6 @@ def param_space_sampler2(heights, radii, source, seeing, instrument, **kwargs):
                    ("sfwhm", float), ("dfwhm", float),
                    ("ofwhm", float), ("depth", float)])
     data = np.zeros((len(heights), len(radii)), dtype=dt)
-
     for h, i in zip(heights, range(len(heights))):
         for r, j in zip(radii, range(len(radii))):
             P = source(h, r, **kwargs)
@@ -1276,7 +1288,7 @@ def plot_param_space(fig, ax, data, xdat, ydat, secydat=None, pcollims=None,
     contours = {"levels" : [[1, 2, 3], [4, 5, 6]], "spacings" : [7, 8]}
     """
     if pcollims is None:
-        pcollims = (0, data.max())
+        pcollims = (0, np.max(data))
     pcol = ax.pcolormesh(xdat, ydat, data, vmin=pcollims[0], vmax=pcollims[1])
 
     # check if contours are special case of batches or simple flat lists
@@ -1338,7 +1350,43 @@ def plot_param_space(fig, ax, data, xdat, ydat, secydat=None, pcollims=None,
     return pcol, None
 
 
-def get_or_create_data(datafiles, heights=None, seeings=None, radii=None):
+def get_or_create_data(datafiles, heights=None, seeings=None, radii=None,
+                       sources=None, sampler=None, **kwargs):
+    """Retrieves data stored in a file or creates the data and stores it at the
+    given location.
+
+    Parameters
+    ----------
+    datafiles : `list`, `tuple` or `str`
+        List of absolute filepaths to existing files or just a filename of one
+        of the already cached files. If the given absolute path is outside of
+        lfd's cache location the file can still be read, but it is not possible
+        to refer to it again just by its filename. For single files only it's
+        acceptable to provide a string directly.
+    heights : `list`, `tuple` or `numpy.array`
+        Optional. Heights at which data points are going to be sampled.
+    seeings : `list`, `tuple` or `numpy.array`
+        Optional. Seeings at which data points are going to be sampled.
+    radii : `list`, `tuple` or `numpy.array`
+        Optional. Radii at which data points are going to be sampled.
+    `sources` `list`, `tuple`, `numpy.array` or `dict`
+        Optional. A dictionary, or an iterable of dictionaries, containing
+        "source" and "instrument" keys. Source should point to one of the
+        classes found in `lfd.analysis.profiles` and instrument to a tuple or
+        a list of floats or integers stating outter and inner mirror radius of
+        instrument in question (see `lfd.profiles.SDSS` or `lfd.profiles.LSST`)
+    sampler : `function`
+        Optional. If left as None the appropriate sampler is determined based
+        on the provided heights and seeings or radii. Otherwise the specified
+        sampler will be used.
+    **kwargs : `dict`
+        Optional. Any additional keywords are forwarded to the sampler.
+
+    Returns
+    -------
+    data : `list`
+       A list of numpy arrays containing the read. or created, data.
+    """
     # this needs fixing and not just ugly hacks
     if seeings is not None and radii is not None:
         raise ValueError("Sampler undefined when both seeing and radii are given.")
@@ -1352,22 +1400,93 @@ def get_or_create_data(datafiles, heights=None, seeings=None, radii=None):
         parameter = radii
 
     data = []
-    for datfile in datafiles:
+    datafiles = (datafiles,) if isinstance(datafiles, str) else datafiles
+    sources = (sources,) if isinstance(sources, dict) else sources
+    for datfile, source in zip(datafiles, sources):
         try:
-            path = plotutils.get_data_file(datfile[0])
+            path = plotutils.get_data_file(datfile)
             data.append(np.load(path, allow_pickle=False))
         except OSError:
-            warnings.warn(f"Parameter space data file {plotutils.create_data_file_name(datfile[0])} "
+            warnings.warn(f"Parameter space data file {plotutils.create_data_file_name(datfile)} "
                           "does not exist or has been corrupted. Recreating it can take some time.")
-            data.append(sampler(heights, parameter, **datfile[1]))
-            np.save(plotutils.create_data_file_name(datfile[0]), data[-1])
+            data.append(sampler(heights, parameter, **source, **kwargs))
+            np.save(plotutils.create_data_file_name(datfile), data[-1])
 
     return data
 
 
-def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
-                 sharedcb=True, cbtitle=None, xlims=None, ylims=None,
-                 xlabels="", ylabels="", **kwargs):
+def figures23242526(fig, axes, data, xdat, ydat, secydat=None, contours=None,
+                   sharedcb=True, cbtitle=None, xlims=None, ylims=None,
+                   xlabels="", ylabels="", **kwargs):
+    """A genericized version of plots 23 to 26. Generally useful to create
+    pseudo-colored parameter space plots for figures with multiple axes with a
+    shared or individual colorbar and with or without the 3rd axis. Effectively
+    calls `plot_param_space` for each of the given axis and then additionaly
+    performs full-figure operations such as creating a single or multiple
+    colorbar axes, or appending 3rd axis to each of the plots, maintains axis
+    limits etc.
+
+    Parameters
+    ----------
+    fig : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    ax : `tuple` or `list`
+        List of ``matplotlib.pyplot.Axes` on which to plot.
+    data : `tuple` or `list`
+        List containing the data, as a 2D `numpy.array`, that will make the
+        central color plot on each axis.
+    xdat : `list`, `tuple` or `numpy.array`
+        Data that will be used to stretch the x axis of the plot, f.e. seeing.
+    ydat : `list`, `tuple` or `numpy.array`
+        Data that will be used to stretch the y axis of the plot, f.e. heights.
+    secydat : `list`, `tuple`, `numpy.array` or `None`
+        Optional. If not None a 3rd axis will be added to the plot, i.e. a 2nd
+        y axis. The data contained in secydat will be used to create labels for
+        that axis, therefore data provided should be invariant to xdat data.
+    contours : `list`, `tuple`, `numpy.array` or `None`
+        Optional. List of values at which contours will be drawn. If None, no
+        countours are drawn.
+    sharedcb : `bool`
+        If True the entire figure will contain a single colorbar at the top of
+        the plot. Else, each axis will have a colorbar attached to it. True by
+        default.
+    cbtitle : `str` or `None`
+        Optional. Title displayed on top of the colorbar.
+    xlims : `list`, `tuple` or `None`
+        Optional. A nested list or tuple each element of which is a (min, max)
+        value used to set limits of the x axes of the plot. If None the limits
+        are determined as minimal and maximal values of the data plotted. See
+        `lfd.analysis.plotting.paperplots.set_ax_props` for more.
+    ylims : `list`, `tuple` or `None`
+        Optional. A nested list or tuple each element of which is a (min, max)
+        value used to set limits of the y axes of the plot. If None the limits
+        are determined as minimal and maximal values of the data plotted. See
+        `lfd.analysis.plotting.paperplots.set_ax_props` for more.
+    xlabels : `list`, `tuple`, `str` or generator expression
+        Optional. No x axis labels are created if not provided. If a string
+        only the edge axis are labeled, if an iterable all axes will be
+        labeled. See `lfd.analysis.plotting.paperplots.set_ax_props` for more.
+    ylabels : `list`, `tuple`, `str` or generator expression
+        Optional. No y axis labels are created when not provided. If a string
+        only the edge axis are labeled, if an iterable all axes will be
+        labeled. See `lfd.analysis.plotting.paperplots.set_ax_props` for more.
+    **kwargs : `dict`
+        Dictionary of any additional keywords is forwarded to
+        `plot_param_space` function.
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     # clean up the arguments. Technically each plot can have completely
     # arbitrary x, y axis and plot data. Realistically, they will share them so
     # for brevity we allow simple lists as x and y data but then sanitize them
@@ -1375,7 +1494,7 @@ def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
         xdat = (xdat,)*len(data)
     if len(ydat) != len(data):
         ydat = (ydat,)*len(data)
-    cbtitle = plotcol if cbtitle is None else cbtitle
+    cbtitle = "" if cbtitle is None else cbtitle
 
     # shared colorbars need to share color ranges and the same normalization so
     # create a fake data based on data extrema and use its range and
@@ -1384,7 +1503,7 @@ def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
     if sharedcb:
         pmax = max([np.max(d) for d in data])
         pmin = min([np.min(d) for d in data])
-        pcollims = (pmax, pmin) 
+        pcollims = (pmax, pmin)
         pcol = np.linspace(*pcollims, len(xdat[0])*len(ydat[0]))
         pcol = pcol.reshape(len(ydat[0]), len(xdat[0]))
         pcol = axes[0].pcolormesh(xdat[0], ydat[0], pcol)
@@ -1407,8 +1526,8 @@ def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
     contours = [None,]*len(axes) if contours is None else contours
     secydat = [None,]*len(axes) if secydat is None else secydat
     for ax, d, xax, yax, syd, cnt in zip(axes, data, xdat, ydat, secydat, contours):
-        pcol1, ax2 = plot_param_space(fig, ax, d, xax, yax, sectdat=syd, contours=cnt,
-                                      colors="white", **kwargs)
+        pcol1, ax2 = plot_param_space(fig, ax, d, xax, yax, secydat=syd,
+                                      contours=cnt, colors="white", **kwargs)
         twinx.append(ax2)
         # if the colorbar was not shared, plot each axis' colorbar individually
         if not sharedcb:
@@ -1450,19 +1569,40 @@ def figure232426(fig, axes, data, xdat, ydat, secydat=None, contours=None,
 # on January 30th 2020 by Dino Bektesevic.
 # The top two graphs are correct however.
 def figure23():
+    """Plot of the observed FWHM (color scale and contours) as a function of
+    distance and seeing for SDSS in three cases (from the top to bottom): point
+    source, a uniform disk of R_meteor=0.9m (~R_mirror) and a uniform disk of
+    R_meteor=3m (>> R_mirror). The right axis shows the defocussing FWHM for
+    distances indicated on the left axis. This is the convolution of source
+    profile with defocusing only. The dashed line represents FWHM for which
+    the seeing is identical to the defocussing at agiven height. Points above
+    the dashed line are dominated by the seeing FWHM, while defocusing
+    dominates points below the line.
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     fig, axes = plt.subplots(3, 1, figsize=(12, 24), sharex=True)
 
     # if the premade data products are missing, recreate them. Used parameters
-    # match those used in the paper plots, output will be cached if produced. 
+    # match those used in the paper plots, output will be cached if produced.x
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    datafiles = (("sdss_point_data.npy",
-                  {"source" : profiles.PointSource, "instrument" : profiles.SDSS}),
-                 ("sdss_diskeq_data.npy",
-                  {"source" : profiles.DiskSource, "radius" : 0.9, "instrument" : profiles.SDSS}),
-                 ("sdss_diskgg_data.npy",
-                  {"source" : profiles.DiskSource, "radius" : 3, "instrument" : profiles.SDSS}))
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
+    sources = ({"source" : profiles.PointSource, "instrument" : profiles.SDSS},
+               {"source" : profiles.DiskSource, "radius" : 0.9, "instrument" : profiles.SDSS},
+               {"source" : profiles.DiskSource, "radius" : 3, "instrument" : profiles.SDSS})
+    datafiles = ("sdss_point_data.npy", "sdss_diskeq_data.npy", "sdss_diskgg_data.npy")
+    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
 
     # set the contours
     cnt = {"levels" : [[2,3,4], [5,8]], "spacings" : [5, 3]}
@@ -1473,11 +1613,11 @@ def figure23():
     # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
     plotdata = [d['ofwhm'] for d in data]
     secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
-                                               heights, secydat=secydat,
-                                               contours=contours,
-                                               sharedcb=True,
-                                               cbtitle="Observed FWHM (arcsec)")
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
+                                                  heights, secydat=secydat,
+                                                  contours=contours,
+                                                  sharedcb=True,
+                                                  cbtitle="Observed FWHM (arcsec)")
     # tidy up axes labels and ticks
     twinaxes[1].set_ylabel("Defocus FWHM (arcsec)")
     axes[1].set_ylabel("Height (km)")
@@ -1485,23 +1625,44 @@ def figure23():
     axes[0].get_xaxis().set_visible(False)
     axes[1].get_xaxis().set_visible(False)
 
-    return fig, axes
+    return fig, axes, twinaxes, cbaxes
 
 
 def figure24():
+    """Plot of the observed FWHM (color scale and contours) as a function of
+    distance and seeing for LSST in three cases (from the top to bottom): point
+    source, a uniform disk of R_meteor=4m (~R_mirror) and a uniform disk of
+    R_meteor=8m (>> R_mirror). The right axis shows the defocussing FWHM for
+    distances indicated on the left axis. This is the convolution of source
+    profile with defocusing only. The dashed line represents FWHM for which
+    the seeing is identical to the defocussing at agiven height. The observed
+    FWHM is almost completely dominated by the defocusing effect for the range
+    of distances and seeing shown in these panels.
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     fig, axes = plt.subplots(3, 1, figsize=(12, 24), sharex=True)
 
     # if the premade data products are missing, recreate them. Used parameters
-    # match those used in the paper plots, output will be cached if produced. 
+    # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    datafiles = (("lsst_point_data.npy",
-                  {"source" : profiles.PointSource, "instrument" : profiles.LSST}),
-                 ("lsst_diskeq_data.npy",
-                  {"source" : profiles.DiskSource, "radius" : 4, "instrument" : profiles.LSST}),
-                 ("lsst_diskgg_data.npy",
-                  {"source" : profiles.DiskSource, "radius" : 8, "instrument" : profiles.LSST}))
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
+    sources = ({"source" : profiles.PointSource, "instrument" : profiles.LSST},
+               {"source" : profiles.DiskSource, "radius" : 4, "instrument" : profiles.LSST},
+               {"source" : profiles.DiskSource, "radius" : 8, "instrument" : profiles.LSST})
+    datafiles = ("lsst_point_data.npy", "lsst_diskeq_data.npy", "lsst_diskgg_data.npy")
+    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
 
     # set the contours, more complicated on this plot due to large gradient
     cnt1 = {"levels" : [[4,5,6,8], [12, 16, 20, 25, 30]], "spacings" : [5, 5]}
@@ -1512,11 +1673,11 @@ def figure24():
     # advance, but the observed FWHM and defocus FWHM need to be read.
     plotdata = [d['ofwhm'] for d in data]
     secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
-                                               heights, secydat=secydat,
-                                               contours=contours,
-                                               sharedcb=True,
-                                               cbtitle="Observed FWHM (arcsec)")
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
+                                                  heights, secydat=secydat,
+                                                  contours=contours,
+                                                  sharedcb=True,
+                                                  cbtitle="Observed FWHM (arcsec)")
     # tidy up axes labels and ticks
     twinaxes[1].set_ylabel("Defocus FWHM (arcsec)")
     axes[1].set_ylabel("Height (km)")
@@ -1529,6 +1690,24 @@ def figure24():
 
 
 def figure25():
+    """The observed FWHM (color scale and contours) as afunction of a uniform
+    brightness disk radius and meteor distance to the telescope. The top panel
+    is for the case of SDSS (the seeing FWHM fixed to 1.48′′) and the bottom is
+    for LSST (seeing is 0.67′′).
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     fig, axes = plt.subplots(2, 1, figsize=(12, 24))
 
     # if the premade data products are missing, recreate them using same params
@@ -1536,17 +1715,17 @@ def figure25():
     # from two different sources of seeing and radii which is done manually
     heights1 = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
-    datafiles = (("sdss_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
-                   "instrument" : profiles.SDSS}), )
-    dat1 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+    source  = {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
+               "instrument" : profiles.SDSS}
+    datafile = "sdss_radii_data.npy"
+    dat1 = get_or_create_data(datafile, heights=heights1, radii=radii1, sources=source)
 
     heights2 = np.arange(55, 305, 5)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    datafiles = (("lsst_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
-                   "instrument" : profiles.LSST}), )
-    dat2 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+    source = {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
+              "instrument" : profiles.LSST}
+    datafile = "lsst_radii_data.npy"
+    dat2 = get_or_create_data(datafile, heights=heights2, radii=radii2, sources=source)
     data = [dat1[0], dat2[0]]
 
     # set the contours
@@ -1562,26 +1741,47 @@ def figure25():
     plotdata = [d['ofwhm'] for d in data]
     xdat = [radii1, radii2]
     ydat = [heights1, heights2]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, xdat, ydat,
-                                               contours=contours, sharedcb=False,
-                                               cbtitle="Observed FWHM (arcsec)",
-                                               xlabels=("Radius (m)",)*2,
-                                               ylabels=("Distance (km)",)*2)
-    return fig, axes
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, xdat, ydat,
+                                                  contours=contours, sharedcb=False,
+                                                  cbtitle="Observed FWHM (arcsec)",
+                                                  xlabels=("Radius (m)",)*2,
+                                                  ylabels=("Distance (km)",)*2)
+    return fig, axes, twinaxes, cbaxes
 
 
 def figure26():
+    """The strength of the central dip for a point source in the observed
+    image profile measured as the intensity loss (colorscale and contours)
+    relative to the maximum brightness value im the profile (see e.g. Figs.4
+    and 5). The panels show how the intensity loss depends on seeing and
+    distance from the meteor in SDSS (top panel) and LSST (bottom panel). The
+    right axis shows the defocusing FWHM for distances indicated on the left
+    axis. These are FWHM of the convolution profile of source profile and
+    defocusing effects only.
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     fig, axes = plt.subplots(2, 1, figsize=(12, 24))
 
     # if the premade data products are missing, recreate them. Used parameters
-    # match those used in the paper plots, output will be cached if produced. 
+    # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    datafiles = (("sdss_point_data.npy",
-                  {"source" : profiles.PointSource, "instrument" : profiles.SDSS}),
-                 ("lsst_point_data.npy",
-                  {"source" : profiles.PointSource, "instrument" : profiles.LSST}))
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings)
+    sources = ({"source" : profiles.PointSource, "instrument" : profiles.SDSS},
+               {"source" : profiles.PointSource, "instrument" : profiles.LSST})
+    datafiles = ("sdss_point_data.npy", "lsst_point_data.npy")
+    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
 
     # set the contours
     cnt1 = {"levels" : [[5,15,25,35]],
@@ -1594,40 +1794,59 @@ def figure26():
     # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
     plotdata = [d['depth'] for d in data]
     secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, seeings,
-                                               heights, secydat=secydat,
-                                               contours=contours,
-                                               sharedcb=False,
-                                               cbtitle="Intensity loss (\% of max value)",
-                                               xlabels=("Seeing FWHM (arcsec)",)*2,
-                                               ylabels=("Distance (km)",)*2)
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
+                                                  heights, secydat=secydat,
+                                                  contours=contours,
+                                                  sharedcb=False,
+                                                  cbtitle="Intensity loss (\% of max value)",
+                                                  xlabels=("Seeing FWHM (arcsec)",)*2,
+                                                  ylabels=("Distance (km)",)*2)
 
     # How I'd love mpl makes it easy to contextualize what is an axis' purpose,
     # untill then, manually setting axes is the only way.
     for ax, twax in zip(axes, twinaxes):
         twax.set_ylabel("Defocus FWHM (arcsec)")
 
-    return fig, axes
+    return fig, axes, twinaxes, cbaxes
 
 
 def figure27():
+    """The strength of the central dip for a disk source in the observed
+    image profile measured as the intensity loss (colorscale and contours)
+    relative to the maximum brightness value im the profile (see e.g. Figs.4
+    and 5). The horizontal axis shows the meteor head radius. The seeing is
+    set to 1.48′′for SDSS (top panel) and 0.67′′for LSST (bottom panel).
+
+    Returns
+    -------
+    fig  : `matplotlib.pyplot.Figure`
+        Figure containing the plot.
+    axes : `list` or `tuple`
+        List of all the main `matplotlib.pyplot.Axes` in the figure.
+    twinaxes : `list`
+        List of `matplotlib.pyplot.Axes`. If secydat data is given any created
+        secondary axes are returned in this list. Otherwise it's empty.
+    cbaxes : `list`
+        List of `matplotlib.pyplot.Axes` containing all the axes that contain
+        colorbars.
+    """
     fig, axes = plt.subplots(2, 1, figsize=(12, 24))
 
     # this plot is compiled from two different sources of seeing and radii
     # which does have to be stated manually
     heights1 = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
-    datafiles = (("sdss_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
-                   "instrument" : profiles.SDSS}), )
-    dat1 = get_or_create_data(datafiles, heights=heights1, radii=radii1)
+    source = {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
+              "instrument" : profiles.SDSS}
+    datafile = "sdss_radii_data.npy"
+    dat1 = get_or_create_data(datafile, heights=heights1, radii=radii1, sources=source)
 
     heights2 = np.arange(55, 305, 5)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    datafiles = (("lsst_radii_data.npy",
-                  {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
-                   "instrument" : profiles.LSST}), )
-    dat2 = get_or_create_data(datafiles, heights=heights2, radii=radii2)
+    source = {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
+              "instrument" : profiles.LSST}
+    datafile = "lsst_radii_data.npy"
+    dat2 = get_or_create_data(datafile, heights=heights2, radii=radii2, sources=source)
     data = [dat1[0], dat2[0]]
 
     # set the contours
@@ -1643,17 +1862,41 @@ def figure27():
     plotdata = [d['depth'] for d in data]
     ydat = [heights1, heights2]
     xdat = [radii1, radii2]
-    fig, axes, twinaxes, cbaxes = figure232426(fig, axes, plotdata, xdat, ydat,
-                                               contours=contours,
-                                               xlims=[(0.02, 1.8), (0.01, 8)],
-                                               ylims=[(60, 181), (55, 300)],
-                                               xlabels=("Radius (m)",)*2,
-                                               ylabels=("Distance (km)",)*2,
-                                               sharedcb=False,
-                                               cbtitle="Intensity loss (\% of max value)")
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, xdat, ydat,
+                                                  contours=contours,
+                                                  xlims=[(0.02, 1.8), (0.01, 8)],
+                                                  ylims=[(60, 181), (55, 300)],
+                                                  xlabels=("Radius (m)",)*2,
+                                                  ylabels=("Distance (km)",)*2,
+                                                  sharedcb=False,
+                                                  cbtitle="Intensity loss (\% of max value)")
 
     for ax, twax in zip(axes, twinaxes):
         ax.set_xlabel("Radius (m)")
         ax.set_ylabel("Distance (km)")
 
-    return fig, axes
+    return fig, axes, twinaxes, cbaxes
+
+
+def plotall(path="."):
+    """Create PNG image files containing figures 4 to 27 as they appeared in
+    the::
+
+      Bektesevic & Vinkovic et. al. 2017 (arxiv: 1707.07223)
+
+    paper at a given location.
+
+    Parameters
+    ---------
+    path : `str`
+        Optional. Path to location in which images will be stored. Defaults to
+        current directory.
+    """
+    globs = globals()
+    abspath = os.path.abspath(path)
+    plotfuns = [f for f in globs if re.search(r"figure\d+", f)]
+    for plotfun in plotfuns:
+        with plotutils.paperstyle():
+            fig, axes, *rest = globs[plotfun]()
+            plt.savefig(os.path.join(abspath, plotfun+".png"))
+            plt.close(fig)
