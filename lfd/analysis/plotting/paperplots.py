@@ -47,9 +47,9 @@ def figure4(h=100):
                         xlabels="arcsec", ylabels="Intensity")
 
     point = PointSource(h)
-    sdssdefocus = FluxPerAngle(h, profiles.SDSS)
-    lsstdefocus = FluxPerAngle(h, profiles.LSST)
-    for s in profiles.SEEINGS:
+    sdssdefocus = FluxPerAngle(h, SDSS)
+    lsstdefocus = FluxPerAngle(h, LSST)
+    for s in SEEINGS:
         seeing = GausKolmogorov(s)
         ls = get_ls()
         plot_profile(axes[0], convolve(point, seeing, sdssdefocus),
@@ -87,9 +87,9 @@ def figure5():
                         xticks=(range(-25, 26, 5), range(-20, 21, 5)),
                         xlabels="arcsec", ylabels="Intensity")
 
-    sdssc = generic_sampler(PointSource, h=profiles.HEIGHTS)
-    lsstc = generic_sampler(PointSource, instrument=profiles.LSST, h=profiles.HEIGHTS)
-    for sp, lp, h in zip(sdssc, lsstc, profiles.HEIGHTS):
+    sdssc = generic_sampler(PointSource, h=HEIGHTS)
+    lsstc = generic_sampler(PointSource, instrument=LSST, h=HEIGHTS)
+    for sp, lp, h in zip(sdssc, lsstc, HEIGHTS):
         ls = get_ls()
         plot_profile(axes[0], sp, label=f"${int(h)}km$", color="black", linestyle=ls)
         plot_profile(axes[1], lp, label=f"${int(h)}km$", color="black", linestyle=ls)
@@ -102,7 +102,7 @@ def figure5():
     return fig, axes
 
 
-def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profiles.LSSTSEEING):
+def figure6(h=100,  rs=(0.1, 4, 8), instrument=LSST, seeingfwhm=LSSTSEEING):
     """Three cases of meteors with \theta_D << \theta_O, \theta_D \approx \theta_O
     and \thetaD >> \theta_O (see equations 6 and 8) illustrated for the LSST
     telescope at 100km distance and the seeing of 0.67′′. Meteors are modeled
@@ -214,11 +214,11 @@ def figures78(rs, instrument,  xlims, xticks, seeingfwhm=None):
     axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
     profs = generic_sampler(DiskSource, instrument=instrument, radius=rs,
-                            h=profiles.HEIGHTS, seeingFWHM=seeingfwhm)
-    diskeq, diskgg = profs[:len(profiles.HEIGHTS)], profs[len(profiles.HEIGHTS):]
+                            h=HEIGHTS, seeingFWHM=seeingfwhm)
+    diskeq, diskgg = profs[:len(HEIGHTS)], profs[len(HEIGHTS):]
 
     # sampler iterates the last given param first, so they will be ordered by r
-    for h, deq, dgg in zip( profiles.HEIGHTS, diskeq, diskgg):
+    for h, deq, dgg in zip(HEIGHTS, diskeq, diskgg):
         ls = get_ls()
         plot_profile(axes[0], deq, label=f"${int(h)}km$", color="black", linestyle=ls)
         plot_profile(axes[1], dgg, label=f"${int(h)}km$", color="black", linestyle=ls)
@@ -258,7 +258,7 @@ def figure7():
     xlims : [(-6, 6), (-11, 11)]
     xticks : [range(-30, 30, 6), range(-30, 30, 2)]
     """
-    return figures78(rs=(1, 4), instrument=profiles.SDSS,
+    return figures78(rs=(1, 4), instrument=SDSS,
                      xlims=((-6, 6), (-11, 11)), xticks=(range(-30, 30, 2),))
 
 
@@ -287,7 +287,7 @@ def figure8():
     xlims : [(-18, 18), (-25, 25)]
     xticks : [range(-30, 30, 6), range(-30, 30, 10)]
     """
-    return figures78(rs=(4, 8), instrument=profiles.LSST,
+    return figures78(rs=(4, 8), instrument=LSST,
                      xlims=((-18, 18), (-25, 25)),
                      xticks=(range(-30, 30, 6), range(-30, 30, 10)))
 
@@ -340,7 +340,7 @@ def figures1011(seeingfwhm, instrument, xlims, xticks):
     axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
     seeing = GausKolmogorov(seeingfwhm)
-    for h in profiles.HEIGHTS:
+    for h in HEIGHTS:
         defocus = FluxPerAngle(h, instrument)
         rab1 = RabinaSource(h, 0.0)
         rab2 = RabinaSource(h, 0.5)
@@ -381,7 +381,7 @@ def figure10():
     xlims : [(-7.5, 7.5)]
     xticks : [range (-25, 26, 5)]
     """
-    return figures1011(profiles.SDSSSEEING, profiles.SDSS, ((-7.5, 7.5),),
+    return figures1011(SDSSSEEING, SDSS, ((-7.5, 7.5),),
                        (range(-25, 26, 5), ))
 
 
@@ -405,7 +405,7 @@ def figure11():
     xlims : [(-7.5, 7.5)]
     xticks : [range (-25, 26, 5)]
     """
-    return figures1011(profiles.LSSTSEEING, profiles.LSST, ((-15.5, 15.5), ),
+    return figures1011(LSSTSEEING, LSST, ((-15.5, 15.5), ),
                        (range(-20, 21, 10), ))
 
 
@@ -479,7 +479,7 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     axes[0].get_xaxis().set_visible(False)
     axes[1].get_xaxis().set_visible(False)
 
-    gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
+    gaussians = [GaussianSource(h, i) for i in exp_fwhms(tau, n, duration)]
     s = GausKolmogorov(seeingfwhm)
     d = FluxPerAngle(h, instrument)
 
@@ -551,7 +551,7 @@ def figure12():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return figures1213(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+    return figures1213(1, 100, SDSSSEEING, SDSS,
                       xlims=((-8.5,8.5),), xticks=(range(-20, 20, 2),),
                       txtpos=((2,0.8), (2,0.8), (2,0.8)))
 
@@ -595,7 +595,7 @@ def figure13():
         Axes containing the plot.
     """
 
-    return figures1213(1, 100, profiles.LSSTSEEING, profiles.LSST,
+    return figures1213(1, 100, LSSTSEEING, LSST,
                       xlims=((-15,15),), xticks=(range(-20, 20, 2),),
                       txtpos=((2,0.8), (-5,0.28), (2,0.8)))
 
@@ -679,7 +679,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
 
     s = GausKolmogorov(seeingfwhm)
     d = FluxPerAngle(h, instrument)
-    gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
+    gaussians = [GaussianSource(h, i) for i in exp_fwhms(tau, n, duration)]
     conv = [convolve(g,s,d) for g in gaussians]
 
     # same procedure as for figures 12 and 13
@@ -778,7 +778,7 @@ def figure14():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return figures1415(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+    return figures1415(1, 100, SDSSSEEING, SDSS,
                       xlims=((-4.5, 12.5),), xticks=(range(-20, 20, 2),),
                       txtpos=((6,0.6), (6,0.6), (6,0.6)))
 
@@ -821,7 +821,7 @@ def figure15():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return figures1415(1, 100, profiles.LSSTSEEING, profiles.LSST,
+    return figures1415(1, 100, LSSTSEEING, LSST,
                       xlims=((-10.5,17.5),), xticks=(range(-20, 20, 5),),
                       txtpos=((9,0.6), (9,0.6), (9,0.6)))
 
@@ -896,7 +896,7 @@ def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
     # not plotting them
     s = GausKolmogorov(seeingfwhm)
     d = FluxPerAngle(h, instrument)
-    gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
+    gaussians = [GaussianSource(h, i) for i in exp_fwhms(tau, n, duration)]
     obsgaus = [convolve(g,s,d) for g in gaussians]
 
     timestep = 0
@@ -981,7 +981,7 @@ def figure16():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return  figures1617(1, 100, profiles.SDSSSEEING, profiles.SDSS,
+    return  figures1617(1, 100, SDSSSEEING, SDSS,
                        xlims=((-5.5, 10.5),), xticks=(range(-20, 20, 2),))
 
 
@@ -1015,7 +1015,7 @@ def figure17():
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
-    return figures1617(1, 100, profiles.LSSTSEEING, profiles.LSST, loc="upper center",
+    return figures1617(1, 100, LSSTSEEING, LSST, loc="upper center",
                       xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))
 
 

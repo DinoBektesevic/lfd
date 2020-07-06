@@ -86,7 +86,7 @@ def meshgrid(data, x, y, tgt, fold=None, axes=True):
     array([3., 4.])
     >>> z
     array([[8.1, 4.5],
-           [8.1, 4.5]])
+         [8.1, 4.5]])
     """
     unsafe=False
     foldedData = data
@@ -119,8 +119,8 @@ def get_rabina_profile(angle, useCV2=False):
     """Returns image of projected Rabina profile as a function of angle between
     the observers line of sight and the velocity vector of the meteor.
 
-    Params
-    ------
+    Parameters
+    ----------
     angle: `float`
         angle, in radians, between LOS and vector of the meteor.
     useCV2: `bool`, optional
