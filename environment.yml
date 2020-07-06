@@ -115,7 +115,7 @@ dependencies:
   - py=1.8.1=py_0
   - py-opencv=3.4.2=py37hb342d67_1
   - pycairo=1.18.2=py37h2a1e443_0
-  - pillow=7.2.0=py37hb39fc2d_0
+  - pillow=7.0.0=py37hb39fc2d_0
   - pycodestyle=2.5.0=py37_0
   - pycparser=2.19=py37_0
   - pyflakes=2.1.1=py37_0
