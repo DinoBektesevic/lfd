@@ -43,9 +43,11 @@ Examples
 """
 
 
+from lfd.analysis.profiles.utils import *
 from lfd.analysis.profiles.seeing import *
 from lfd.analysis.profiles.consts import *
-from lfd.analysis.profiles.utils import *
+from lfd.analysis.profiles.samplers import *
+from lfd.analysis.profiles.defocusing import *
 from lfd.analysis.profiles.convolution import *
 from lfd.analysis.profiles.objectprofiles import *
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject

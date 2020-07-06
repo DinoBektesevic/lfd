@@ -32,7 +32,7 @@ class PointSource(ConvolutionObject):
       appropriate angular size of the object by the resolution, so that the
       object remains unresolved at the required resolution.
     """
-    def __init__(self, h, res=0.001):
+    def __init__(self, h, res=0.001, **kwargs):
         self.h = h
         theta = 1.0/(h*1000.) * RAD2ARCSEC
         scale = np.arange(-theta, theta, theta*res)
@@ -87,9 +87,8 @@ class GaussianSource(ConvolutionObject):
     units : string
       spatial units (meters by default) - currently not very well supported
     """
-    def __init__(self, h, fwhm, res=0.001, units="meters"):
+    def __init__(self, h, fwhm, res=0.001, units="meters", **kwargs):
         self.h = h
-        #self.
         self.theta = fwhm/(h*1000.)*RAD2ARCSEC
         self.sigma = fwhm/2.355
         self._f = stats.norm(scale=fwhm/2.355).pdf
@@ -122,7 +121,7 @@ class DiskSource(ConvolutionObject):
     res : float
       desired resolution, in arcseconds
     """
-    def __init__(self, h, radius, res=0.001):
+    def __init__(self, h, radius, res=0.001, **kwargs):
         self.h = h
         self.r = radius
         self.theta = radius/(2*h*1000.) * RAD2ARCSEC
@@ -201,7 +200,7 @@ class RabinaSource(ConvolutionObject):
 
     Parameters
     ----------
-    projection : `string`, `float` or `int`
+    angle : `string`, `float` or `int`
         If string the path to the premade 2D integrated Rabina profile projection,
         if float or int the angle in radians that will be converted into a filename
         of one of the premade Rabina profiles.
@@ -221,17 +220,19 @@ class RabinaSource(ConvolutionObject):
     zmin, zmax = -5., 5.
     N = 1000.
 
-    def __init__(self, projection, h):
-        self.projection = projection
+    def __init__(self, h, angle, **kwargs):
+        self.projection = angle
         self.h = h
 
         try:
-            angle = float(projection)
-            imgpath = utils.get_rabina_path(angle)
+            imgneg = utils.get_rabina_profile(angle, useCV2=True)
         except ValueError:
-            if not os.path.isfile(projection):
+            if not os.path.isfile(self.projection):
                 raise ValueError(f"Expected path to file or an angle got {projection} instead.")
-            imgpath = projection
+            imgneg = cv2.imread(self.projection, cv2.IMREAD_GRAYSCALE)
+        if imgneg is None:
+            raise RuntimeError(f"OpenCV underscriptively failed to open {imgpath}. "
+                               "Try to open it manually.")
 
         #xmin, xmax = RabinaProfile.xmin, RabinaProfile.xmax
         #ymin, ymax = RabinaSource.ymin, RabinaSource.ymax
@@ -239,10 +240,6 @@ class RabinaSource(ConvolutionObject):
         #xstep = (xmax-xmin)/RabinaProfile.N
         ystep = (RabinaSource.ymax- RabinaSource.ymin)/RabinaSource.N
 
-        imgneg = cv2.imread(os.path.abspath(imgpath), cv2.IMREAD_GRAYSCALE)
-        if imgneg is None:
-            raise RuntimeError(f"OpenCV underscriptively failed to open {imgpath}. "
-                               "Try to open it manually.")
         white = 255.*np.ones(imgneg.shape)
 
         img = -1.*(imgneg-white)

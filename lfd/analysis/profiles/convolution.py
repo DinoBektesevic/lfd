@@ -2,10 +2,17 @@
 to work with provided convolutional objects.
 
 """
-import numpy as np
-from scipy import misc, signal, interpolate, stats
-from lfd.analysis.profiles.convolutionobj import ConvolutionObject
+import inspect
+import itertools
 
+import numpy as np
+from scipy import signal
+
+from lfd.analysis.profiles.convolutionobj import ConvolutionObject
+from lfd.analysis.profiles import consts
+from lfd.analysis.profiles.objectprofiles import *
+from lfd.analysis.profiles.seeing import *
+from lfd.analysis.profiles.defocusing import *
 
 __all__ = ["largest_common_scale", "convolve_seeing", "convolve_defocus",
            "convolve_seeing_defocus", "convolve"]

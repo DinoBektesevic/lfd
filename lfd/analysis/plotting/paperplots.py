@@ -7,139 +7,14 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from lfd.analysis import profiles
-from lfd.analysis.profiles import (convolve, FluxPerAngle, GausKolmogorov,
-                                   PointSource, DiskSource, RabinaSource,
-                                   GaussianSource)
-from lfd.analysis.plotting import plotutils
-from lfd.analysis.plotting.plotutils import plot_profile, plot_profiles, get_ls
+from lfd.analysis.utils import *
+from lfd.analysis.profiles import *
+from lfd.analysis.plotting.utils import *
 
 
-__all__ = ["figure4", "figure5", "figure6", "figure7", "figure8", "figure10",
+__all__ = ["plotall", "figure4", "figure5", "figure6", "figure7", "figure8", "figure10",
            "figure11", "figure12", "figure13", "figur1e14", "figure15", "figure16",
            "figure17", "figure23", "figure24", "figure25", "figure26", "figure27"]
-
-def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
-                 ylabels=(),):
-    """Sets the labels, ticks and limits on all pairs of axes,
-    ticks and labels provided.
-
-    Params
-    ------
-    axes : `matplotlib.pyplot.Axes`
-        Axes on which ticks, limits and labels will be set
-    xlims : `list` or `tuple`
-        Nested list or tuple of x-axis limits of the plots per axis.
-        Default: (,).
-    xticks : `list` or `tuple`
-        Nested list or tuple of locations at which ticks and tick marks will be
-        placed. Default: (,)
-    xlabels : `list`, `tuple`, `string` or generator expression
-        List, tuple or an iterable that provide a label for each of the axes
-    ylims : `list` or `tuple`
-        Nested list or tuple of y-axis limits of the plots per axis.
-        Default: (-0.01, 1.1).
-    ylabels : `list`, `tuple`, `string` or generator expression
-        List, tuple or an iterable that provide a label for each of the axes
-
-    Note
-    ----
-    Ticks and lims that are shorter than the number of axes will begin
-    repeating themselves untill they match the length of axes.
-    Given ticks and lims *NEED* to be nested list or tuples (i.e. list of
-    lists, list of tuples, tuple of lists...) in order to work properly.
-    Otherwise only a singular limit can be extracted from them and the limits
-    can not be set properly.
-
-    Ticks and lims can be any iterable that supports Python's
-    multiplication trick (i.e. [1, 2]*2 = [1, 2, 1, 2]).
-    Given ticks and lims that have length zero will not be set.
-
-    The labels are expected to always be given for each axis. When only a
-    string is given an attempt will be made to inspect and ascertain which axes
-    are shared and which ones are on the edge of the figure and only those axes
-    will be labeled. This procedure, however, is susceptible to errors - often
-    in situations where additional axes holding colorbars are given. In that
-    situation best course of action is to provide the labels as expected, one
-    for each axis, even when they are all the same.
-    """
-    def pad_prop(prop, lentresh):
-        """Given a prop and some numerical treshold returns (False,
-        range(lentresh)) when the length of prop is zero and (True, prop) when
-        the length of prop is different than zero.
-        If a prop is shorter than the numerical treshold it will be padded
-        to be at least as long (usually longer)."""
-        # catch generators as limit expressions
-        try:
-            len(prop)
-        except TypeError:
-            prop = list(prop)
-
-        setprop = False
-        if len(prop) != 0:
-            setprop = True
-            if len(prop) < lentresh:
-                prop *= lentresh
-        else:
-            # a fake prop return prevents the zip from truncating valid props
-            prop = (prop,)*lentresh
-        return setprop, prop
-
-    # padding ticks and lims could be memory expensive
-    # so we try not to expand if not needed.
-    if isinstance(axes, plt.Axes):
-        axlen = 1
-        axes = (axes,)
-    else:
-        axlen = len(axes)
-
-    setxticks, xticks = pad_prop(xticks, axlen)
-    setxlims, xlims = pad_prop(xlims, axlen)
-    setylims, ylims = pad_prop(ylims, axlen)
-    for (ax, ticks, xlim, ylim)  in zip(axes, xticks, xlims, ylims):
-        if setxticks:
-            ax.set_xticks(ticks)
-        if setxlims:
-            ax.set_xlim(xlim)
-        if setylims:
-            ax.set_ylim(ylim)
-
-    # labels are complicated since not only do we need to know if we want to
-    # set them, but for which axes we want to set them too.
-    xlbls = (xlabels,) if isinstance(xlabels, str) else xlabels
-    ylbls = (ylabels,) if isinstance(ylabels, str) else ylabels
-    setxlabels, xlbls = pad_prop(xlbls, axlen)
-    setylabels, ylbls = pad_prop(ylbls, axlen)
-
-    # only clear-cut case happens when labels are given as lists matching the
-    # axes list. Any other case is at least partially ambiguous. Still, attempt
-    # is made to resolve the left/right-most axes only and label only those
-    # when labels are pure strings. If this happens, setflags are left True
-    # only for those axes that are not shared. This will fail if hidden axes,
-    # f.e. such as colorbars, are added to the plot. It should, however, always
-    # be safe to label border axes of the plot.
-    if isinstance(xlabels, str):
-        xgrouper = [ax for ax in axes[0].get_shared_x_axes()]
-        setxlabels = False if len(xgrouper) != 0 else True
-        axes[-1].set_xlabel(xlabels)
-    if isinstance(ylabels, str):
-        ygrouper = [ax for ax in axes[0].get_shared_y_axes()]
-        setylabels = False if len(ygrouper) != 0 else True
-        axes[0].set_ylabel(ylabels)
-
-    for (ax, ticks, xlim, ylim, xlbl, ylbl)  in zip(axes, xticks, xlims, ylims, xlbls, ylbls):
-        if setxlabels:
-            ax.set_xlabel(xlbl)
-        if setylabels:
-            ax.set_ylabel(ylbl)
-        if setxticks:
-            ax.set_xticks(ticks)
-        if setxlims:
-            ax.set_xlim(xlim)
-        if setylims:
-            ax.set_ylim(ylim)
-
-    return axes
 
 
 def figure4(h=100):
@@ -172,8 +47,8 @@ def figure4(h=100):
                         xlabels="arcsec", ylabels="Intensity")
 
     point = PointSource(h)
-    sdssdefocus = FluxPerAngle(h, *profiles.SDSS)
-    lsstdefocus = FluxPerAngle(h, *profiles.LSST)
+    sdssdefocus = FluxPerAngle(h, profiles.SDSS)
+    lsstdefocus = FluxPerAngle(h, profiles.LSST)
     for s in profiles.SEEINGS:
         seeing = GausKolmogorov(s)
         ls = get_ls()
@@ -212,17 +87,12 @@ def figure5():
                         xticks=(range(-25, 26, 5), range(-20, 21, 5)),
                         xlabels="arcsec", ylabels="Intensity")
 
-    sdssseeing = GausKolmogorov(profiles.SDSSSEEING)
-    lsstseeing = GausKolmogorov(profiles.LSSTSEEING)
-    for h in profiles.HEIGHTS:
-        point = PointSource(h)
-        sdssdefocus = FluxPerAngle(h, *profiles.SDSS)
-        lsstdefocus = FluxPerAngle(h, *profiles.LSST)
+    sdssc = generic_sampler(PointSource, h=profiles.HEIGHTS)
+    lsstc = generic_sampler(PointSource, instrument=profiles.LSST, h=profiles.HEIGHTS)
+    for sp, lp, h in zip(sdssc, lsstc, profiles.HEIGHTS):
         ls = get_ls()
-        plot_profile(axes[0], convolve(point, sdssseeing, sdssdefocus),
-                     label=f"${int(h)}km$", color="black", linestyle=ls)
-        plot_profile(axes[1], convolve(point, lsstseeing, lsstdefocus),
-                     label=f"${int(h)}km$", color="black", linestyle=ls)
+        plot_profile(axes[0], sp, label=f"${int(h)}km$", color="black", linestyle=ls)
+        plot_profile(axes[1], lp, label=f"${int(h)}km$", color="black", linestyle=ls)
 
     plt.legend(bbox_to_anchor=(0.1, 1.0, 0.9, 0.), ncol=4, mode="expand",
                bbox_transform=plt.gcf().transFigure, loc="upper left")
@@ -263,24 +133,29 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profile
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
+    # guard against sting-like values of rcParams when calling directly, if
+    # rcParams titlesze is given assume it's paperplots context manager
+    if isinstance(rcParams["axes.titlesize"], str):
+        titlesize = rcParams["axes.titlesize"]
+    else:
+        titlesize = rcParams["axes.titlesize"] - 8
+
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(10, 10))
     axes[0].text(-10., 1.03, r"$D_{meteor} \ll D_{mirror}$",
-                 fontsize=rcParams["axes.titlesize"]-8)
+                 fontsize=titlesize)
     axes[1].text(-13.0, 1.03, r"$D_{meteor} \approx D_{mirror}$",
-                 fontsize=rcParams["axes.titlesize"]-8)
+                 fontsize=titlesize)
     axes[2].text(-17.0, 1.03, r"$D_{meteor} \gg D_{mirror}$",
-                 fontsize=rcParams["axes.titlesize"]-8)
+                 fontsize=titlesize)
     axes = set_ax_props(axes,
                         xlims=((-12, 12), (-15, 16),( -21, 21)),
                         xticks=(range(-20, 21, 5), range(-21, 21, 7), range(-30, 31, 10)),
                         xlabels="arcsec", ylabels="Intensity")
 
-    seeing  = GausKolmogorov(seeingfwhm)
-    defocus = FluxPerAngle(h, *instrument)
-
-    for r, ax in zip(rs, axes):
+    convs = generic_sampler(DiskSource, instrument=instrument,
+                            seeingFWHM=seeingfwhm, h=(h,), radius=rs)
+    for r, c, ax in zip(rs, convs, axes):
         d = DiskSource(h, r)
-        c = convolve(d, seeing, defocus)
         plot_profiles(ax, (d, c), color="black", linestyles=('-', '--'),
                       labels=('Object', 'Observed'))
 
@@ -291,7 +166,7 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=profiles.LSST, seeingfwhm=profile
     return fig, axes
 
 
-def figures78(rs, instrument, seeingfwhm, xlims, xticks):
+def figures78(rs, instrument,  xlims, xticks, seeingfwhm=None):
     """Genericized version of plots 7 and 8 representing two cases of meteors
     with \theta_D \approx \theta_O and \thetaD >> \theta_O at various distances.
     In effect this is the combination of plots 5 and 6 where we evaluate
@@ -307,8 +182,6 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
         Radii of the meteor head in meters.
     instrument : `tuple` or `list`
         Radii of inner and outter mirror diameters of the instrument.
-    seeingfwhm : `int` or `float`
-        Seeing FWHM in arcseconds.
     xlims : `list` or `tuple` of `lists` or `tuples`
         A list or tuple containing up to two nested lists or tuples. Each
         nested list or tuple contains two values (xmin, xmax) used to set
@@ -318,6 +191,8 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
         nested list or tuple contains positions at which to mark and label the
         ticks at. Tick marks will be displayed for other equally spaced values
         but no labels will be displayed.
+    seeingfwhm : `int` or `float`, optional
+        Seeing FWHM in arcseconds, if known instrument is given can be None.
 
     Returns
     -------
@@ -326,24 +201,27 @@ def figures78(rs, instrument, seeingfwhm, xlims, xticks):
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
+    if isinstance(rcParams["axes.titlesize"], str):
+        titlesize = rcParams["axes.titlesize"]
+    else:
+        titlesize = rcParams["axes.titlesize"] - 8
+
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
     axes[0].text(xlims[0][0]/2.0, 1.03, r"$D_{meteor} \approx D_{mirror}$",
-                 fontsize=rcParams["axes.titlesize"]-8)
+                 fontsize=titlesize)
     axes[1].text(xlims[1][0]/2.0, 1.03, r"$D_{meteor} \gg D_{mirror}$",
-                 fontsize=rcParams["axes.titlesize"]-8)
+                 fontsize=titlesize)
     axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
-    seeing = GausKolmogorov(seeingfwhm)
-    for h in profiles.HEIGHTS:
-        defocus = FluxPerAngle(h, *instrument)
-        diskeq = DiskSource(h, rs[0])
-        diskgg = DiskSource(h, rs[1])
+    profs = generic_sampler(DiskSource, instrument=instrument, radius=rs,
+                            h=profiles.HEIGHTS, seeingFWHM=seeingfwhm)
+    diskeq, diskgg = profs[:len(profiles.HEIGHTS)], profs[len(profiles.HEIGHTS):]
 
+    # sampler iterates the last given param first, so they will be ordered by r
+    for h, deq, dgg in zip( profiles.HEIGHTS, diskeq, diskgg):
         ls = get_ls()
-        plot_profile(axes[0], convolve(diskeq, seeing, defocus),
-                     label=f"${int(h)}km$", color="black", linestyle=ls)
-        plot_profile(axes[1], convolve(diskgg, seeing, defocus),
-                     label=f"${int(h)}km$", color="black", linestyle=ls)
+        plot_profile(axes[0], deq, label=f"${int(h)}km$", color="black", linestyle=ls)
+        plot_profile(axes[1], dgg, label=f"${int(h)}km$", color="black", linestyle=ls)
 
     plt.legend(bbox_to_anchor=(0.1, 1.0, 0.9, 0.), ncol=4, mode="expand",
                bbox_transform=plt.gcf().transFigure, loc="upper left")
@@ -380,7 +258,7 @@ def figure7():
     xlims : [(-6, 6), (-11, 11)]
     xticks : [range(-30, 30, 6), range(-30, 30, 2)]
     """
-    return figures78(rs=(1, 4), instrument=profiles.SDSS, seeingfwhm=profiles.SDSSSEEING,
+    return figures78(rs=(1, 4), instrument=profiles.SDSS,
                      xlims=((-6, 6), (-11, 11)), xticks=(range(-30, 30, 2),))
 
 
@@ -410,7 +288,6 @@ def figure8():
     xticks : [range(-30, 30, 6), range(-30, 30, 10)]
     """
     return figures78(rs=(4, 8), instrument=profiles.LSST,
-                     seeingfwhm=profiles.LSSTSEEING,
                      xlims=((-18, 18), (-25, 25)),
                      xticks=(range(-30, 30, 6), range(-30, 30, 10)))
 
@@ -434,11 +311,11 @@ def figures1011(seeingfwhm, instrument, xlims, xticks):
         A list or tuple containing up to two nested lists or tuples. Each
         nested list or tuple contains two values (xmin, xmax) used to set
         individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
-    xticks : `list` or `tuple` 
+    xticks : `list` or `tuple`
         A list or tuple containing up to two nested lists or tuples. Each
         nested list or tuple contains positions at which to mark and label the
         ticks at. Tick marks will be displayed for other equally spaced values
-        but no labels will be displayed. 
+        but no labels will be displayed.
 
     Returns
     -------
@@ -447,24 +324,29 @@ def figures1011(seeingfwhm, instrument, xlims, xticks):
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
     """
+    if isinstance(rcParams["axes.titlesize"], str):
+        titlesize = rcParams["axes.titlesize"]
+    else:
+        titlesize = rcParams["axes.titlesize"] - 8
+
     fig, axes = plt.subplots(1, 3, sharey=True, figsize=(10, 10))
     # xlims[0][0]/2.0
     axes[0].text(xlims[0][0]/2.0, 1.03, r"$\theta_{rot} = 90^\circ$",
-                 fontsize=rcParams["axes.titlesize"]-6)
+                 fontsize=titlesize)
     axes[1].text(xlims[0][0]/2.0, 1.03, r"$\theta_{rot} = 60^\circ$",
-                 fontsize=rcParams["axes.titlesize"]-6)
+                 fontsize=titlesize)
     axes[2].text(xlims[0][0]/2.0, 1.03, r"$\theta_{rot} = 0^\circ$",
-                 fontsize=rcParams["axes.titlesize"]-6)
+                 fontsize=titlesize)
     axes = set_ax_props(axes, xlims, xticks, xlabels="arcsec", ylabels="Intensity")
 
     seeing = GausKolmogorov(seeingfwhm)
     for h in profiles.HEIGHTS:
-        defocus = FluxPerAngle(h, *instrument)
-        rab1 = RabinaSource(0.0, h)
-        rab2 = RabinaSource(0.5, h)
-        rab3 = RabinaSource(1.5, h)
+        defocus = FluxPerAngle(h, instrument)
+        rab1 = RabinaSource(h, 0.0)
+        rab2 = RabinaSource(h, 0.5)
+        rab3 = RabinaSource(h, 1.5)
 
-        ls = plotutils.get_ls()
+        ls = get_ls()
         plot_profile(axes[0], convolve(rab1, seeing, defocus),
                      label=f"${int(h)}km$", color="black", linestyle=ls)
         plot_profile(axes[1], convolve(rab2, seeing, defocus),
@@ -562,7 +444,7 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
         A list or tuple containing up to three nested lists or tuples. Each
         nested list or tuple contains two values (xmin, xmax) used to set
         individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
-    xticks : `list` or `tuple` 
+    xticks : `list` or `tuple`
         A list or tuple containing up to three nested lists or tuples. Each
         nested list or tuple contains positions at which to mark and label the
         ticks at. Tick marks will be displayed for other equally spaced values
@@ -599,7 +481,7 @@ def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
 
     gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
     s = GausKolmogorov(seeingfwhm)
-    d = FluxPerAngle(h, *instrument)
+    d = FluxPerAngle(h, instrument)
 
     conv = []
     for g in gaussians:
@@ -668,7 +550,7 @@ def figure12():
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
-    """ 
+    """
     return figures1213(1, 100, profiles.SDSSSEEING, profiles.SDSS,
                       xlims=((-8.5,8.5),), xticks=(range(-20, 20, 2),),
                       txtpos=((2,0.8), (2,0.8), (2,0.8)))
@@ -694,7 +576,7 @@ def figure13():
 
     Notes
     -----
-    The function calls figures1213 with the following values: 
+    The function calls figures1213 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.LSSTSEEING`
@@ -711,7 +593,7 @@ def figure13():
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
-    """ 
+    """
 
     return figures1213(1, 100, profiles.LSSTSEEING, profiles.LSST,
                       xlims=((-15,15),), xticks=(range(-20, 20, 2),),
@@ -755,7 +637,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
         A list or tuple containing up to three nested lists or tuples. Each
         nested list or tuple contains two values (xmin, xmax) used to set
         individual axis x-axis limits. F.e. [(xmin1, xmax1), (xmin2, xmax2)].
-    xticks : `list` or `tuple` 
+    xticks : `list` or `tuple`
         A list or tuple containing up to three nested lists or tuples. Each
         nested list or tuple contains positions at which to mark and label the
         ticks at. Tick marks will be displayed for other equally spaced values
@@ -796,7 +678,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     axes[1].get_xaxis().set_visible(False)
 
     s = GausKolmogorov(seeingfwhm)
-    d = FluxPerAngle(h, *instrument)
+    d = FluxPerAngle(h, instrument)
     gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
     conv = [convolve(g,s,d) for g in gaussians]
 
@@ -877,7 +759,7 @@ def figure14():
 
     Notes
     -----
-    The function calls figures1415 with the following values: 
+    The function calls figures1415 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.SDSSSEEING`
@@ -920,7 +802,7 @@ def figure15():
 
     Notes
     -----
-    The function calls figures1415 with the following values: 
+    The function calls figures1415 with the following values:
     tau : 1s
     h : 100km
     seeingfwhm : `profiles.LSSTSEEING`
@@ -1013,7 +895,7 @@ def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
     # time its safe to skip rescaling and renormalizing gaussians because we're
     # not plotting them
     s = GausKolmogorov(seeingfwhm)
-    d = FluxPerAngle(h, *instrument)
+    d = FluxPerAngle(h, instrument)
     gaussians = [GaussianSource(h, i) for i in profiles.exp_fwhms(tau, n, duration)]
     obsgaus = [convolve(g,s,d) for g in gaussians]
 
@@ -1137,96 +1019,7 @@ def figure17():
                       xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))
 
 
-def param_space_sampler(heights, seeings, source, instrument, **kwargs):
-    """Given of heights and seeings simplistically samples the key meteor
-    profile parameters as an numpy structured array with the following columns:
-        * height - distance, really, to the meteor head
-        * seeing - seeing fwhm
-        * sfwhm  - the calculated seeing fwhm post convolution (good for
-                   verification)
-        * dfwhm  - FWHM of the defocused source profile only (no seeing)
-        * ofwhm  - the observed fwhm
-        * depth  - the percentage value of the difference between a profiles
-                   maximum and the minimum value of the central dip
-
-    The function samples only across different defocusing and seeing effects
-    and can not sample across source parameters, i.e. it can not sample across
-    different radii of DiskSource, or different initial FWHMs of GaussianSource
-    even though it is possible to instantiate sources using different
-    parameters.
-
-    Parameters
-    ----------
-    heights : `list`, `tuple` or `generator`
-        Iterable of integers or floats representing height in kilometers.
-    seeings : `list`, `tuple` or `generator`
-        Iterable of integers or floats representing seeing FWHM in arcseconds.
-    source : `cls`
-        Class to use for meteor profile.
-    instrument : `list` or `tuple`
-        An length two iterable containing ints or floats representing the inner
-        inner and outter mirror radii of the instrument.
-    **kwargs : `dict`
-        Any additional kwargs are passed to the source class instantiation.
-    """
-    dt = np.dtype([("height", float), ("seeing", float),
-                   ("sfwhm", float), ("dfwhm", float),
-                   ("ofwhm", float), ("depth", float)])
-    data = np.zeros((len(heights), len(seeings)), dtype=dt)
-
-    for h, i in zip(heights, range(len(heights))):
-        for s, j in zip(seeings, range(len(seeings))):
-            P = source(h, **kwargs)
-            S = GausKolmogorov(s)
-            D = FluxPerAngle(h, *instrument)
-            C = convolve(P, S, D)
-
-            top = C.peak
-            mid = C.obj[int(len(C.obj)/2)]
-            diff = (top-mid)
-
-            data["seeing"][i,j] = s
-            data['sfwhm'][i,j] = S.calc_fwhm()
-            data['ofwhm'][i,j] = C.calc_fwhm()
-            data['depth'][i,j] = (diff/top)*100.0
-        # defocusing FWHM will be the same for each seeing FWHM
-        C = convolve(P, D)
-        data['dfwhm'][i,:] = C.calc_fwhm()
-        data['height'][i,:] = h
-
-    return data
-
-def param_space_sampler2(heights, radii, source, seeing, instrument, **kwargs):
-    dt = np.dtype([("height", float), ("seeing", float),
-                   ("sfwhm", float), ("dfwhm", float),
-                   ("ofwhm", float), ("depth", float)])
-    data = np.zeros((len(heights), len(radii)), dtype=dt)
-    for h, i in zip(heights, range(len(heights))):
-        for r, j in zip(radii, range(len(radii))):
-            P = source(h, r, **kwargs)
-            S = GausKolmogorov(seeing)
-            D = FluxPerAngle(h, *instrument)
-            C = convolve(P, S, D)
-
-            top = C.peak
-            mid = C.obj[int(len(C.obj)/2)]
-            diff = (top-mid)
-
-            # this is here to cover for data dependance of plotting function,
-            # it should actually say radius
-            data["seeing"][i,j] = r
-            data['sfwhm'][i,j] = S.calc_fwhm()
-            data['ofwhm'][i,j] = C.calc_fwhm()
-            data['depth'][i,j] = (diff/top)*100
-        # defocusing FWHM will be the same for each seeing FWHM
-        C = convolve(P, D)
-        data['dfwhm'][i,:] = C.calc_fwhm()
-        data['height'][i,:] = h
-
-    return data
-
-
-def plot_param_space(fig, ax, data, xdat, ydat, secydat=None, pcollims=None,
+def plot_param_space(fig, ax, xdat, ydat, data, secydat=None, pcollims=None,
                      contours=None, **kwargs):
     """Given some data, equivalent to data produced by parameter space
     samplers, plots a psuedocolored plot onto the given ax. Optionally will
@@ -1350,72 +1143,7 @@ def plot_param_space(fig, ax, data, xdat, ydat, secydat=None, pcollims=None,
     return pcol, None
 
 
-def get_or_create_data(datafiles, heights=None, seeings=None, radii=None,
-                       sources=None, sampler=None, **kwargs):
-    """Retrieves data stored in a file or creates the data and stores it at the
-    given location.
-
-    Parameters
-    ----------
-    datafiles : `list`, `tuple` or `str`
-        List of absolute filepaths to existing files or just a filename of one
-        of the already cached files. If the given absolute path is outside of
-        lfd's cache location the file can still be read, but it is not possible
-        to refer to it again just by its filename. For single files only it's
-        acceptable to provide a string directly.
-    heights : `list`, `tuple` or `numpy.array`
-        Optional. Heights at which data points are going to be sampled.
-    seeings : `list`, `tuple` or `numpy.array`
-        Optional. Seeings at which data points are going to be sampled.
-    radii : `list`, `tuple` or `numpy.array`
-        Optional. Radii at which data points are going to be sampled.
-    `sources` `list`, `tuple`, `numpy.array` or `dict`
-        Optional. A dictionary, or an iterable of dictionaries, containing
-        "source" and "instrument" keys. Source should point to one of the
-        classes found in `lfd.analysis.profiles` and instrument to a tuple or
-        a list of floats or integers stating outter and inner mirror radius of
-        instrument in question (see `lfd.profiles.SDSS` or `lfd.profiles.LSST`)
-    sampler : `function`
-        Optional. If left as None the appropriate sampler is determined based
-        on the provided heights and seeings or radii. Otherwise the specified
-        sampler will be used.
-    **kwargs : `dict`
-        Optional. Any additional keywords are forwarded to the sampler.
-
-    Returns
-    -------
-    data : `list`
-       A list of numpy arrays containing the read. or created, data.
-    """
-    # this needs fixing and not just ugly hacks
-    if seeings is not None and radii is not None:
-        raise ValueError("Sampler undefined when both seeing and radii are given.")
-    elif seeings is None and radii is None:
-        raise ValueError("Sampler undefined when neither seeing and radii are given.")
-    elif seeings is not None:
-        sampler = param_space_sampler
-        parameter = seeings
-    elif radii is not None:
-        sampler = param_space_sampler2
-        parameter = radii
-
-    data = []
-    datafiles = (datafiles,) if isinstance(datafiles, str) else datafiles
-    sources = (sources,) if isinstance(sources, dict) else sources
-    for datfile, source in zip(datafiles, sources):
-        try:
-            path = plotutils.get_data_file(datfile)
-            data.append(np.load(path, allow_pickle=False))
-        except OSError:
-            warnings.warn(f"Parameter space data file {plotutils.create_data_file_name(datfile)} "
-                          "does not exist or has been corrupted. Recreating it can take some time.")
-            data.append(sampler(heights, parameter, **source, **kwargs))
-            np.save(plotutils.create_data_file_name(datfile), data[-1])
-
-    return data
-
-
-def figures23242526(fig, axes, data, xdat, ydat, secydat=None, contours=None,
+def figures23242526(fig, axes, xdat, ydat, data, secydat=None, contours=None,
                    sharedcb=True, cbtitle=None, xlims=None, ylims=None,
                    xlabels="", ylabels="", **kwargs):
     """A genericized version of plots 23 to 26. Generally useful to create
@@ -1525,8 +1253,8 @@ def figures23242526(fig, axes, data, xdat, ydat, secydat=None, contours=None,
     twinx = []
     contours = [None,]*len(axes) if contours is None else contours
     secydat = [None,]*len(axes) if secydat is None else secydat
-    for ax, d, xax, yax, syd, cnt in zip(axes, data, xdat, ydat, secydat, contours):
-        pcol1, ax2 = plot_param_space(fig, ax, d, xax, yax, secydat=syd,
+    for ax, xax, yax, d, syd, cnt in zip(axes, xdat, ydat, data, secydat, contours):
+        pcol1, ax2 = plot_param_space(fig, ax, xax, yax, d, secydat=syd,
                                       contours=cnt, colors="white", **kwargs)
         twinx.append(ax2)
         # if the colorbar was not shared, plot each axis' colorbar individually
@@ -1558,8 +1286,8 @@ def figures23242526(fig, axes, data, xdat, ydat, secydat=None, contours=None,
     return fig, axes, twinx, cbaxes
 
 
-# The paper plot must be wrong because the bottom defocusing values actually correspond
-# to the following:
+# The paper plot must be wrong because the bottom defocusing values actually
+# correspond to the following:
 #     S = [DiskSource(h, 8) for h in range(40, 440, 10)]
 #     D = [FluxPerAngle(h, *profiles.LSST) for h in range(40, 440, 10)]
 #     C = [convolve(s, d).calc_fwhm() for s, d in zip(S, D)]
@@ -1598,23 +1326,28 @@ def figure23():
     # match those used in the paper plots, output will be cached if produced.x
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    sources = ({"source" : profiles.PointSource, "instrument" : profiles.SDSS},
-               {"source" : profiles.DiskSource, "radius" : 0.9, "instrument" : profiles.SDSS},
-               {"source" : profiles.DiskSource, "radius" : 3, "instrument" : profiles.SDSS})
-    datafiles = ("sdss_point_data.npy", "sdss_diskeq_data.npy", "sdss_diskgg_data.npy")
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
+    skwargs = ({"sources" : PointSource},
+               {"sources" : DiskSource, "radius" : (0.9, 3)})
+    data = get_or_create_data(("sdss_point_data.npy", "sdss_disk_data.npy"),
+                              samplerKwargs=skwargs, h=heights, seeingFWHM=seeings,
+                              instrument=SDSS)
+
+    plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'ofwhm', axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':0.9}, axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':3}, axes=False)]
+    # gridding on defocus gets us rows of same values, we only need a column
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':0.9}, axes=False)[:,0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':3}, axes=False)[:,0]]
+
 
     # set the contours
     cnt = {"levels" : [[2,3,4], [5,8]], "spacings" : [5, 3]}
     cnt2 = {"levels" : [[2,3,4,5], [8,10]], "spacings" : [5, -5]}
     contours = [cnt, cnt, cnt2]
 
-    # heights and seeings can be reconstructed from the data, plus knows in
-    # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
-    plotdata = [d['ofwhm'] for d in data]
-    secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
-                                                  heights, secydat=secydat,
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
+                                                  plotdata, secydat=secydat,
                                                   contours=contours,
                                                   sharedcb=True,
                                                   cbtitle="Observed FWHM (arcsec)")
@@ -1658,23 +1391,27 @@ def figure24():
     # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    sources = ({"source" : profiles.PointSource, "instrument" : profiles.LSST},
-               {"source" : profiles.DiskSource, "radius" : 4, "instrument" : profiles.LSST},
-               {"source" : profiles.DiskSource, "radius" : 8, "instrument" : profiles.LSST})
-    datafiles = ("lsst_point_data.npy", "lsst_diskeq_data.npy", "lsst_diskgg_data.npy")
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
+    skwargs = ({"sources" : PointSource},
+               {"sources" : DiskSource, "radius" : (4, 8)})
+    data = get_or_create_data(("lsst_point_data.npy", "lsst_disk_data.npy"),
+                              samplerKwargs=skwargs, h=heights, seeingFWHM=seeings,
+                              instrument=LSST)
+
+    plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'ofwhm', axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':4}, axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':8}, axes=False)]
+    # gridding on defocus gets us rows of same values, we only need a column
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':4}, axes=False)[:,0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':8}, axes=False)[:,0]]
 
     # set the contours, more complicated on this plot due to large gradient
     cnt1 = {"levels" : [[4,5,6,8], [12, 16, 20, 25, 30]], "spacings" : [5, 5]}
     cnt2 = {"levels" : [[5,6,8], [12, 16, 20, 25, 30]], "spacings" : [-5, -10]}
     contours = [cnt1, cnt2, cnt2]
 
-    # heights and seeings can be reconstructed from the data, plus known in
-    # advance, but the observed FWHM and defocus FWHM need to be read.
-    plotdata = [d['ofwhm'] for d in data]
-    secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
-                                                  heights, secydat=secydat,
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
+                                                  plotdata, secydat=secydat,
                                                   contours=contours,
                                                   sharedcb=True,
                                                   cbtitle="Observed FWHM (arcsec)")
@@ -1713,20 +1450,13 @@ def figure25():
     # if the premade data products are missing, recreate them using same params
     # as in the paper and cache the calculation results. This plot is compiled
     # from two different sources of seeing and radii which is done manually
-    heights1 = np.arange(55, 305, 5)
+    heights = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
-    source  = {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
-               "instrument" : profiles.SDSS}
-    datafile = "sdss_radii_data.npy"
-    dat1 = get_or_create_data(datafile, heights=heights1, radii=radii1, sources=source)
-
-    heights2 = np.arange(55, 305, 5)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    source = {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
-              "instrument" : profiles.LSST}
-    datafile = "lsst_radii_data.npy"
-    dat2 = get_or_create_data(datafile, heights=heights2, radii=radii2, sources=source)
-    data = [dat1[0], dat2[0]]
+    skwargs = ({"sources" : DiskSource, "radius": radii1, "instrument": SDSS},
+               {"sources" : DiskSource, "radius": radii2, "instrument": LSST})
+    datafile = ("sdss_radii_data.npy", "lsst_radii_data.npy")
+    data = get_or_create_data(datafile, heights=heights, radii=radii1, sources=skwargs)
 
     # set the contours
     cnt1 = {"levels" : [[2, 3, 4, 5, 6, 7, 8, 10]],
@@ -1738,10 +1468,12 @@ def figure25():
     # this plot is different than previous because heights and seeings are not
     # shared across all the plots in the figure. Appropriate height and seeing
     # arrays are required so color mesh can be constricted.
-    plotdata = [d['ofwhm'] for d in data]
     xdat = [radii1, radii2]
-    ydat = [heights1, heights2]
-    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, xdat, ydat,
+    ydat = [heights, heights]
+    plotdata = [meshgrid(data[0], 'radius', 'h', 'ofwhm', axes=False),
+                meshgrid(data[1], 'radius', 'h', 'ofwhm', axes=False)]
+
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, xdat, ydat, plotdata,
                                                   contours=contours, sharedcb=False,
                                                   cbtitle="Observed FWHM (arcsec)",
                                                   xlabels=("Radius (m)",)*2,
@@ -1778,10 +1510,11 @@ def figure26():
     # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    sources = ({"source" : profiles.PointSource, "instrument" : profiles.SDSS},
-               {"source" : profiles.PointSource, "instrument" : profiles.LSST})
+    sources = ({"source" : PointSource, "instrument" : SDSS},
+               {"source" : PointSource, "instrument" : LSST})
     datafiles = ("sdss_point_data.npy", "lsst_point_data.npy")
-    data = get_or_create_data(datafiles, heights=heights, seeings=seeings, sources=sources)
+    data = get_or_create_data(datafiles, heights=heights, seeings=seeings,
+                              sources=sources)
 
     # set the contours
     cnt1 = {"levels" : [[5,15,25,35]],
@@ -1792,10 +1525,13 @@ def figure26():
 
     # heights and seeings can be reconstructed from the data, plus knows in
     # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
-    plotdata = [d['depth'] for d in data]
-    secydat = [d['dfwhm'][:,0] for d in data]
-    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, seeings,
-                                                  heights, secydat=secydat,
+    plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'depth', axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'depth', axes=False)]
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0]]
+
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
+                                                  plotdata, secydat=secydat,
                                                   contours=contours,
                                                   sharedcb=False,
                                                   cbtitle="Intensity loss (\% of max value)",
@@ -1834,20 +1570,13 @@ def figure27():
 
     # this plot is compiled from two different sources of seeing and radii
     # which does have to be stated manually
-    heights1 = np.arange(55, 305, 5)
+    heights = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
-    source = {"source" : profiles.DiskSource, "seeing" : profiles.SDSSSEEING,
-              "instrument" : profiles.SDSS}
-    datafile = "sdss_radii_data.npy"
-    dat1 = get_or_create_data(datafile, heights=heights1, radii=radii1, sources=source)
-
-    heights2 = np.arange(55, 305, 5)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    source = {"source" : profiles.DiskSource, "seeing" : profiles.LSSTSEEING,
-              "instrument" : profiles.LSST}
-    datafile = "lsst_radii_data.npy"
-    dat2 = get_or_create_data(datafile, heights=heights2, radii=radii2, sources=source)
-    data = [dat1[0], dat2[0]]
+    skwargs = ({"sources" : DiskSource, "radius": radii1, "instrument": SDSS},
+               {"sources" : DiskSource, "radius": radii2, "instrument": LSST})
+    datafile = ("sdss_radii_data.npy", "lsst_radii_data.npy")
+    data = get_or_create_data(datafile, heights=heights, radii=radii1, sources=skwargs)
 
     # set the contours
     cnt1 = {"levels" : [[1, 5, 10, 15, 18, 20, 23]],
@@ -1859,10 +1588,12 @@ def figure27():
     # this plot is different than previous because heights and seeings are not
     # shared across all the plots in the figure. Appropriate height and seeing
     # arrays are required so color mesh can be constricted.
-    plotdata = [d['depth'] for d in data]
-    ydat = [heights1, heights2]
     xdat = [radii1, radii2]
-    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, plotdata, xdat, ydat,
+    ydat = [heights, heights]
+    plotdata = [meshgrid(data[0], 'radius', 'h', 'depth', axes=False),
+                meshgrid(data[1], 'radius', 'h', 'depth', axes=False)]
+
+    fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, xdat, ydat, plotdata,
                                                   contours=contours,
                                                   xlims=[(0.02, 1.8), (0.01, 8)],
                                                   ylims=[(60, 181), (55, 300)],
@@ -1896,7 +1627,7 @@ def plotall(path="."):
     abspath = os.path.abspath(path)
     plotfuns = [f for f in globs if re.search(r"figure\d+", f)]
     for plotfun in plotfuns:
-        with plotutils.paperstyle():
+        with paperstyle():
             fig, axes, *rest = globs[plotfun]()
             plt.savefig(os.path.join(abspath, plotfun+".png"))
             plt.close(fig)

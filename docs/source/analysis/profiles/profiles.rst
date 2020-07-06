@@ -8,6 +8,8 @@ Profiles
    convolution
    objprofiles
    seeing
-   plotutils
-
+   samplers
+   consts
+   utils
+   
 .. automodule:: lfd.analysis.profiles

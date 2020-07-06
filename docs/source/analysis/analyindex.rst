@@ -16,3 +16,7 @@ behaviour of trails on images is provided in this module.
    :caption: Contents:
 
    profiles/profiles
+   plotting/plotting
+   utils
+
+.. automodule:: lfd.analysis.utils

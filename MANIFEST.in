@@ -1,5 +1,6 @@
 include lfd/detecttrails/sdss/share/sdssFileTypes.par
 include lfd/detecttrails/sdss/share/sdssMaskbits.par
 include lfd/gui/imagechecker/lfd_noimage.png
-graft   lfd/analysis/profiles/rabina
+graft   lfd/analysis/profiles/data
+graft   lfd/analysis/plotting/data
 graft   lfd/detecttrails/fits_dump
