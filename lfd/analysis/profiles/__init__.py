@@ -18,11 +18,13 @@ these efects. So a convolution of a PointSource and seeing represents a source
 in focus observed through an atmoshere and PointSource convolved with Defocus
 corresponds to a defocused point source in ideal seeing (no seeing effects) etc
 
-The module also provides a light wrapper around plotting utilities in
-matplotlib (but this is by no means extensive).
+The module also contains a more powerful generic sampler that produces profiles
+and/or specific measurements in given points. 
 
 Examples
 --------
+
+A simple convolution of a point profile with SDSS seeing and defocus:
 
 .. code-block:: python
 
@@ -34,12 +36,42 @@ Examples
 
      a = profiles.convolve(point, seeing, defocus)
 
-     import matplotlib.pyplot as plt
-     fig, ax = plt.subplots(1, 1)
-     profiles.plot_profiles(ax, (point, seeing, defocus, a))
-     plt.legend()
-     plt.show()
 
+Simplest use of a generic sampler is just creating many point profiles at
+different heights as seen by SDSS:
+
+.. code-block:: python
+
+     from lfd.analysis import profiles
+     points = profiles.generic_sampler(profiles.PointSource, profiles.HEIGHTS)
+
+A more complicated use case would be creating disk profilse of different radii
+at many different seeings FWHMs and heights as seen by SDSS:
+
+.. code-block:: python
+
+     from lfd.analysis import profiles
+     disks = profiles.generic_sampler(profiles.DiskSource,
+                                      radius = (1, 2, 3),
+                                      seeingFWHM=profiles.SEEINGS,
+                                      h = profiles.HEIGHTS)
+
+By default the generic sampler would return the actual profiles but it can also
+return a strucutred array containing all information pertinent  (used profiles,
+instrument, height radius, FWHM measurements etc...) to the created
+profiles instead:
+
+.. code-block:: python
+
+     from lfd.analysis import profiles
+     disks = profiles.generic_sampler(profiles.DiskSource,
+                                      radius = (1, 2, 3),
+                                      seeingFWHM=profiles.SEEINGS,
+                                      h = profiles.HEIGHTS,
+                                      returnType="grid")
+
+As well as convenient functionality to convert the retrieved structured arrays
+into something easily plottable with matplotlib for example (see meshgrid). 
 """
 
 

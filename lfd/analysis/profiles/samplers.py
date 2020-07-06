@@ -75,8 +75,8 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
 
     Examples
     --------
-    convProfiles, convMeas = generic_sampler(sources=profiles.PointSource,
-                                             sfwhm=s, h=h, returnType='grid')
+    >>> convProfiles, convMeas = generic_sampler(sources=profiles.PointSource,
+                                                 sfwhm=s, h=h, returnType='grid')
     """
     ########
     #       SANITIZE INPUT

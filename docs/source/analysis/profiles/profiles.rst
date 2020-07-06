@@ -9,7 +9,7 @@ Profiles
    objprofiles
    seeing
    samplers
-   consts
    utils
+   consts
    
 .. automodule:: lfd.analysis.profiles

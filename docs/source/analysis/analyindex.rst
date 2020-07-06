@@ -1,15 +1,15 @@
 Analysis
 ========
 
-.. note::
+A small subset of detected linear features will belong to trails left by
+meteors when flying through the SDSS field of view (FOV), while the remaining
+linear features will be spurious detections or satelite.
 
-   A small subset of detected linear features will belong to trails left by
-   meteors when flying through the SDSS field of view (FOV). Most of this module
-   is oriented to providing tools for analysis and additional functionality
-   specifically suited to processing meteor trails. 
+This module provides tools and any additional functionality required for
+analysis, measurement or moddeling linear features made by meteors.
 
-Various miscelaneous functionality usefull in analyzing or understanding the
-behaviour of trails on images is provided in this module. 
+The module also provides code required to repeat and reproduce the plots made
+in the paper.
 
 .. toctree::
    :maxdepth: 2

@@ -39,10 +39,15 @@ def create_data_file_name(name):
     The file might already exist. To retrieve a filepath to
     an already existing file use `get_data_file`.
 
-    Params
-    ------
+    Parameters
+    ----------
     name : str
         Name of the desired data file.
+
+    Returns
+    -------
+    fpath : `str`
+        Path to a file in the data directory.
     """
     return ospath.join(get_data_dir(), name)
 
@@ -51,11 +56,15 @@ def get_data_file(name):
     """Returns a path to an existing file in the data directory of
     utils module. If the file doesn't exist an OSError is raised.
 
-    Params
-    ------
+    Parameters
+    ----------
     name : str
         Name of the desired data file.
 
+    Returns
+    -------
+    fname : `str`
+        Returns a full data dir path of an existing file.
     Raises
     ------
     error : OSError
@@ -76,8 +85,7 @@ def get_style_path():
 
 
 def get_ls():
-    """
-    Function returns the next linestyle from linestyles
+    """Function returns the next linestyle from linestyles
     to help out with graphing in for loops
     """
     global CUR_LS
@@ -147,8 +155,8 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
     """Sets the labels, ticks and limits on all pairs of axes,
     ticks and labels provided.
 
-    Params
-    ------
+    Parameters
+    ----------
     axes : `matplotlib.pyplot.Axes`
         Axes on which ticks, limits and labels will be set
     xlims : `list` or `tuple`

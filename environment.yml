@@ -20,7 +20,6 @@ dependencies:
   - chardet=3.0.4=py37_1003
   - cryptography=2.8=py37h1ba5d50_0
   - cycler=0.10.0=py37_0
-  - dbus=1.13.12=h746ee38_0
   - decorator=4.4.1=py_0
   - defusedxml=0.6.0=py_0
   - docutils=0.15.2=py37_0
@@ -105,7 +104,6 @@ dependencies:
   - pcre=8.43=he6710b0_0
   - pexpect=4.8.0=py37_0
   - pickleshare=0.7.5=py37_0
-  - pillow=7.0.0=py37hb39fc2d_0
   - pip=19.3.1=py37_0
   - pixman=0.38.0=h7b6447c_0
   - pluggy=0.13.1=py37_0
@@ -117,6 +115,7 @@ dependencies:
   - py=1.8.1=py_0
   - py-opencv=3.4.2=py37hb342d67_1
   - pycairo=1.18.2=py37h2a1e443_0
+  - pillow=7.2.0=py37hb39fc2d_0
   - pycodestyle=2.5.0=py37_0
   - pycparser=2.19=py37_0
   - pyflakes=2.1.1=py37_0

@@ -207,7 +207,9 @@ def get_2Dgaus(rangex, rangey, N):
     z = z*1/z.max()
     return x, y, z
 
-def get_zero_plane((xmin,xmax), (ymin,ymax), N):
+def get_zero_plane(xminmax, yminmax, N):
+    xmin, xmax = xminmax
+    ymin, ymax = yminmax
     x = np.linspace(xmin, xmax, N)
     y = np.linspace(ymin, ymax, N)
     x, y = np.meshgrid(x, y)

@@ -1,6 +1,3 @@
-"""A collection of various miscelaneous functionality that helps visualize the
-profiles and other utilities.
-"""
 import os
 import os.path as ospath
 import glob
@@ -16,19 +13,20 @@ from lfd.analysis.profiles.seeing import *
 from lfd.analysis.profiles.consts import *
 from lfd.analysis.utils import *
 
+
 __all__ = ["get_rabina_profile", "meshgrid"]
 
 
 def meshgrid(data, x, y, tgt, fold=None, axes=True):
     """Given a structured numpy array returns two 1D arrays and one 2D array.
     The two 1D arrays contain elements of data and represent the x and y axes,
-    respectively, of the returned 2D. Similar to numpy's meshgrid.
-    The 2D array containes target column data reshaped such that it matches the
-    chosen x and y. Optionally, if there are multiple additional columns with
-    which the target data varies with, it is possible to "fold" over those
-    columns; that is subselect only those elements of the target data that
-    correspond to rows in the structured numpy array for which element values
-    equal the given fold values.
+    respectively, of the returned 2D. Similar to numpy's meshgrid. The 2D array
+    containes target column data reshaped such that it matches the chosen x and
+    y. Optionally, if there are multiple additional columns with  which the
+    target data varies with, it is possible to "fold" over those columns; that
+    is subselect only those elements of the target data that correspond to rows
+    in the structured numpy array for which element values equal the given fold
+    values.
 
     Parameters
     ----------
@@ -43,12 +41,12 @@ def meshgrid(data, x, y, tgt, fold=None, axes=True):
     tgt : `str`
         A string representing the column that will be reshaped into 2D array
         matching the entries of x and y.
-    fold : `dict`, optional
+    fold : `dict`
         An optional dictionary of key:value pairs that represent column names
         and values on which to fold the total data on. Folding subselects
         particular target column elements of data based matched values provided
         in the dictionary.
-    axes : `bool`, optional
+    axes : `bool`
         If True, default, both axes and grid are returned. If false, only the
         gridded data is returned.
 
@@ -66,19 +64,18 @@ def meshgrid(data, x, y, tgt, fold=None, axes=True):
     Examples
     --------
      >>> data
-    array(
-      [(3., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
-       (3., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
-       (3., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
-       (3., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5),
-       (4., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
-       (4., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
-       (4., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
-       (4., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5)],
+        array(
+          [(3., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
+           (3., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
+           (3., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
+           (3., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5),
+           (4., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
+           (4., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
+           (4., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
+           (4., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5)],
       dtype=[('fwhm', '<f8'), ('h', '<f8'), ('radius', '<f8'), ('source', '<U12'),
-    ('seeing', '<U14'), ('defocus', '<U12'), ('sfwhm', '<f8'), ('dfwhm', '<f8'),
-    ('ofwhm', '<f8'), ('depth', '<f8')])
-
+      ('seeing', '<U14'), ('defocus', '<U12'), ('sfwhm', '<f8'), ('dfwhm', '<f8'),
+      ('ofwhm', '<f8'), ('depth', '<f8')])
     >>> x, y, z = meshgrid(meas, 'h', 'fwhm', 'ofwhm', fold={'radius':5})
     >>> x
     array([1., 2.])

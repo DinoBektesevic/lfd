@@ -28,6 +28,11 @@ def get_cache_dirs(path=None, name="data"):
     ----------
     name : `str`, optional
         If provided, name will be joined to the module path.
+
+    Returns
+    -------
+    cacheList : `list`
+        List of paths to all cache directories.
     """
     path = ospath.dirname(__file__) if path is None else path
     cacheList = []
@@ -57,14 +62,19 @@ def search_cached(name, ephemeral=True, persistent=True):
     """Returns a list of files matching the given name. By default both caches
     are searched. If no matches are found an error is raised.
 
-    Params
-    ------
+    Parameters
+    ----------
     names: `str``
         Name of the desired data file.
     ephemeral: `bool`, optional
         Search ephemeral cache. True by default.
     persistent: `bool`, optional
         Search persistent cache. True by default.
+
+    Returns
+    -------
+    filePaths : `list`
+        List of paths to all cached files that matched the given name pattern.
 
     Raises
     ------
@@ -90,13 +100,18 @@ def get_rabina_profile(angle, useCV2=False):
     """Returns image of projected Rabina profile as a function of angle between
     the observers line of sight and the velocity vector of the meteor.
 
-    Params
-    ------
+    Parameters
+    ----------
     angle: `float`
         angle, in radians, between LOS and vector of the meteor.
     useCV2: `bool`, optional
         If True will use cv2 to open the Rabina profile, otherwise matplotlib.
         Default is False.
+
+    Returns
+    -------
+    profile : `np.array`
+        Projected image of a Rabina prfile as numpy array.
 
     Notes
     -----
@@ -175,6 +190,11 @@ def get_data(fname):
     ----------
     fname : `str`
         File path or file name of the file to load. Does not support loading.
+
+    Returns
+    -------
+    data : `np.array`
+        A numpy array with the requested data.
 
     Raises
     ------

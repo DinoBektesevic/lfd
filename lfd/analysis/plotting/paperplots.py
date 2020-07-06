@@ -13,7 +13,7 @@ from lfd.analysis.plotting.utils import *
 
 
 __all__ = ["plotall", "figure4", "figure5", "figure6", "figure7", "figure8", "figure10",
-           "figure11", "figure12", "figure13", "figur1e14", "figure15", "figure16",
+           "figure11", "figure12", "figure13", "figure14", "figure15", "figure16",
            "figure17", "figure23", "figure24", "figure25", "figure26", "figure27"]
 
 
@@ -231,11 +231,11 @@ def figures78(rs, instrument,  xlims, xticks, seeingfwhm=None):
 
 
 def figure7():
-    """Two cases of uniform brightness disk meteors with \theta_D \approx \theta_O
-    (R_meteor=1m) and \thetaD >> \theta_O (R_meteor=4m) illustrated for the
+    """Two cases of uniform brightness disk meteors with \\theta_D \\approx \\theta_O
+    (R_meteor=1m) and \\thetaD >> \\theta_O (R_meteor=4m) illustrated for the
     SDSS telescope at various distances (different linetypes) and the seeing of
     1.48′′. This seeing transforms a point source into an object similar to
-    \theta_D in size, which results in a defocused image with a negligible
+    \\theta_D in size, which results in a defocused image with a negligible
     central drop in the brightness profile. The distinguishing element for a
     disk observed with SDSS is the very wide peak when the disk is similar in
     size to the telescope primary mirror and a growing FWHM as the disk becomes
@@ -251,19 +251,20 @@ def figure7():
 
     Notes
     -----
-    The function calls on figure78 with the following parameters:
-    rs : (1, 4)
-    instrument : `profiles.SDSS`
-    seeingfwhm : `profiles.SDSSSEEING`
-    xlims : [(-6, 6), (-11, 11)]
-    xticks : [range(-30, 30, 6), range(-30, 30, 2)]
+    | The function calls on figure78 with the following parameters:
+    | rs : (1, 4)
+    | instrument : \`profiles.SDSS\`
+    | seeingfwhm : \`profiles.SDSSSEEING\`
+    | xlims : [(-6, 6\), (-11, 11)]
+    | xticks : [range(-30, 30, 6), range(-30, 30, 2)]
+
     """
     return figures78(rs=(1, 4), instrument=SDSS,
                      xlims=((-6, 6), (-11, 11)), xticks=(range(-30, 30, 2),))
 
 
 def figure8():
-    """Two cases of uniform brightness disk meteors with \theta_D \approx \theta_O
+    """Two cases of uniform brightness disk meteors with \\theta_D \\approx \\theta_O
     (R_meteor=4m) and \thetaD >> \theta_O (R_meteor=8m) illustrated for the
     LSST telescope at various distances (different linetypes) and the seeing of
     0.67′′. Since the seeing FWHM is much smaller than the apparent angular
@@ -280,12 +281,13 @@ def figure8():
 
     Notes
     -----
-    The function calls on figure78 with the following parameters:
-    rs : (4, 8)
-    instrument : `profiles.LSST`
-    seeingfwhm : `profiles.LSSTSEEING`
-    xlims : [(-18, 18), (-25, 25)]
-    xticks : [range(-30, 30, 6), range(-30, 30, 10)]
+    | The function calls on figure78 with the following parameters:
+    | rs : (4, 8)
+    | instrument : `profiles.LSST`
+    | seeingfwhm : `profiles.LSSTSEEING`
+    | xlims : [(-18, 18), (-25, 25)]
+    | xticks : [range(-30, 30, 6), range(-30, 30, 10)]
+
     """
     return figures78(rs=(4, 8), instrument=LSST,
                      xlims=((-18, 18), (-25, 25)),
@@ -375,11 +377,12 @@ def figure10():
 
     Notes
     -----
-    The function calls on figures1011 with the following parameters:
-    seeingfwhm : `profiles.SDSSSEEING`
-    instrument : `profiles.SDSS`
-    xlims : [(-7.5, 7.5)]
-    xticks : [range (-25, 26, 5)]
+    | The function calls on figures1011 with the following parameters:
+    | seeingfwhm : `profiles.SDSSSEEING`
+    | instrument : `profiles.SDSS`
+    | xlims : [(-7.5, 7.5)]
+    | xticks : [range (-25, 26, 5)]
+
     """
     return figures1011(SDSSSEEING, SDSS, ((-7.5, 7.5),),
                        (range(-25, 26, 5), ))
@@ -399,11 +402,12 @@ def figure11():
 
     Notes
     -----
-    The function calls on figures1011 with the following parameters:
-    seeingfwhm : `profiles.LSSTSEEING`
-    instrument : `profiles.LSST`
-    xlims : [(-7.5, 7.5)]
-    xticks : [range (-25, 26, 5)]
+    | The function calls on figures1011 with the following parameters:
+    | seeingfwhm : `profiles.LSSTSEEING`
+    | instrument : `profiles.LSST`
+    | xlims : [(-7.5, 7.5)]
+    | xticks : [range (-25, 26, 5)]
+
     """
     return figures1011(LSSTSEEING, LSST, ((-15.5, 15.5), ),
                        (range(-20, 21, 10), ))
@@ -531,25 +535,26 @@ def figure12():
     seen in the image.
     All panels have the maximum brightness scaled to one for clarity.
 
-    Notes
-    -----
-    The function calls figures1213 with the following values:
-    tau : 1s
-    h : 100km
-    seeingfwhm : `profiles.SDSSSEEING`
-    instrument : `profiles.SDSS`
-    xlims : [(-8.5, 8.5)]
-    xticks : [range(-20, 20, 2)]
-    txtpos : [(2, 0.8), (2, 0.8), (2, 0.8)]
-    n : 10
-    duration : 2s
-
     Returns
     -------
     fig : `matplotlib.pyplot.Figure`
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
+
+    Notes
+    -----
+    | The function calls figures1213 with the following values:
+    | tau : 1s
+    | h : 100km
+    | seeingfwhm : `profiles.SDSSSEEING`
+    | instrument : `profiles.SDSS`
+    | xlims : [(-8.5, 8.5)]
+    | xticks : [range(-20, 20, 2)]
+    | txtpos : [(2, 0.8), (2, 0.8), (2, 0.8)]
+    | n : 10
+    | duration : 2s
+
     """
     return figures1213(1, 100, SDSSSEEING, SDSS,
                       xlims=((-8.5,8.5),), xticks=(range(-20, 20, 2),),
@@ -574,25 +579,26 @@ def figure13():
     larger telescope aperture and now even meteor trails can have a central dip
     in the brightness profile.
 
-    Notes
-    -----
-    The function calls figures1213 with the following values:
-    tau : 1s
-    h : 100km
-    seeingfwhm : `profiles.LSSTSEEING`
-    instrument : `profiles.LSST`
-    xlims : [(-15, 15)]
-    xticks : [range(-20, 20, 2)]
-    txtpos : [(2, 0.8), (-5, 0.28), (2, 0.8)]
-    n : 10
-    duration : 2s
-
     Returns
     -------
     fig : `matplotlib.pyplot.Figure`
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
+
+    Notes
+    -----
+    | The function calls figures1213 with the following values:
+    | tau : 1s
+    | h : 100km
+    | seeingfwhm : `profiles.LSSTSEEING`
+    | instrument : `profiles.LSST`
+    | xlims : [(-15, 15)]
+    | xticks : [range(-20, 20, 2)]
+    | txtpos : [(2, 0.8), (-5, 0.28), (2, 0.8)]
+    | n : 10
+    | duration : 2s
+
     """
 
     return figures1213(1, 100, LSSTSEEING, LSST,
@@ -757,26 +763,28 @@ def figure14():
     head brightness profile in order to reconstruct the overall meteor track
     seen in the image.
 
-    Notes
-    -----
-    The function calls figures1415 with the following values:
-    tau : 1s
-    h : 100km
-    seeingfwhm : `profiles.SDSSSEEING`
-    instrument : `profiles.SDSS`
-    xlims : [(-4.5, 12.5)]
-    xticks : [range(-20, 20, 2)]
-    txtpos : [(6, 0.6), (6, 0.06), (6, 0.6)]
-    n : 10
-    duration : 2s
-    nsteps : 486
-
     Returns
     -------
     fig : `matplotlib.pyplot.Figure`
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
+
+
+    Notes
+    -----
+    | The function calls figures1415 with the following values:
+    | tau : 1s
+    | h : 100km
+    | seeingfwhm : `profiles.SDSSSEEING`
+    | instrument : `profiles.SDSS`
+    | xlims : [(-4.5, 12.5)]
+    | xticks : [range(-20, 20, 2)]
+    | txtpos : [(6, 0.6), (6, 0.06), (6, 0.6)]
+    | n : 10
+    | duration : 2s
+    | nsteps : 486
+
     """
     return figures1415(1, 100, SDSSSEEING, SDSS,
                       xlims=((-4.5, 12.5),), xticks=(range(-20, 20, 2),),
@@ -960,26 +968,27 @@ def figure16():
     meteor trail deforms the pure meteor head brightness profile by deforming
     dominantly one side of the defocused two-peak meteor head profile.
 
-    Notes
-    -----
-    The function calls figures1617 with the following values:
-    tau : 1s
-    h : 100km
-    seeingfwhm : `profiles.SDSSSEEING`
-    instrument : `profiles.SDSS`
-    xlims : [(-5.5, 10.5)]
-    xticks : [range(-20, 20, 2)]
-    n : 10
-    duration : 2s
-    nsteps : 486
-    loc : 'upper right'
-
     Returns
     -------
     fig : `matplotlib.pyplot.Figure`
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
+
+    Notes
+    -----
+    | The function calls figures1617 with the following values:
+    | tau : 1s
+    | h : 100km
+    | seeingfwhm : `profiles.SDSSSEEING`
+    | instrument : `profiles.SDSS`
+    | xlims : [(-5.5, 10.5)]
+    | xticks : [range(-20, 20, 2)]
+    | n : 10
+    | duration : 2s
+    | nsteps : 486
+    | loc : 'upper right'
+
     """
     return  figures1617(1, 100, SDSSSEEING, SDSS,
                        xlims=((-5.5, 10.5),), xticks=(range(-20, 20, 2),))
@@ -994,26 +1003,27 @@ def figure17():
     disruption to the meteor head brightness is in reducing the depth of the
     central brightness dip, while the profile asymmetryis not very prominent.
 
-    Notes
-    -----
-    The function calls figures1617 with the following values:
-    tau : 1s
-    h : 100km
-    seeingfwhm : `profiles.LSSTSEEING`
-    instrument : `profiles.LSST`
-    xlims : [(-11.5, 14.5)]
-    xticks : [range(-20, 20, 5)]
-    n : 10
-    duration : 2s
-    nsteps : 486
-    loc : 'upper right'
-
     Returns
     -------
     fig : `matplotlib.pyplot.Figure`
         Figure containing the plot.
     ax : `matplotlib.pyplot.Axes`
         Axes containing the plot.
+
+    Notes
+    -----
+    | The function calls figures1617 with the following values:
+    | tau : 1s
+    | h : 100km
+    | seeingfwhm : `profiles.LSSTSEEING`
+    | instrument : `profiles.LSST`
+    | xlims : [(-11.5, 14.5)]
+    | xticks : [range(-20, 20, 5)]
+    | n : 10
+    | duration : 2s
+    | nsteps : 486
+    | loc : 'upper right'
+
     """
     return figures1617(1, 100, LSSTSEEING, LSST, loc="upper center",
                       xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))

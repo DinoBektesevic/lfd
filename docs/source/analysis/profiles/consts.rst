@@ -1,4 +1,4 @@
-Utilities
+Constants
 =========
 
 .. automodule:: lfd.analysis.profiles.consts
