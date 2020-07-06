@@ -2,7 +2,9 @@
 objects such as PointSource, Disk etc...
 
 """
+import warnings
 import copy
+import os
 
 import numpy as np
 from scipy import stats
@@ -10,8 +12,11 @@ import cv2
 
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject
 from lfd.analysis.profiles.consts import *
+import lfd.analysis.profiles.utils as utils
 
-__all__ = ["PointSource", "GaussianSource", "DiskSource", "RabinaSource"]
+
+__all__ = ["PointSource", "GaussianSource", "DiskSource", "RabinaSource", "exp_fwhms"]
+
 
 class PointSource(ConvolutionObject):
     """Simple point like source. Point-like sources are not resolved, therefore
@@ -27,7 +32,8 @@ class PointSource(ConvolutionObject):
       appropriate angular size of the object by the resolution, so that the
       object remains unresolved at the required resolution.
     """
-    def __init__(self, h, res=0.001):
+    def __init__(self, h, res=0.001, **kwargs):
+        self.h = h
         theta = 1.0/(h*1000.) * RAD2ARCSEC
         scale = np.arange(-theta, theta, theta*res)
 
@@ -54,7 +60,7 @@ class PointSource(ConvolutionObject):
             obj[int(len(obj)/2)] += 1.0
             return obj
         else:
-            # in the case where we evaluate at a singular point 
+            # in the case where we evaluate at a singular point
             # if the position is closer to the location of the peak than the
             # resolution of our scale - we are looking at the source, otherwise
             # we are looking somewhere else
@@ -65,6 +71,7 @@ class PointSource(ConvolutionObject):
                 return np.array([self.obj.max()])
             else:
                 return np.array([0.0])
+
 
 class GaussianSource(ConvolutionObject):
     """Simple gaussian intensity profile.
@@ -80,8 +87,8 @@ class GaussianSource(ConvolutionObject):
     units : string
       spatial units (meters by default) - currently not very well supported
     """
-    def __init__(self, h, fwhm, res=0.001, units="meters"):
-
+    def __init__(self, h, fwhm, res=0.001, units="meters", **kwargs):
+        self.h = h
         self.theta = fwhm/(h*1000.)*RAD2ARCSEC
         self.sigma = fwhm/2.355
         self._f = stats.norm(scale=fwhm/2.355).pdf
@@ -114,7 +121,8 @@ class DiskSource(ConvolutionObject):
     res : float
       desired resolution, in arcseconds
     """
-    def __init__(self, h, radius, res=0.001):
+    def __init__(self, h, radius, res=0.001, **kwargs):
+        self.h = h
         self.r = radius
         self.theta = radius/(2*h*1000.) * RAD2ARCSEC
 
@@ -123,12 +131,11 @@ class DiskSource(ConvolutionObject):
 
         ConvolutionObject.__init__(self, obj, scale)
 
-
     def f(self, r, units="arcsec"):
         """Returns the brightness value of the object at a point. By default
         the units of the scale are arcseconds but radians are also accepted.
         """
-        # 99% (578x) speedup was achieved refactoring this code - Jan 2018 
+        # 99% (578x) speedup was achieved refactoring this code - Jan 2018
 
         # standardize the output format to numpy array even in case of a number
         if any((isinstance(r, int), isinstance(r, float),
@@ -144,7 +151,7 @@ class DiskSource(ConvolutionObject):
         _f = lambda x: 2*np.sqrt(theta**2-x**2)/(np.pi*theta**2)
 
         # testing showed faster abs performs faster for smaller arrays and
-        # logical_or outperforms abs by 12% for larger ones 
+        # logical_or outperforms abs by 12% for larger ones
         if len(rr) < 50000:
             mask = np.abs(rr)>=theta
         else:
@@ -154,7 +161,6 @@ class DiskSource(ConvolutionObject):
         rr[~mask] = _f(rr[~mask])
 
         return rr
-
 
     def width(self):
         """FWHM is not a good metric for measuring the end size of the object
@@ -186,7 +192,7 @@ class RabinaSource(ConvolutionObject):
     where the angle between meteor direction of travel and observer linesight
     varies in the range from 0-1.5 radians (0-86 degrees) which are then used
     to produce this 1D profile. The 1D profile is created from a crosssection
-    perpendicular to the meteors direction of travel. 
+    perpendicular to the meteors direction of travel.
     These 2D profiles are avilable as images in the rabina directory along with
     the required code to generate them.
     The default profile is then scaled appropriately to the desired height and
@@ -194,45 +200,62 @@ class RabinaSource(ConvolutionObject):
 
     Parameters
     ----------
-    h : float
-      height of the object, in meters
-    imgpath : str
-      path to the image of the 2D integrated profile, the precalculated
-      profiles can be found in lfd/analysis/profiles/rabina alongside with the
-      code required to generate new ones.
+    angle : `string`, `float` or `int`
+        If string the path to the premade 2D integrated Rabina profile projection,
+        if float or int the angle in radians that will be converted into a filename
+        of one of the premade Rabina profiles.
+    h : `float`
+        height of the object, in meters
+
+    Note
+    ----
+    Integrating 3D Rabina profile to create the 2D projection is very costly.
+    Premade profiles range from 0 to 1.5 radians in steps of 0.1 radians, or
+    approximately 0 to 90 degrees in steps of ~6 degrees. If a specific projection
+    angle is required code to generate one can be found in `profiles/rabina` dir
+    (see also: profiles.utils.get_rabina_dir).
     """
     xmin, xmax = -5., 5.
     ymin, ymax = -5., 5.
     zmin, zmax = -5., 5.
     N = 1000.
 
-    def __init__(self, imgpath, h):
+    def __init__(self, h, angle, **kwargs):
+        self.projection = angle
+        self.h = h
+
+        try:
+            imgneg = utils.get_rabina_profile(angle, useCV2=True)
+        except ValueError:
+            if not os.path.isfile(self.projection):
+                raise ValueError(f"Expected path to file or an angle got {projection} instead.")
+            imgneg = cv2.imread(self.projection, cv2.IMREAD_GRAYSCALE)
+        if imgneg is None:
+            raise RuntimeError(f"OpenCV underscriptively failed to open {imgpath}. "
+                               "Try to open it manually.")
+
         #xmin, xmax = RabinaProfile.xmin, RabinaProfile.xmax
         #ymin, ymax = RabinaSource.ymin, RabinaSource.ymax
 
         #xstep = (xmax-xmin)/RabinaProfile.N
         ystep = (RabinaSource.ymax- RabinaSource.ymin)/RabinaSource.N
 
-        imgneg = cv2.imread(imgpath, cv2.IMREAD_GRAYSCALE)
         white = 255.*np.ones(imgneg.shape)
 
         img = -1.*(imgneg-white)
         imgr = np.zeros(img.shape)
         imgr[2:-2, 2:-2] += img[2:-2, 2:-2]
-        imgrn = imgr/imgr.max()
+        self.raw = imgr/imgr.max()
 
         #meterscalex = np.arange(xmin, xmax, xstep)
         meterscaley = np.arange( RabinaSource.ymin,  RabinaSource.ymax, ystep)
 
         #scalex = meterscalex/(h*1000.) * RAD2ARCSEC
-        scaley = meterscaley/(h*1000.) * RAD2ARCSEC
+        self.scaley = meterscaley/(h*1000.) * RAD2ARCSEC
         #self.distx = imgrn.sum(axis=0)
-        disty = imgrn.sum(axis=1)
+        disty = self.raw.sum(axis=1)
 
-        self.raw = imgrn
-        self.scaley = scaley
-
-        ConvolutionObject.__init__(self, disty, scaley)
+        ConvolutionObject.__init__(self, disty, self.scaley)
 
     def f(self, r, units="arcsec"):
         """Returns the brightness value at a desired point."""
@@ -247,16 +270,21 @@ class RabinaSource(ConvolutionObject):
 
         if units.upper() == "RAD":
             rr = rr*RAD2ARCSEC
-        
+
         # testing showed faster abs performs faster for smaller arrays and
-        # logical_or outperforms abs by 12% for larger ones 
+        # logical_or outperforms abs by 12% for larger ones
         if len(rr) < 50000:
             mask = np.abs(rr)>=self.scaley[-1]
         else:
-            mask = np.logical_or(rr>self.scaley[-1], rr<-scaley[-1])
+            mask = np.logical_or(rr>self.scaley[-1], rr<-self.scaley[-1])
 
         rr[mask] = 0
-        rr[~mask] = self._guessf(rr[~mask])
+        # RabinaSource will always raise interpolation warning, do not silence
+        # the longer interpolation warning.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",
+                                    message="Required value estimated by interpolation.")
+            rr[~mask] = self._guessf(rr[~mask])
         return rr
 
 

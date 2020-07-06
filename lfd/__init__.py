@@ -41,7 +41,7 @@ BOSS = None
 PHOTO_REDUX = None
 BOSS_PHOTOOBJ = None
 
-
+from lfd import analysis
 from lfd import detecttrails
 from lfd import createjobs
 from lfd import gui

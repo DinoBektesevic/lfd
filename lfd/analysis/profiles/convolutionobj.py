@@ -2,6 +2,7 @@ import numpy as np
 import warnings
 from scipy import misc, signal, interpolate, stats
 
+
 class ConvolutionObject:
     """Represents an object that can be convolved with other ConvolutionObjects
     or functions. Practical because the objects can be created with or without
@@ -76,17 +77,38 @@ class ConvolutionObject:
             self.name = name
         self.obj = obj
         self.scale = scale
-        self._guessf = interpolate.interp1d(scale, obj)
+        self.__guessf = interpolate.interp1d(scale, obj)
         self.update()
+
+    def _guessf(self, r):
+        """Estimates the value of the profile in new points r via interpolation
+        when possible. Interpolation is only allowed within the scale range of
+        the original scale used to create the object. Values outside that
+        scale are assumed to be zero.
+
+        Parameters
+        ----------
+        r : `np.array` or `list`
+            Scale on which the profile is to be evaluated.
+        """
+        try:
+            warnings.warn("Required value estimated by interpolation.")
+            return self.__guessf(r)
+        except ValueError:
+             warnings.warn("Interpolation performed for value outside scale range. "
+                          "This can occur when extending profiles into tails of "
+                          "their distribution where they are assumed to be 0. "
+                          "Is this the case?")
+             newobj = np.zeros(len(r))
+             overlap = (r>self.scaleleft) & (r < self.scaleright)
+             newobj[overlap] += self.__guessf(r[overlap])
+             return newobj
 
     def f(self, r=None):
         """Returns the value of the profile function at a point/array of points
         r. If analytical expression is not know interpolation between nearest
         points is attempted. If this occurs a warning is raised.
         """
-        warnings.warn(("Required value estimated by interpolation - this is "
-                       "usually not correct. Are you sure you're doing the "
-                       "right thing?"))
         return self._guessf(r)
 
     def rescale(self, x, y=None, step=None):
@@ -98,13 +120,16 @@ class ConvolutionObject:
         boundaries [x, y> where the distance between two points equals to step.
         """
         if y is not None and step is not None:
-            self.scale = np.arange(x, y, step)
+            newscale = np.arange(x, y, step)
         elif y is not None and step is None:
-            self.scale = np.arange(x, y, self.step)
+            newscale = np.arange(x, y, self.step)
         else:
-            self.scale = x
+            newscale = x
 
-        self.obj = self.f(self.scale)
+        # must be called before update so that scaleleft and scaleright
+        # remain unchanged from the original
+        self.obj = self.f(newscale)
+        self.scale = newscale
         self.update()
 
     def update(self):
@@ -117,10 +142,12 @@ class ConvolutionObject:
         self.objleft = np.where(self.obj > 0.0)[0][0]
         self.objright = np.where(self.obj > 0.0)[0][0]
         self.step = self.scale[1]-self.scale[0]
+        self.peak = self.obj.max()
 
     def norm(self):
         """Renormalizes values so that maximal value is 1."""
-        self.obj = self.obj/self.obj.max()
+        self.obj = self.obj/self.peak
+        self.peak = 1
 
     def __str__(self):
         m = self.__class__.__module__
@@ -130,17 +157,17 @@ class ConvolutionObject:
         return tmpstr.format(m, n, self.scaleleft, self.scaleright, self.step,
                              self.objright-self.objleft)
 
-
     def calc_fwhm(self):
         """Calculates Full-Width-Half-Maximum of the object."""
         if len(self.obj) != len(self.scale):
-            errormsg = ("Expected equal length object and scale arrays, " 
-                       "got {0} and {1} instead. Run rescale method "
-                       "for possible fix")
+            errormsg = ("Expected len(obj) == len(scale) but got, "
+                       "len({0}) != len({1}) instead. Run rescale method "
+                       "for possible fix.")
             raise ValueError(errormsg.format(len(self.obj), len(self.scale)))
 
-        left = np.where(self.obj >= max(self.obj)/2.)[0][0]
-        right = np.where(self.obj >= max(self.obj)/2.)[0][-1]
+        #maxobj = max(self.obj)
+        left = np.where(self.obj >= self.peak/2.)[0][0]
+        right = np.where(self.obj >= self.peak/2.)[0][-1]
 
         if left == right:
             return 0.0

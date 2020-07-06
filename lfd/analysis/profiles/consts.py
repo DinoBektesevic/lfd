@@ -1,24 +1,34 @@
-# conversion from radians to arcseconds
 RAD2ARCSEC = 206264.806247
+"""Conversion from radians to arcseconds."""
 
-# conversion factor between FWHM and sqrt(variance)
+
 FWHM2SIGMA = 2.436
+"""Conversion factor between FWHM and sqrt(variance)."""
 
-# commonly used heights
+
 HEIGHTS = [80., 100., 120., 150.]
+"""Commonly used heights (throughout the paper)."""
 
-# commonly used radii, in meters
+
 RS = [0.1, 0.5, 5, 10]
+"""Commonly used radii, in meters (in the paper)."""
 
-# upper and lower values for seeing for both SDSS and LSST
+
 SEEINGS = [0.67, 1.3455, 1.48, 1.6353]
+"""Upper and lower values for seeing for both SDSS and LSST."""
 
-# estimated expected value of LSST seeing
+
 LSSTSEEING = 0.67
+"""Estimated expected value of LSST seeing."""
 
-# measured median value of SDSS seeing
+
 SDSSSEEING = 1.43
+"""Measured median value of SDSS seeing."""
 
-# the dimensions of SDSS and LSST primary and secondary mirrors in mm
+
 LSST = (4180., 2558.)
+"""The dimensions, in milimeters, of the primary and secondary LSST mirrors."""
+
+
 SDSS = (1250., 585.)
+"""The dimensions, in milimeters, of the primary and secondary SDSS mirrors."""

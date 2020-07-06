@@ -64,11 +64,7 @@ or::
 
 depending on the shell and OS used. Or they can be set by using top-level
 functionality in the `lfd` module.
-
-.. module:: lfd
-
-.. currentmodule:: lfd
-
+ 
 .. autofunction:: lfd.setup_detecttrails
 
 .. autofunction:: lfd.setup_createjobs

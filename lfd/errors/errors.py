@@ -225,10 +225,10 @@ class Errors:
         curframe = inspect.currentframe()
         calframe = inspect.getouterframes(curframe, context=15)
         for i in range(5):
-            print "    caller: ",calframe[i][3]
+            print("    caller: ",calframe[i][3])
         len1 = len(self.qsub)
-        print "Number of failed QSUB jobs: ", len1
+        print("Number of failed QSUB jobs: ", len1)
         len2 = len(self.dettrails)
-        print "Number of failed frames (DetTrails errors): ", len2
-        print "Total errors occured QSUB+DetTrails = "
+        print("Number of failed frames (DetTrails errors): ", len2)
+        print("Total errors occured QSUB+DetTrails = ")
         return len1+len2
