@@ -7,15 +7,17 @@ image sources so that the correct order of operations is ensured for different
 directory structures is what makes detecttrails capable of processing variety
 of different images.
 """
-
 import cv2
 import numpy as np
 import os as os
 
+
 __all__ = ["process_field_bright", "process_field_dim", "pathBright"]
+
 
 pathBright = None
 pathDim = None
+
 
 def setup_debug():
     """Sets up the module global variables - paths to where the debug output is
@@ -27,8 +29,9 @@ def setup_debug():
         global pathDim
         pathBright = os.environ["DEBUG_PATH"]
         pathDim = os.environ["DEBUG_PATH"]
-    except:
+    except KeyError:
         pass
+
 
 def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
     """
@@ -83,10 +86,10 @@ def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
     debug : bool
         produces a verboose output of calculated values.
     """
-    ro1 = np.zeros((navg,1))
-    ro2 = np.zeros((navg,1))
-    theta1 = np.zeros((navg,1))
-    theta2 = np.zeros((navg,1))
+    ro1 = np.zeros((navg, 1))
+    ro2 = np.zeros((navg, 1))
+    theta1 = np.zeros((navg, 1))
+    theta2 = np.zeros((navg, 1))
     for i in range(0, navg):
         try:
             # changed with opencv 3, the shape is (N, 1, 2) where N is number
@@ -95,59 +98,60 @@ def check_theta(hough1, hough2, navg, dro, thetaTresh, lineSetTresh, debug):
             ro2[i] = hough2[i][0][0]
             theta1[i] = hough1[i][0][1]
             theta2[i] = hough2[i][0][1]
-        except:
+        except IndexError:
             pass
 
     if debug:
-        print ("RO: "                                                 )
-        print ("Ro_tresh:    ", dro                                   )
-        print ("  PROCESED IMAGE: "                                   )
-        print ("    ro1:    ", ro1.tolist()                           )
-        print ("    avg(ro1):    ", np.average(ro1)                   )
-        print ("  MINAREARECT IMAGE: "                                )
-        print ("    ro2:    ", ro2.tolist()                           )
-        print ("    avg(ro2):    ", np.average(ro2)                   )
-        print ("------------------------------------------"           )
-        print ("avg1-avg2:    ", abs(np.average(ro1)-np.average(ro2)) )
+        print("RO:"
+              f"Ro_tresh:    {dro}\n"
+              "  PROCESSED IMAGE:\n"
+              f"    ro1:    {ro1.tolist()}\n"
+              f"    avg(ro1):    {np.average(ro1)}\n"
+              "  MINAREARECT IMAGE:\n"
+              f"    ro2:    {ro2.tolist()}\n"
+              f"    avg(ro2):    {np.average(ro2)}\n"
+              "------------------------------------------\n"
+              f"avg1 - avg2 =    {abs(np.average(ro1) - np.average(ro2))}")
 
-    if abs(np.average(ro1)-np.average(ro2))>dro:
-        if debug: print("Ro test:    FAILED")
+    if abs(np.average(ro1) - np.average(ro2)) > dro:
+        if debug:
+            print("Ro test:    FAILED")
         return True
-
 
     if debug:
-        print ("\nTHETA: "                                                 )
-        print ("Theta_tresh:    ", thetaTresh                              )
-        print ("Lineset_tresh    ", lineSetTresh                           )
-        print ("  PROCESED IMAGE: "                                        )
-        print ("    theta1    ", theta1.tolist()                           )
-        print ("    max1-min1    ", abs(theta1.max()-theta1.min())         )
-        print ("  MINAREARECT IMAGE: "                                     )
-        print ("    theta2    ", theta2.tolist()                           )
-        print ("    max2-min2    ", abs(theta2.max()-theta2.min())         )
-        print ("------------------------------------------"                )
-        print ("Average(theta1-theta2):    ",abs(np.average(theta1-theta2)))
+        print("\nTHETA:"
+              f"Theta_tresh:     {thetaTresh}\n"
+              f"Lineset_tresh:   {lineSetTresh}\n"
+              "  PROCESSED IMAGE: \n"
+              f"    theta1:    {theta1.tolist()}\n"
+              f"    max1 - min1:     {abs(theta1.max() - theta1.min())}"
+              "  MINAREARECT IMAGE:\n"
+              f"    theta2:    {ro2.tolist()}\n"
+              f"    max2 - min2:    {abs(theta2.max() - theta2.min())}\n"
+              "------------------------------------------\n"
+              f"Avg(theta)1 - theta2) =    {abs(np.average(theta1 - theta2))}")
 
-    dtheta1=abs(theta1.max()-theta1.min())
-    if dtheta1> thetaTresh:
-        if debug: print("Theta1 tresh test:    FAILED")
+    dtheta1 = abs(theta1.max() - theta1.min())
+    if dtheta1 > thetaTresh:
+        if debug:
+            print("Theta1 tresh test:    FAILED")
         return True
 
-    dtheta2=abs(theta2.max()-theta2.min())
-    if dtheta2> thetaTresh:
-        if debug: print ("Theta2 tresh test:    FAILED")
+    dtheta2 = abs(theta2.max() - theta2.min())
+    if dtheta2 > thetaTresh:
+        if debug:
+            print("Theta2 tresh test:    FAILED")
         return True
 
-
-    dtheta = abs(theta1-theta2)
-    if np.average(dtheta)> lineSetTresh:
-        if debug: print ("Lineset tresh test:    FAILED")
+    dtheta = abs(theta1 - theta2)
+    if np.average(dtheta) > lineSetTresh:
+        if debug:
+            print("Lineset tresh test:    FAILED")
         return True
-
 
 
 def draw_lines(hough, image, nlines, name, path=pathDim,
-                compression=0, color=(255,0,0)):
+               compression=0, color=(255, 0, 0)):
     """
     Draws hough lines on a given image and saves it as a png.
 
@@ -169,28 +173,33 @@ def draw_lines(hough, image, nlines, name, path=pathDim,
         cv2.IMWRITE_PNG_COMPRESSION parameter from 0 to 9. A higher value means
         a smaller size and longer compression time. Default value is 0.
     """
-    n_x, n_y=image.shape
-    #convert to color image so that you can see the lines
+    n_x, n_y = image.shape
+    # convert to color image so that you can see the lines
     draw_im = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
     for houghparams in hough[:nlines]:
         try:
             rho, theta = houghparams[0]
-            x0 = np.cos(theta)*rho
-            y0 = np.sin(theta)*rho
-            pt1 = ( int(x0 + (n_x+n_y)*(-np.sin(theta))),
-                    int(y0 + (n_x+n_y)*np.cos(theta)) )
-            pt2 = ( int(x0 - (n_x+n_y)*(-np.sin(theta))),
-                    int(y0 - (n_x+n_y)*np.cos(theta)) )
+            x0 = np.cos(theta) * rho
+            y0 = np.sin(theta) * rho
+            pt1 = (
+                int(x0 - (n_x + n_y) * np.sin(theta)),
+                int(y0 + (n_x + n_y) * np.cos(theta))
+            )
+            pt2 = (
+                int(x0 + (n_x + n_y) * np.sin(theta)),
+                int(y0 - (n_x + n_y) * np.cos(theta))
+            )
             cv2.line(draw_im, pt1, pt2, color, 2)
-        except:
+        except Exception:
             pass
 
     cv2.imwrite(os.path.join(path, name+".png"), draw_im,
                 [cv2.IMWRITE_PNG_COMPRESSION, compression])
 
+
 def fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
-                     lwTresh, debug):
+                    lwTresh, debug):
     """
     Fits minimal area rectangles to the image. If no rectangles can be
     fitted it returns False. Otherwise returns True and an image with drawn
@@ -236,23 +245,23 @@ def fit_minAreaRect(img, contoursMode, contoursMethod, minAreaRectMinLen,
         contours, hierarchy = cv2.findContours(canny, contoursMode,
                                                contoursMethod)
 
-    boxes = list()
     for cnt in contours:
         rect = cv2.minAreaRect(cnt)
-        if (rect[1][0]>rect[1][1]):
-            l = rect[1][0]
-            w = rect[1][1]
+        if (rect[1][0] > rect[1][1]):
+            length = rect[1][0]
+            width = rect[1][1]
         else:
-            w = rect[1][0]
-            l = rect[1][1]
-        if l>minAreaRectMinLen and w>minAreaRectMinLen:
-            if (l/w>lwTresh):
+            width = rect[1][0]
+            length = rect[1][1]
+        if (length > minAreaRectMinLen) and (width > minAreaRectMinLen):
+            if (length/width > lwTresh):
                 detection = True
                 box = cv2.boxPoints(rect)
                 box = np.asarray(box, dtype=np.int32)
-                cv2.fillPoly(box_img, [box], (255, 255,255))
+                cv2.fillPoly(box_img, [box], (255, 255, 255))
 
     return detection, box_img
+
 
 def dictify_hough(shape, houghVals):
     """Function converts from hough line tuples (rho, theta) into a dictionary
@@ -269,14 +278,14 @@ def dictify_hough(shape, houghVals):
     rho, theta = houghVals
     n_x, n_y = shape
 
-    x0 = np.cos(theta)*rho
-    y0 = np.sin(theta)*rho
-    x1 = int(x0 - (n_x+n_y)*np.sin(theta))
-    y1 = int(y0 + (n_x+n_y)*np.cos(theta))
-    x2 = int(x0 + (n_x+n_y)*np.sin(theta))
-    y2 = int(y0 - (n_x+n_y)*np.cos(theta))
+    x0 = np.cos(theta) * rho
+    y0 = np.sin(theta) * rho
+    x1 = int(x0 - (n_x + n_y) * np.sin(theta))
+    y1 = int(y0 + (n_x + n_y) * np.cos(theta))
+    x2 = int(x0 + (n_x + n_y) * np.sin(theta))
+    y2 = int(y0 - (n_x + n_y) * np.cos(theta))
 
-    return {"x1":x1, "y1":y1, "x2":x2, "y2":y2}
+    return {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
 
 
 def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
@@ -299,7 +308,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
 
     Parameters
     ----------
-    img : np.array 
+    img : np.array
         numpy array representing gray 32 bit 1 chanel image.
     lwTresh : float
         treshold for the ratio of rectangle side lengths that has to be
@@ -330,9 +339,9 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
         treshold for maximal allowed distance between the average x-axis
         intersection coordinates of the two sets of lines
     """
-    img[img<0] = 0
+    img[img < 0] = 0
 
-    #FITS files are usually 1 channel 32 bit float images, we need
+    # FITS files are usually 1 channel 32 bit float images, we need
     # 1 channel 8 bit int images for OpenCV
     gray_image = cv2.convertScaleAbs(img)
     equ = cv2.equalizeHist(gray_image)
@@ -345,10 +354,9 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
     equ = cv2.dilate(equ, dilateKernel)
 
     if debug:
-            cv2.imwrite(os.path.join(pathBright, "2dilateBRIGHT.png"), equ,
-                        [cv2.IMWRITE_PNG_COMPRESSION, 3])
-            print("BRIGHT: saving dilated image.")
-
+        cv2.imwrite(os.path.join(pathBright, "2dilateBRIGHT.png"), equ,
+                    [cv2.IMWRITE_PNG_COMPRESSION, 3])
+        print("BRIGHT: saving dilated image.")
 
     detection, box_img = fit_minAreaRect(equ, contoursMode, contoursMethod,
                                          minAreaRectMinLen, lwTresh, debug)
@@ -356,7 +364,7 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
     if debug:
         cv2.imwrite(os.path.join(pathBright, "3contoursBRIGHT.png"), box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 3])
-        print ("BRIGHT: saving contours")
+        print("BRIGHT: saving contours")
 
     if detection:
         equhough = cv2.HoughLines(equ, houghMethod, np.pi/180, 1)
@@ -364,18 +372,19 @@ def process_field_bright(img, lwTresh, thetaTresh, dilateKernel, contoursMode,
 
         if debug:
             draw_lines(equhough, equ, nlinesInSet, "5equhoughBRIGHT",
-                        path=pathBright)
-            draw_lines(boxhough, box_img,  nlinesInSet, "4boxhoughBRIGHT",
-                        path=pathBright)
+                       path=pathBright)
+            draw_lines(boxhough, box_img, nlinesInSet, "4boxhoughBRIGHT",
+                       path=pathBright)
             print("BRIGHT!")
 
         if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
-                        lineSetTresh, debug):
+                       lineSetTresh, debug):
             return (False, None)
         else:
             return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print("BRIGHT: no boxes found")
+        if debug:
+            print("BRIGHT: no boxes found")
         return (False, None)
 
 
@@ -403,7 +412,7 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
 
     Parameters
     ----------
-    img : np.array 
+    img : np.array
         numpy array representing gray 32 bit 1 chanel image.
     minFlux : float
         treshold for maximal allowed pixel brightness value under which pixel
@@ -441,8 +450,8 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
         treshold for maximal allowed distance between the average x-axis
         intersection coordinates of the two sets of lines
     """
-    img[img<minFlux]=0
-    img[img>0]+=addFlux
+    img[img < minFlux] = 0
+    img[img > 0] += addFlux
 
     gray_image = cv2.convertScaleAbs(img)
     equ = cv2.equalizeHist(gray_image)
@@ -467,9 +476,9 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
 
     detection, box_img = fit_minAreaRect(equ, contoursMode,
-                                          contoursMethod,
-                                          minAreaRectMinLen, lwTresh,
-                                          debug)
+                                         contoursMethod,
+                                         minAreaRectMinLen, lwTresh,
+                                         debug)
     if debug:
         cv2.imwrite(os.path.join(pathDim, "9contoursDIM.png"), box_img,
                     [cv2.IMWRITE_PNG_COMPRESSION, 0])
@@ -481,16 +490,17 @@ def process_field_dim(img, minFlux, addFlux, lwTresh, thetaTresh, erodeKernel,
 
         if debug:
             draw_lines(equhough, equ, nlinesInSet, "10equhoughDIM",
-                        compression=4, path=pathDim)
+                       compression=4, path=pathDim)
             draw_lines(boxhough, box_img, nlinesInSet, "11boxhoughDIM",
-                        compression=4, color=(0,0,255), path=pathDim)
+                       compression=4, color=(0, 0, 255), path=pathDim)
             print("DIM!")
 
         if check_theta(equhough, boxhough, nlinesInSet, dro, thetaTresh,
-                        lineSetTresh, debug):
+                       lineSetTresh, debug):
             return (False, None)
         else:
             return (True, dictify_hough(equ.shape, equhough[0][0]))
     else:
-        if debug: print("DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!")
+        if debug:
+            print("DIM: FALSE AT NO RECTANGLES MATCHING THE CONDITIONS FOUND!")
         return (False, None)

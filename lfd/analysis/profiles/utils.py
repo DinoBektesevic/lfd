@@ -1,17 +1,16 @@
-import os
-import os.path as ospath
-import glob
-import time
-import warnings
-
 import numpy as np
 import matplotlib.pyplot as plt
 
 from lfd.analysis.profiles.convolution import convolve
-from lfd.analysis.profiles.objectprofiles import *
-from lfd.analysis.profiles.seeing import *
-from lfd.analysis.profiles.consts import *
-from lfd.analysis.utils import *
+from lfd.analysis.profiles.objectprofiles import RabinaSource
+from lfd.analysis.profiles.defocusing import FluxPerAngle
+from lfd.analysis.profiles.seeing import GausKolmogorov
+from lfd.analysis.profiles.consts import (SDSS,
+                                          SDSSSEEING,
+                                          LSST,
+                                          LSSTSEEING,
+                                          HEIGHTS)
+from lfd.analysis.utils import search_cached
 
 
 __all__ = ["get_rabina_profile", "meshgrid"]
@@ -65,17 +64,18 @@ def meshgrid(data, x, y, tgt, fold=None, axes=True):
     --------
      >>> data
         array(
-          [(3., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
-           (3., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
-           (3., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
-           (3., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5),
-           (4., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),
-           (4., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),
-           (4., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),
-           (4., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5)],
-      dtype=[('fwhm', '<f8'), ('h', '<f8'), ('radius', '<f8'), ('source', '<U12'),
-      ('seeing', '<U14'), ('defocus', '<U12'), ('sfwhm', '<f8'), ('dfwhm', '<f8'),
-      ('ofwhm', '<f8'), ('depth', '<f8')])
+          [(3., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),  # noqa: W505
+           (3., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),  # noqa: W505
+           (3., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),  # noqa: W505
+           (3., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5),  # noqa: W505
+           (4., 1., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 8.1, 8.1, 3.5),  # noqa: W505
+           (4., 1., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 9.8, 9.8, 1.5),  # noqa: W505
+           (4., 2., 5., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.5, 4.5, 2.6),  # noqa: W505
+           (4., 2., 6., 'DiskSource', 'GausKolmogorov', 'FluxPerAngle', 1.43, 4.4, 4.4, 1.5)],  # noqa: W505
+      dtype=[('fwhm', '<f8'), ('h', '<f8'), ('radius', '<f8'),
+             ('source', '<U12'), ('seeing', '<U14'), ('defocus', '<U12'),
+             ('sfwhm', '<f8'), ('dfwhm', '<f8'), ('ofwhm', '<f8'),
+             ('depth', '<f8')])
     >>> x, y, z = meshgrid(meas, 'h', 'fwhm', 'ofwhm', fold={'radius':5})
     >>> x
     array([1., 2.])
@@ -85,10 +85,8 @@ def meshgrid(data, x, y, tgt, fold=None, axes=True):
     array([[8.1, 4.5],
          [8.1, 4.5]])
     """
-    unsafe=False
     foldedData = data
     if fold is not None:
-        unsafe = True
         for k, v in fold.items():
             foldedData = foldedData[foldedData[k] == v]
 
@@ -157,9 +155,8 @@ def get_rabina_profile(angle, useCV2=False):
 
 
 def tableRabina(angle=1.5):
-    profile = get_prerendered_rabina_profile_path(angle)
     for h in HEIGHTS:
-        o = RabinaSource(profile, h)
+        o = RabinaSource(angle, h)
         d = FluxPerAngle(h, *SDSS)
 
         ofwhm = o.calc_fwhm()
@@ -167,20 +164,20 @@ def tableRabina(angle=1.5):
         c = convolve(o, d)
         dfwhm1 = c.calc_fwhm()
 
-        o = RabinaSource(profile, h)
+        o = RabinaSource(angle, h)
         s = GausKolmogorov(SDSSSEEING)
         d = FluxPerAngle(h, *SDSS)
 
         c = convolve(o, s, d)
         obsfwhm1 = c.calc_fwhm()
 
-        o = RabinaSource(profile, h)
+        o = RabinaSource(angle, h)
         d = FluxPerAngle(h, *LSST)
 
         c = convolve(o, d)
         dfwhm2 = c.calc_fwhm()
 
-        o = RabinaSource(profile, h)
+        o = RabinaSource(angle, h)
         s = GausKolmogorov(LSSTSEEING)
         d = FluxPerAngle(h, *LSST)
 
@@ -189,4 +186,3 @@ def tableRabina(angle=1.5):
 
         res = "{0}&\t{1:.2f}&\t{2:.2f}&\t{3:.2f}&\t{4:.2f}&\t{5:.2f}\\\\"
         print(res.format(int(h), ofwhm, dfwhm1, obsfwhm1, dfwhm2, obsfwhm2))
-

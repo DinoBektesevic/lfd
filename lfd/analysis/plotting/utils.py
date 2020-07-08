@@ -7,7 +7,6 @@ import os.path as ospath
 import contextlib
 import warnings
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from lfd.analysis.profiles.samplers import generic_sampler
@@ -89,7 +88,7 @@ def get_ls():
     to help out with graphing in for loops
     """
     global CUR_LS
-    CUR_LS+=1
+    CUR_LS += 1
     if CUR_LS >= len(LINESTYLES):
         CUR_LS = 0
     return LINESTYLES[CUR_LS]
@@ -102,7 +101,7 @@ def paperstyle(after_reset=True):
     """
     stylepath = get_style_path()
     with plt.style.context(stylepath, after_reset) as c:
-        yield
+        yield c
 
 
 def plot_profile(ax, profile, normed=True, **kwargs):
@@ -123,16 +122,15 @@ def plot_profile(ax, profile, normed=True, **kwargs):
     return ax
 
 
-def plot_profiles(ax, profiles,  normed=True,  **kwargs):
+def plot_profiles(ax, profiles, normed=True, **kwargs):
     """Normalizes all given profiles and then plots them on a given axis. Set
     normed to False if normalization is not desired. Lables are determined from
     the name attribute of the profile. `*args` and `**kwargs` are forwarded to
     the matplotlib plot function.
     """
-    norms = (normed,)*len(profiles)
     lss = kwargs.pop("linestyles", (False,)*len(profiles))
-    cls = kwargs.pop("colors", (False,)*len(profiles))
-    lbls = kwargs.pop("labels", (False,)*len(profiles))
+    cls = kwargs.pop("colors", (False, ) * len(profiles))
+    lbls = kwargs.pop("labels", (False, ) * len(profiles))
 
     plotprops = []
     for profile, label, color, linestyle in zip(profiles, lbls, cls, lss):
@@ -150,7 +148,7 @@ def plot_profiles(ax, profiles,  normed=True,  **kwargs):
     return ax
 
 
-def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
+def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims=((-0.01, 1.1), ),
                  ylabels=(),):
     """Sets the labels, ticks and limits on all pairs of axes,
     ticks and labels provided.
@@ -227,7 +225,7 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
     setxticks, xticks = pad_prop(xticks, axlen)
     setxlims, xlims = pad_prop(xlims, axlen)
     setylims, ylims = pad_prop(ylims, axlen)
-    for (ax, ticks, xlim, ylim)  in zip(axes, xticks, xlims, ylims):
+    for (ax, ticks, xlim, ylim) in zip(axes, xticks, xlims, ylims):
         if setxticks:
             ax.set_xticks(ticks)
         if setxlims:
@@ -258,7 +256,7 @@ def set_ax_props(axes, xlims=(), xticks=(), xlabels=(), ylims =((-0.01, 1.1),),
         setylabels = False if len(ygrouper) != 0 else True
         axes[0].set_ylabel(ylabels)
 
-    for (ax, ticks, xlim, ylim, xlbl, ylbl)  in zip(axes, xticks, xlims, ylims, xlbls, ylbls):
+    for (ax, ticks, xlim, ylim, xlbl, ylbl) in zip(axes, xticks, xlims, ylims, xlbls, ylbls):
         if setxlabels:
             ax.set_xlabel(xlbl)
         if setylabels:
@@ -300,11 +298,10 @@ def get_or_create_data(filenames, samplerKwargs=None, samplers=None, cache=True,
 
     Notes
     -----
-    There is no functional difference between providing a single ``samplerArgs``
-    dictionary or givin the arguments as "plain old" kwargs. When ``samplerArgs``
-    are a list, however, it is iterated over, and each element is passed as a
-    kwarg to the sampler, while kwargs are passed to the sampler as-is on every
-    iteration.
+    There is no difference between providing a single ``samplerArgs`` or giving
+    the arguments as kwargs. When ``samplerArgs`` are a list, however, it is
+    iterated over, and each element is passed as a kwarg to the sampler, while
+    kwargs are passed to the sampler as-is on every iteration.
     """
     filenames = (filenames, ) if isinstance(filenames, str) else filenames
 
@@ -321,9 +318,8 @@ def get_or_create_data(filenames, samplerKwargs=None, samplers=None, cache=True,
     else:
         smplrKw = samplerKwargs
 
-
     data = []
-    for fname, samplerKwarg, sampler in zip (filenames, smplrKw, samplers):
+    for fname, samplerKwarg, sampler in zip(filenames, smplrKw, samplers):
         try:
             data.append(utils.get_data(fname))
         except FileNotFoundError:

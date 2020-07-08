@@ -1,15 +1,34 @@
 import os
 import re
-import warnings
 
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from lfd.analysis.utils import *
-from lfd.analysis.profiles import *
-from lfd.analysis.plotting.utils import *
+# from lfd.analysis.utils import *
+from lfd.analysis.profiles import (convolve,
+                                   generic_sampler,
+                                   meshgrid,
+                                   PointSource,
+                                   DiskSource,
+                                   RabinaSource,
+                                   FluxPerAngle,
+                                   GausKolmogorov,
+                                   GaussianSource,
+                                   SDSS,
+                                   SDSSSEEING,
+                                   LSST,
+                                   LSSTSEEING,
+                                   SEEINGS,
+                                   HEIGHTS,
+                                   exp_fwhms)
+from lfd.analysis.plotting.utils import (set_ax_props,
+                                         get_ls,
+                                         paperstyle,
+                                         plot_profile,
+                                         plot_profiles,
+                                         get_or_create_data)
 
 
 __all__ = ["plotall", "figure4", "figure5", "figure6", "figure7", "figure8", "figure10",
@@ -40,9 +59,9 @@ def figure4(h=100):
         Axes containing the plot.
     """
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
-    axes[0].text(-1.2, 1.03,  'SDSS', fontsize=rcParams["axes.titlesize"])
+    axes[0].text(-1.2, 1.03, 'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.35, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
-    axes = set_ax_props(axes, xlims =((-5.5, 5.5), (-15.5, 15.5)),
+    axes = set_ax_props(axes, xlims=((-5.5, 5.5), (-15.5, 15.5)),
                         xticks=(range(-25, 26, 5), range(-20, 21, 5)),
                         xlabels="arcsec", ylabels="Intensity")
 
@@ -83,7 +102,7 @@ def figure5():
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(10, 10))
     axes[0].text(-1.2, 1.03, 'SDSS', fontsize=rcParams["axes.titlesize"])
     axes[1].text(-3.0, 1.03, 'LSST', fontsize=rcParams["axes.titlesize"])
-    axes = set_ax_props(axes, xlims =((-5.5, 5.5), (-15.5, 15.5)),
+    axes = set_ax_props(axes, xlims=((-5.5, 5.5), (-15.5, 15.5)),
                         xticks=(range(-25, 26, 5), range(-20, 21, 5)),
                         xlabels="arcsec", ylabels="Intensity")
 
@@ -102,17 +121,17 @@ def figure5():
     return fig, axes
 
 
-def figure6(h=100,  rs=(0.1, 4, 8), instrument=LSST, seeingfwhm=LSSTSEEING):
-    """Three cases of meteors with \theta_D << \theta_O, \theta_D \approx \theta_O
-    and \thetaD >> \theta_O (see equations 6 and 8) illustrated for the LSST
-    telescope at 100km distance and the seeing of 0.67′′. Meteors are modeled
-    as disks with a uniform surface brightness and the radii of 0.1m, 4m and
-    8m, respectively. The solid line shows how the meteor track looks like when
-    the telescope is focused on the meteor without any seeing, while the dashed
-    line shows what we actually see under defocusing and seeing. For a small
-    disk diameter the defocused profile corresponds to that of a point source.
-    As the meteor diameter approaches the inner diameter of the LSSTs primary
-    mirror, the defocusing profile starts to lose its dip in the middle.
+def figure6(h=100, rs=(0.1, 4, 8), instrument=LSST, seeingfwhm=LSSTSEEING):
+    """Three cases of meteors with \\theta_D << \\theta_O, \\theta_D \\approx
+    \\theta_O and \\thetaD >> \\theta_O (see equations 6 and 8) illustrated for
+    the LSST telescope at 100km distance and the seeing of 0.67′′. Meteors are
+    modeled as disks with a uniform surface brightness and the radii of 0.1m,
+    4m and 8m, respectively. The solid line shows how the meteor track looks
+    like when the telescope is focused on the meteor without any seeing, while
+    the dashed line shows what we actually see under defocusing and seeing. For
+    a small disk diameter the defocused profile corresponds to that of a point
+    source. As the meteor diameter approaches the inner diameter of the LSSTs
+    primary mirror, the defocusing profile starts to lose its dip in the middle
 
     Parameters
     ----------
@@ -148,7 +167,7 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=LSST, seeingfwhm=LSSTSEEING):
     axes[2].text(-17.0, 1.03, r"$D_{meteor} \gg D_{mirror}$",
                  fontsize=titlesize)
     axes = set_ax_props(axes,
-                        xlims=((-12, 12), (-15, 16),( -21, 21)),
+                        xlims=((-12, 12), (-15, 16), (-21, 21)),
                         xticks=(range(-20, 21, 5), range(-21, 21, 7), range(-30, 31, 10)),
                         xlabels="arcsec", ylabels="Intensity")
 
@@ -166,12 +185,12 @@ def figure6(h=100,  rs=(0.1, 4, 8), instrument=LSST, seeingfwhm=LSSTSEEING):
     return fig, axes
 
 
-def figures78(rs, instrument,  xlims, xticks, seeingfwhm=None):
+def figures78(rs, instrument, xlims, xticks, seeingfwhm=None):
     """Genericized version of plots 7 and 8 representing two cases of meteors
-    with \theta_D \approx \theta_O and \thetaD >> \theta_O at various distances.
-    In effect this is the combination of plots 5 and 6 where we evaluate
-    distance to meteor effect on the observed profile and meteor radius effects
-    on the observed profile.
+    with \\theta_D \\approx \\theta_O and \\thetaD >> \\theta_O at various
+    distances. In effect this is the combination of plots 5 and 6 where we
+    evaluate distance to meteor effect on the observed profile and meteor
+    radius effects on the observed profile.
     Given the parameters the function creates the whole 2 axes figure with
     titles, x and y labels, ticks, limits and a legend. Figure 7 and 8 exist
     only to specify the parameters that recreate the figures from the paper.
@@ -231,16 +250,16 @@ def figures78(rs, instrument,  xlims, xticks, seeingfwhm=None):
 
 
 def figure7():
-    """Two cases of uniform brightness disk meteors with \\theta_D \\approx \\theta_O
-    (R_meteor=1m) and \\thetaD >> \\theta_O (R_meteor=4m) illustrated for the
-    SDSS telescope at various distances (different linetypes) and the seeing of
-    1.48′′. This seeing transforms a point source into an object similar to
-    \\theta_D in size, which results in a defocused image with a negligible
-    central drop in the brightness profile. The distinguishing element for a
-    disk observed with SDSS is the very wide peak when the disk is similar in
-    size to the telescope primary mirror and a growing FWHM as the disk becomes
-    much larger than the mirror (compare with fig. 4). Small disk diameter are
-    comparable to point source plots in Fig. 5.
+    """Two cases of uniform brightness disk meteors with \\theta_D \\approx
+    \\theta_O (R_meteor=1m) and \\thetaD >> \\theta_O (R_meteor=4m) illustrated
+    for the SDSS telescope at various distances (different linetypes) and the
+    seeing of 1.48′′. This seeing transforms a point source into an object
+    similar to \\theta_D in size, which results in a defocused image with a
+    negligible central drop in the brightness profile. The distinguishing
+    element for a disk observed with SDSS is the very wide peak when the disk
+    is similar in size to the telescope primary mirror and a growing FWHM as
+    the disk becomes much larger than the mirror (compare with fig. 4). Small
+    disk diameter are comparable to point source plots in Fig. 5.
 
     Returns
     -------
@@ -253,9 +272,9 @@ def figure7():
     -----
     | The function calls on figure78 with the following parameters:
     | rs : (1, 4)
-    | instrument : \`profiles.SDSS\`
-    | seeingfwhm : \`profiles.SDSSSEEING\`
-    | xlims : [(-6, 6\), (-11, 11)]
+    | instrument : `profiles.SDSS`
+    | seeingfwhm : `profiles.SDSSSEEING`
+    | xlims : [(-6, 6), (-11, 11)]
     | xticks : [range(-30, 30, 6), range(-30, 30, 2)]
 
     """
@@ -264,13 +283,13 @@ def figure7():
 
 
 def figure8():
-    """Two cases of uniform brightness disk meteors with \\theta_D \\approx \\theta_O
-    (R_meteor=4m) and \thetaD >> \theta_O (R_meteor=8m) illustrated for the
-    LSST telescope at various distances (different linetypes) and the seeing of
-    0.67′′. Since the seeing FWHM is much smaller than the apparent angular
-    size \theta_D of the disk in the sky, the brightness profiles are dominated
-    by the defocusing effect. Small disk diameter are comparable to point
-    source plots in Fig. 5.
+    """Two cases of uniform brightness disk meteors with \\theta_D \\approx
+    \\theta_O (R_meteor=4m) and \thetaD >> \theta_O (R_meteor=8m) illustrated
+    for the LSST telescope at various distances (different linetypes) and the
+    seeing of 0.67′′. Since the seeing FWHM is much smaller than the apparent
+    angular size \\theta_D of the disk in the sky, the brightness profiles are
+    dominated by the defocusing effect. Small disk diameter are comparable to
+    point source plots in Fig. 5.
 
     Returns
     -------
@@ -414,7 +433,7 @@ def figure11():
 
 
 def figures1213(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
-               n=10, duration=2):
+                n=10, duration=2):
     """A fiducial model of ionized meteor trail evolution as seen by SDSS or
     LSST at some distance. The top panel is the trail brightness as seen by an
     telescope without seeing. Different lines show the trail evolution with the
@@ -557,8 +576,8 @@ def figure12():
 
     """
     return figures1213(1, 100, SDSSSEEING, SDSS,
-                      xlims=((-8.5,8.5),), xticks=(range(-20, 20, 2),),
-                      txtpos=((2,0.8), (2,0.8), (2,0.8)))
+                       xlims=((-8.5, 8.5),), xticks=(range(-20, 20, 2),),
+                       txtpos=((2, 0.8), (2, 0.8), (2, 0.8)))
 
 
 def figure13():
@@ -600,14 +619,13 @@ def figure13():
     | duration : 2s
 
     """
-
     return figures1213(1, 100, LSSTSEEING, LSST,
-                      xlims=((-15,15),), xticks=(range(-20, 20, 2),),
-                      txtpos=((2,0.8), (-5,0.28), (2,0.8)))
+                       xlims=((-15, 15), ), xticks=(range(-20, 20, 2), ),
+                       txtpos=((2, 0.8), (-5, 0.28), (2, 0.8)))
 
 
-def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
-               n=10, duration=2, nsteps=486):
+def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos, n=10,
+                duration=2, nsteps=486):
     """A fiducial model of ionized meteor trail evolution as seen by an
     telescope some distance with trail drift, due to atmospheric winds,
     included. The top panel is the trail brightness as seen without seeing.
@@ -686,7 +704,7 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     s = GausKolmogorov(seeingfwhm)
     d = FluxPerAngle(h, instrument)
     gaussians = [GaussianSource(h, i) for i in exp_fwhms(tau, n, duration)]
-    conv = [convolve(g,s,d) for g in gaussians]
+    conv = [convolve(g, s, d) for g in gaussians]
 
     # same procedure as for figures 12 and 13
     newscale = gaussians[-1].scale
@@ -707,23 +725,20 @@ def figures1415(tau, h, seeingfwhm, instrument, xlims, xticks, txtpos,
     # the +10000 elements is just padding to allow the shifted profiles to fit
     # fully into the new array.
     timestep = 0
-    tmpobj = np.zeros((c.obj.shape[0]+10000,))
+    tmpobj = np.zeros((c.obj.shape[0] + 10000, ))
     for g, c in zip(gaussians, conv):
-        newg = np.zeros((g.obj.shape[0]+10000, ))
-        newc = np.zeros((c.obj.shape[0]+10000, ))
+        newg = np.zeros((g.obj.shape[0] + 10000, ))
+        newc = np.zeros((c.obj.shape[0] + 10000, ))
 
         shift = timestep*nsteps
-        half  = len(g.obj)/2
-        start = int(shift - half)
-        end   = int(shift + half)
 
         newg[shift:shift+len(g.obj)] += g.obj
         newc[shift:shift+len(c.obj)] += c.obj
 
-        g.obj   = newg
-        g.scale = np.arange(g.scaleleft, g.scaleright+10001*g.step, g.step)
-        c.obj   = newc
-        c.scale = np.arange(c.scaleleft, c.scaleright+10001*c.step, c.step)
+        g.obj = newg
+        g.scale = np.arange(g.scaleleft, g.scaleright + 10001*g.step, g.step)
+        c.obj = newc
+        c.scale = np.arange(c.scaleleft, c.scaleright + 10001*c.step, c.step)
         tmpobj += newc
         timestep += 1
 
@@ -787,8 +802,8 @@ def figure14():
 
     """
     return figures1415(1, 100, SDSSSEEING, SDSS,
-                      xlims=((-4.5, 12.5),), xticks=(range(-20, 20, 2),),
-                      txtpos=((6,0.6), (6,0.6), (6,0.6)))
+                       xlims=((-4.5, 12.5),), xticks=(range(-20, 20, 2), ),
+                       txtpos=((6, 0.6), (6, 0.6), (6, 0.6)))
 
 
 def figure15():
@@ -830,12 +845,12 @@ def figure15():
         Axes containing the plot.
     """
     return figures1415(1, 100, LSSTSEEING, LSST,
-                      xlims=((-10.5,17.5),), xticks=(range(-20, 20, 5),),
-                      txtpos=((9,0.6), (9,0.6), (9,0.6)))
+                       xlims=((-10.5, 17.5),), xticks=(range(-20, 20, 5), ),
+                       txtpos=((9, 0.6), (9, 0.6), (9, 0.6)))
 
 
-def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
-               n=10, duration=2, nsteps=486, loc="upper right"):
+def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks, n=10, duration=2,
+                nsteps=486, loc="upper right"):
     """An example of the observed meteor track at some distance (solid line) as
     it would appear in an image from an telescope obtained as a sum of two
     contributions: from a defocused meteor (dashed line) contributing 80% of
@@ -898,14 +913,14 @@ def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
     fig, ax = plt.subplots(figsize=(12, 10))
     ax = set_ax_props(ax, xlims, xticks, xlabels="arcsec", ylabels="Intensity")[0]
 
-    # same procedure as for figures 12 and 13, first we create the trail sources
-    # by defocusing gaussians and getting them to the same scale; except this
-    # time its safe to skip rescaling and renormalizing gaussians because we're
-    # not plotting them
+    # same as for figures 12 and 13, first we create the trail sources by
+    # defocusing gaussians and getting them to the same scale; except this time
+    # its safe to skip rescaling and renormalizing gaussians because we're not
+    # plotting them
     s = GausKolmogorov(seeingfwhm)
     d = FluxPerAngle(h, instrument)
     gaussians = [GaussianSource(h, i) for i in exp_fwhms(tau, n, duration)]
-    obsgaus = [convolve(g,s,d) for g in gaussians]
+    obsgaus = [convolve(g, s, d) for g in gaussians]
 
     timestep = 0
     trail = np.zeros((obsgaus[-1].obj.shape[0]+10000,))
@@ -914,26 +929,22 @@ def figures1617(tau, h, seeingfwhm, instrument, xlims, xticks,
         c.rescale(trailscale)
         c.obj = c.obj/(c.obj.sum()*c.step)
 
-        # same as for fig 13 and 14 we then move them nsteps sideways to simulate
-        # trail drift, except it's all rolled under 1 for loop
+        # same as for fig 13 and 14 we then move them sideways nsteps to
+        # simulate trail drift, except it's all rolled under 1 for loop
         newc = np.zeros((c.obj.shape[0]+10000, ))
 
         shift = timestep*nsteps
-        half  = len(c.obj)/2
-        start = int(shift - half)
-        end   = int(shift + half)
+        newc[shift:shift + len(c.obj)] += c.obj
 
-        newc[shift:shift+len(c.obj)] += c.obj
-
-        c.obj   = newc
-        c.scale = np.arange(c.scaleleft, c.scaleright+10001*c.step, c.step)
+        c.obj = newc
+        c.scale = np.arange(c.scaleleft, c.scaleright + 10001*c.step, c.step)
         trail += newc
         timestep += 1
 
-    # meteor flies through and leaves its imprint, behind him there is a trail
-    # (a "wake") that exists for some time more and adds to the signal. We assume
-    # the ratios of the signals are 80% meteor and 20% trail. We add them together
-    # by rescaling to same scale and adding.
+    # meteor flies through and leaves its imprint, behind it there is a trail
+    # (a "wake") that exists for some time more and adds to the signal. We
+    # assume the ratios of the signals are 80% meteor and 20% trail. We add
+    # them together by rescaling to same scale and adding.
     p = PointSource(h)
     dp = convolve(p, s, d)
     dp.rescale(c.scale)
@@ -990,8 +1001,8 @@ def figure16():
     | loc : 'upper right'
 
     """
-    return  figures1617(1, 100, SDSSSEEING, SDSS,
-                       xlims=((-5.5, 10.5),), xticks=(range(-20, 20, 2),))
+    return figures1617(1, 100, SDSSSEEING, SDSS,
+                       xlims=((-5.5, 10.5), ), xticks=(range(-20, 20, 2), ))
 
 
 def figure17():
@@ -1026,7 +1037,7 @@ def figure17():
 
     """
     return figures1617(1, 100, LSSTSEEING, LSST, loc="upper center",
-                      xlims=((-11.5,14.5),), xticks=(range(-20, 20, 5),))
+                       xlims=((-11.5, 14.5), ), xticks=(range(-20, 20, 5), ))
 
 
 def plot_param_space(fig, ax, xdat, ydat, data, secydat=None, pcollims=None,
@@ -1110,7 +1121,7 @@ def plot_param_space(fig, ax, xdat, ydat, data, secydat=None, pcollims=None,
     else:
         raise TypeError("Contour levels must be list or tuples.")
     if spcs is None:
-        automaticspcs=True
+        automaticspcs = True
 
     color = kwargs.pop("colors", None)
     fntsize = rcParams["legend.fontsize"]
@@ -1138,14 +1149,14 @@ def plot_param_space(fig, ax, xdat, ydat, data, secydat=None, pcollims=None,
         ax2 = ax.twinx()
         ax2.plot(secydat, ydat, linestyle="--", color="white")
         ax2.set_ylim(min(ydat), max(ydat))
-        # getting ax2.get_xticks and xticklabels gets me nothing sensible! So the
-        # matching between defocused FWHM and height has to be done manually. We
-        # skip the first tick (40km) via [1:: , grab every 5th defocus fwhm as
+        # getting ax2.get_xticks and xticklabels gets me nothing sensible! So
+        # matching between defocused FWHM and height has to be done manually.
+        # Skip the first tick (40km) via [1:: , grab every 5th defocus fwhm as
         # [1::5 . Data has defocus fwhm per seeing but fwhm changes only with
-        # height - we need 1st element of each only. Ergo [1::5,0])
+        # height - and then we need 1st element of each only. Ergo [1::5,0])
         labels = [f"${d:.2f}$" for d in secydat[1::5]]
         # and then because of nonsensical tick values, the first one is -2.0,
-        # I don't know why, but we have to skip it because it's not actually marked
+        # I don't know why, but we have to skip it because it's not drawn
         tlabels = [""]
         tlabels.extend(labels)
         ax2.yaxis.set_ticklabels(tlabels)
@@ -1154,8 +1165,8 @@ def plot_param_space(fig, ax, xdat, ydat, data, secydat=None, pcollims=None,
 
 
 def figures23242526(fig, axes, xdat, ydat, data, secydat=None, contours=None,
-                   sharedcb=True, cbtitle=None, xlims=None, ylims=None,
-                   xlabels="", ylabels="", **kwargs):
+                    sharedcb=True, cbtitle=None, xlims=None, ylims=None,
+                    xlabels="", ylabels="", **kwargs):
     """A genericized version of plots 23 to 26. Generally useful to create
     pseudo-colored parameter space plots for figures with multiple axes with a
     shared or individual colorbar and with or without the 3rd axis. Effectively
@@ -1249,20 +1260,20 @@ def figures23242526(fig, axes, xdat, ydat, data, secydat=None, contours=None,
         # position the colorbar axes on top when shared
         cax = fig.add_axes([0.12, 0.93, 0.76, 0.01])
         cax.text(0.5, 3.5, cbtitle,
-                 horizontalalignment = 'center',
-                 verticalalignment = 'center',
-                 fontsize = rcParams["axes.titlesize"],
-                 transform = cax.transAxes)
+                 horizontalalignment='center',
+                 verticalalignment='center',
+                 fontsize=rcParams["axes.titlesize"],
+                 transform=cax.transAxes)
         colbar = fig.colorbar(pcol, orientation="horizontal", cax=cax)
         colbar.ax.xaxis.set_ticks_position('top')
         colbar.ax.xaxis.set_label_position('top')
-        adjustvals = {"bottom":0.05, "left":0.12, "right":0.88, "top":0.92,
-                      "hspace":0.03}
+        adjustvals = {"bottom": 0.05, "left": 0.12, "right": 0.88, "top": 0.92,
+                      "hspace": 0.03}
 
     # now plot the parameter space data
     twinx = []
-    contours = [None,]*len(axes) if contours is None else contours
-    secydat = [None,]*len(axes) if secydat is None else secydat
+    contours = [None, ] * len(axes) if contours is None else contours
+    secydat = [None, ] * len(axes) if secydat is None else secydat
     for ax, xax, yax, d, syd, cnt in zip(axes, xdat, ydat, data, secydat, contours):
         pcol1, ax2 = plot_param_space(fig, ax, xax, yax, d, secydat=syd,
                                       contours=cnt, colors="white", **kwargs)
@@ -1276,8 +1287,8 @@ def figures23242526(fig, axes, xdat, ydat, data, secydat=None, contours=None,
             colbar.set_label(cbtitle, fontsize=rcParams["axes.titlesize"])
             colbar.ax.xaxis.set_ticks_position('top')
             colbar.ax.xaxis.set_label_position('top')
-            adjustvals = {"bottom":0.05, "left":0.1, "right":0.88, "top":0.96,
-                          "hspace":0.25}
+            adjustvals = {"bottom": 0.05, "left": 0.1, "right": 0.88, "top": 0.96,
+                          "hspace": 0.25}
 
     if xlims is None:
         xmax = [np.max(x) for x in xdat]
@@ -1336,24 +1347,23 @@ def figure23():
     # match those used in the paper plots, output will be cached if produced.x
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    skwargs = ({"sources" : PointSource},
-               {"sources" : DiskSource, "radius" : (0.9, 3)})
+    skwargs = ({"sources": PointSource},
+               {"sources": DiskSource, "radius": (0.9, 3)})
     data = get_or_create_data(("sdss_point_data.npy", "sdss_disk_data.npy"),
                               samplerKwargs=skwargs, h=heights, seeingFWHM=seeings,
                               instrument=SDSS)
 
     plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'ofwhm', axes=False),
-                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':0.9}, axes=False),
-                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':3}, axes=False)]
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius': 0.9}, axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius': 3}, axes=False)]
     # gridding on defocus gets us rows of same values, we only need a column
-    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
-               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':0.9}, axes=False)[:,0],
-               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':3}, axes=False)[:,0]]
-
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:, 0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius': 0.9}, axes=False)[:, 0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius': 3}, axes=False)[:, 0]]
 
     # set the contours
-    cnt = {"levels" : [[2,3,4], [5,8]], "spacings" : [5, 3]}
-    cnt2 = {"levels" : [[2,3,4,5], [8,10]], "spacings" : [5, -5]}
+    cnt = {"levels": [[2, 3, 4], [5, 8]], "spacings": [5, 3]}
+    cnt2 = {"levels": [[2, 3, 4, 5], [8, 10]], "spacings": [5, -5]}
     contours = [cnt, cnt, cnt2]
 
     fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
@@ -1401,23 +1411,23 @@ def figure24():
     # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    skwargs = ({"sources" : PointSource},
-               {"sources" : DiskSource, "radius" : (4, 8)})
+    skwargs = ({"sources": PointSource},
+               {"sources": DiskSource, "radius": (4, 8)})
     data = get_or_create_data(("lsst_point_data.npy", "lsst_disk_data.npy"),
                               samplerKwargs=skwargs, h=heights, seeingFWHM=seeings,
                               instrument=LSST)
 
     plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'ofwhm', axes=False),
-                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':4}, axes=False),
-                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius':8}, axes=False)]
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius': 4}, axes=False),
+                meshgrid(data[1], 'sfwhm', 'h', 'ofwhm', fold={'radius': 8}, axes=False)]
     # gridding on defocus gets us rows of same values, we only need a column
-    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
-               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':4}, axes=False)[:,0],
-               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius':8}, axes=False)[:,0]]
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:, 0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius': 4}, axes=False)[:, 0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', fold={'radius': 8}, axes=False)[:, 0]]
 
     # set the contours, more complicated on this plot due to large gradient
-    cnt1 = {"levels" : [[4,5,6,8], [12, 16, 20, 25, 30]], "spacings" : [5, 5]}
-    cnt2 = {"levels" : [[5,6,8], [12, 16, 20, 25, 30]], "spacings" : [-5, -10]}
+    cnt1 = {"levels": [[4, 5, 6, 8], [12, 16, 20, 25, 30]], "spacings": [5, 5]}
+    cnt2 = {"levels": [[5, 6, 8], [12, 16, 20, 25, 30]], "spacings": [-5, -10]}
     contours = [cnt1, cnt2, cnt2]
 
     fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
@@ -1463,16 +1473,14 @@ def figure25():
     heights = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    skwargs = ({"sources" : DiskSource, "radius": radii1, "instrument": SDSS},
-               {"sources" : DiskSource, "radius": radii2, "instrument": LSST})
+    skwargs = ({"sources": DiskSource, "radius": radii1, "instrument": SDSS},
+               {"sources": DiskSource, "radius": radii2, "instrument": LSST})
     datafile = ("sdss_radii_data.npy", "lsst_radii_data.npy")
     data = get_or_create_data(datafile, heights=heights, radii=radii1, sources=skwargs)
 
     # set the contours
-    cnt1 = {"levels" : [[2, 3, 4, 5, 6, 7, 8, 10]],
-            "spacings" : [5]}
-    cnt2 = {"levels" : [[6, 7, 8, 10, 12], [ 14, 18, 24]],
-            "spacings" : [5, 1]}
+    cnt1 = {"levels": [[2, 3, 4, 5, 6, 7, 8, 10]], "spacings": [5]}
+    cnt2 = {"levels": [[6, 7, 8, 10, 12], [14, 18, 24]], "spacings": [5, 1]}
     contours = [cnt1, cnt2]
 
     # this plot is different than previous because heights and seeings are not
@@ -1486,8 +1494,8 @@ def figure25():
     fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, xdat, ydat, plotdata,
                                                   contours=contours, sharedcb=False,
                                                   cbtitle="Observed FWHM (arcsec)",
-                                                  xlabels=("Radius (m)",)*2,
-                                                  ylabels=("Distance (km)",)*2)
+                                                  xlabels=("Radius (m)",) * 2,
+                                                  ylabels=("Distance (km)",) * 2)
     return fig, axes, twinaxes, cbaxes
 
 
@@ -1520,33 +1528,31 @@ def figure26():
     # match those used in the paper plots, output will be cached if produced.
     heights = np.arange(40, 450, 10)
     seeings = np.arange(0.01, 5, 0.103)
-    sources = ({"source" : PointSource, "instrument" : SDSS},
-               {"source" : PointSource, "instrument" : LSST})
+    sources = ({"source": PointSource, "instrument": SDSS},
+               {"source": PointSource, "instrument": LSST})
     datafiles = ("sdss_point_data.npy", "lsst_point_data.npy")
     data = get_or_create_data(datafiles, heights=heights, seeings=seeings,
                               sources=sources)
 
     # set the contours
-    cnt1 = {"levels" : [[5,15,25,35]],
-            "spacings" : [5]}
-    cnt2 = {"levels" : [[5,15,25,35], [40,42,44,49]],
-            "spacings" : [5, 1]}
+    cnt1 = {"levels": [[5, 15, 25, 35]], "spacings": [5]}
+    cnt2 = {"levels": [[5, 15, 25, 35], [40, 42, 44, 49]], "spacings": [5, 1]}
     contours = [cnt1, cnt2]
 
     # heights and seeings can be reconstructed from the data, plus knows in
     # advance anyhow, but the observed FWHM and defocus FWHM need to be read.
     plotdata = [meshgrid(data[0], 'sfwhm', 'h', 'depth', axes=False),
                 meshgrid(data[1], 'sfwhm', 'h', 'depth', axes=False)]
-    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0],
-               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', axes=False)[:,0]]
+    secydat = [meshgrid(data[0], 'sfwhm', 'h', 'dfwhm', axes=False)[:, 0],
+               meshgrid(data[1], 'sfwhm', 'h', 'dfwhm', axes=False)[:, 0]]
 
     fig, axes, twinaxes, cbaxes = figures23242526(fig, axes, seeings, heights,
                                                   plotdata, secydat=secydat,
                                                   contours=contours,
                                                   sharedcb=False,
-                                                  cbtitle="Intensity loss (\% of max value)",
-                                                  xlabels=("Seeing FWHM (arcsec)",)*2,
-                                                  ylabels=("Distance (km)",)*2)
+                                                  cbtitle="Intensity loss (% of max value)",
+                                                  xlabels=("Seeing FWHM (arcsec)",) * 2,
+                                                  ylabels=("Distance (km)",) * 2)
 
     # How I'd love mpl makes it easy to contextualize what is an axis' purpose,
     # untill then, manually setting axes is the only way.
@@ -1583,16 +1589,14 @@ def figure27():
     heights = np.arange(55, 305, 5)
     radii1 = np.arange(0.01, 4.1, 0.05)
     radii2 = np.arange(0.01, 8.2, 0.103)
-    skwargs = ({"sources" : DiskSource, "radius": radii1, "instrument": SDSS},
-               {"sources" : DiskSource, "radius": radii2, "instrument": LSST})
+    skwargs = ({"sources": DiskSource, "radius": radii1, "instrument": SDSS},
+               {"sources": DiskSource, "radius": radii2, "instrument": LSST})
     datafile = ("sdss_radii_data.npy", "lsst_radii_data.npy")
     data = get_or_create_data(datafile, heights=heights, radii=radii1, sources=skwargs)
 
     # set the contours
-    cnt1 = {"levels" : [[1, 5, 10, 15, 18, 20, 23]],
-            "spacings" : [5]}
-    cnt2 = {"levels" : [[1], range(5, 50, 5)],
-            "spacings" : [5, 1]}
+    cnt1 = {"levels": [[1, 5, 10, 15, 18, 20, 23]], "spacings": [5]}
+    cnt2 = {"levels": [[1], range(5, 50, 5)], "spacings": [5, 1]}
     contours = [cnt1, cnt2]
 
     # this plot is different than previous because heights and seeings are not
@@ -1607,10 +1611,10 @@ def figure27():
                                                   contours=contours,
                                                   xlims=[(0.02, 1.8), (0.01, 8)],
                                                   ylims=[(60, 181), (55, 300)],
-                                                  xlabels=("Radius (m)",)*2,
-                                                  ylabels=("Distance (km)",)*2,
+                                                  xlabels=("Radius (m)",) * 2,
+                                                  ylabels=("Distance (km)",) * 2,
                                                   sharedcb=False,
-                                                  cbtitle="Intensity loss (\% of max value)")
+                                                  cbtitle="Intensity loss (% of max value)")
 
     for ax, twax in zip(axes, twinaxes):
         ax.set_xlabel("Radius (m)")
