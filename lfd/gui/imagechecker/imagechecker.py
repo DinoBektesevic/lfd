@@ -1,15 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+from tkinter import Tk, filedialog
+
 from .leftframe import LeftFrame
 from .rightframe import RightFrame
 from lfd.gui import utils
-from tkinter import *
-from tkinter import ttk
 
-from tkinter import Label
-from tkinter import filedialog
+from lfd.gui.imagechecker.databrowser import EventBrowser
 
-from lfd.gui.imagechecker.databrowser import ImageBrowser, EventBrowser
 
 class ImageChecker(Tk):
     """GUI app that allows for visual inspection of Events. To run the app
@@ -69,7 +68,7 @@ class ImageChecker(Tk):
         self.resize_x = 2.56
         self.resize_y = 2.5628227194492257
 
-        self.data = EventBrowser() #ImageBrowser()
+        self.data = EventBrowser()
 
         self.leftFrame = LeftFrame(self)
         self.rightFrame = RightFrame(self)
@@ -106,7 +105,8 @@ class ImageChecker(Tk):
             self.rightFrame.failedEventLoadScreen()
 
     def initImages(self):
-        """Prompt user for the directory containing all the images in the DB."""
+        """Prompt user for the directory containing all the images in the DB.
+        """
         path = filedialog.askopenfilename(parent=self,
                                           title="Please select image database...",
                                           initialdir=self.imgpath)

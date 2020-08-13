@@ -1,12 +1,16 @@
 import os
 
-from tkinter import *
-from tkinter.ttk import *
+from tkinter import (Canvas,
+                     RAISED,
+                     LEFT,
+                     BOTH,
+                     NW)
+from tkinter import ttk
 
 from PIL import Image, ImageTk
 
 
-class LeftFrame(Frame):
+class LeftFrame(ttk.Frame):
     """Represents the left frame of the GUI. Contains the Canvas within which
     the image is displayed and additional functionality that allows the users
     to chage the line parameters, and persist those changes to the DB. The
@@ -23,7 +27,7 @@ class LeftFrame(Frame):
       the x2, y2 coordinates of p2 Point of the Event.
     """
     def __init__(self, parent):
-        Frame.__init__(self, relief=RAISED, borderwidth=1)
+        ttk.Frame.__init__(self, relief=RAISED, borderwidth=1)
         self.pack(side=LEFT, fill=BOTH, expand=1)
         self.root = parent
         self.data = parent.data
@@ -64,21 +68,23 @@ class LeftFrame(Frame):
         """Clears the canvas and displays the Error image."""
         self.canvas.delete("all")
         tmppath = os.path.split(__file__)[0]
-        tmpimg = Image.open(os.path.join(tmppath, "noimage.png"))
+        tmpimg = Image.open(os.path.join(tmppath, "lfd_noimage.png"))
         # a reference to the image has to be kept, otherwise img is lost
         self.img = ImageTk.PhotoImage(tmpimg)
         self.canvas.create_image(0, 0, image=self.img, anchor=NW)
 
     def lmb(self, event):
-        """Callback, records and updates the x1, y1 coordinates of the Event."""
-        x1,y1,x2,y2 =  self.canvas.coords(self.drawnline)
+        """Callback, records and updates the x1, y1 coordinates of the Event.
+        """
+        x1, y1, x2, y2 = self.canvas.coords(self.drawnline)
         newcoords = [event.x, event.y, x2, y2]
         self.canvas.coords(self.drawnline, *newcoords)
         self.updateLine(event.x, event.y, "1")
 
     def rmb(self, event):
-        """Callback, records and updates the x2, y2 coordinates of the Event."""
-        x1,y1,x2,y2 =  self.canvas.coords(self.drawnline)
+        """Callback, records and updates the x2, y2 coordinates of the Event
+        ."""
+        x1, y1, x2, y2 = self.canvas.coords(self.drawnline)
         newcoords = [x1, y1, event.x, event.y]
         self.canvas.coords(self.drawnline, *newcoords)
         self.updateLine(event.x, event.y, "2")
@@ -100,20 +106,20 @@ class LeftFrame(Frame):
           used to determine whether the coordinates belong to point 1 or point
           2 of the Event. Either '1' or '2'.
         """
-        #y2 = self.data.event.y2
+        # y2 = self.data.event.y2
         x = sx*self.root.resize_x
         y = sy*self.root.resize_y
         if which == "1":
-            #y = (y1+y2)/2.0
+            # y = (y1+y2)/2.0
             self.data.event.x1 = x
             self.data.event.y1 = y
         elif which == "2":
-         #   y = y1
+            #   y = y1
             self.data.event.x2 = x
             self.data.event.y2 = y
-        #use these to check if db is actually updated:
-        #self.canvas.delete(self.drawnline)
-        #self.drawline(self.data.getImageData())
+        # use these to check if db is actually updated:
+        # self.canvas.delete(self.drawnline)
+        # self.drawline(self.data.getImageData())
 
     def drawline(self, delete=False):
         """Draws the line defined by the current Event's Points p1 and p2. If
@@ -125,13 +131,13 @@ class LeftFrame(Frame):
         else:
             x1, y1 = self.data.event.x1, self.data.event.y1
             x2, y2 = self.data.event.x2, self.data.event.y2
-            #y1 = 2*y0-y2
+            # y1 = 2*y0-y2
 
             sx1, sy1 = x1/self.root.resize_x, y1/self.root.resize_y
             sx2, sy2 = x2/self.root.resize_x, y2/self.root.resize_y
 
-            #m = float(sy2-sy1)/float(sx2-sx1)
-            #b = sy1 - m*sx1
+            # m = float(sy2-sy1)/float(sx2-sx1)
+            # b = sy1 - m*sx1
 
         self.drawnline = self.canvas.create_line(sx1, sy1, sx2, sy2,
                                                  fill="red", width=1)

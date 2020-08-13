@@ -1,10 +1,13 @@
-from tkinter import *
-from tkinter.ttk import *
+from tkinter import (RIGHT,
+                     BOTH,
+                     RAISED)
+from tkinter import ttk
 
 from lfd.gui.imagechecker.topright import TopRight
 from lfd.gui.imagechecker.botright import BottomRight
 
-class RightFrame(Frame):
+
+class RightFrame(ttk.Frame):
     """Represents the right part of the frame containing all the action buttons
     and displaying the data of he Event from the database. The right frame is
     split into two sub-frames one used to display the Event in question and the
@@ -13,7 +16,7 @@ class RightFrame(Frame):
 
     """
     def __init__(self, parent):
-        Frame.__init__(self, relief=RAISED, borderwidth=1)
+        ttk.Frame.__init__(self, relief=RAISED, borderwidth=1)
         self.pack(side=RIGHT, fill=BOTH, expand=1)
         self.root = parent
         self.data = parent.data
@@ -43,7 +46,10 @@ class RightFrame(Frame):
         for widget in self.topRight.winfo_children():
             widget.destroy()
 
-        Label(self.topRight, background="red2", font=("Helvetica", 20),
-              text="NO IMAGE DATA\nFOUND").grid(row=0, columnspan=2, padx=50,
-                                                pady=(50,0))
+        style = ttk.Style()
+        style.configure("NoImageFound.TLabel", background="red2",
+                        font=("Helvetica", 20))
 
+        ttk.Label(self.topRight, style="NoImageFound.TLabel",
+                  text="NO IMAGE DATA\nFOUND").grid(
+                      row=0, columnspan=2, padx=50, pady=(50, 0))

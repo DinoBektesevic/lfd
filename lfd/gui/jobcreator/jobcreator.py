@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 import os
 
-from  lfd.gui.jobcreator.leftframe import LeftFrame
-from  lfd.gui.jobcreator.rightframe import RightFrame
-from lfd.gui.utils import utils
+from tkinter import (Tk,
+                     filedialog,
+                     messagebox,
+                     Toplevel,
+                     StringVar)
+from tkinter import ttk
 
-from tkinter import *
-from tkinter.ttk import *
-from tkinter import filedialog
-from tkinter import messagebox
+from lfd.gui.jobcreator.leftframe import LeftFrame
+from lfd.gui.jobcreator.rightframe import RightFrame
+from lfd.gui.utils import utils
 
 import lfd.createjobs as cj
 
@@ -29,14 +31,14 @@ class SetupPopUp:
                "Please provide the PHOTO_REDUX path. See"
                "help(createjobs.setup.) for details.")
 
-        self.explainLabel = Label(self.top, text=txt)
+        self.explainLabel = ttk.Label(self.top, text=txt)
         self.explainLabel.pack()
 
         self.photoreduxSV = StringVar()
-        self.pathEntry = Entry(self.top)
+        self.pathEntry = ttk.Entry(self.top)
         self.pathEntry.pack(padx=5)
 
-        self.okButton = Button(self.top, text="OK", command=self.ok)
+        self.okButton = ttk.Button(self.top, text="OK", command=self.ok)
         self.okButton.pack(pady=5)
         self.top.grab_set()
 
@@ -78,7 +80,7 @@ class JobCreator(Tk):
         try:
             self.job = cj.Jobs(1)
         except FileExistsError:
-            messagebox.showerror("Directory exists!", "To avoid overriding " +
+            messagebox.showerror("Directory exists!", "To avoid overriding "
                                  "existing jobs select a different directory.")
             foldername = filedialog.askdirectory()
             self.job = cj.Jobs(1, save_path=foldername)
@@ -89,7 +91,6 @@ class JobCreator(Tk):
         self.title("Job Creator")
 
         self.check_setup()
-
 
     def check_setup(self):
         """If BOSS or PHOTO_REDUX environemntal paths to the SDSS data were not
@@ -104,7 +105,7 @@ class JobCreator(Tk):
             cj.setup()
 
         if not ("BOSS" in os.environ) or not ("PHOTO_REDUX" in os.environ):
-            tplvl = SetupPopUp(self)
+            SetupPopUp(self)
 
     def create(self):
         """Changes the state of the Job instance of the application to write
@@ -116,9 +117,9 @@ class JobCreator(Tk):
         tmplt = self.rightFrame.getTemplate()
 
         job = cj.Jobs(conf.n, runs=conf.runs, queue=conf.q, ppn=conf.ppn,
-                       command=conf.cmd, wallclock=conf.wallt, cputime=conf.cput,
-                       template=tmplt, save_path=conf.savepath,
-                       res_path=conf.respath)
+                      command=conf.cmd, wallclock=conf.wallt, cputime=conf.cput,
+                      template=tmplt, save_path=conf.savepath,
+                      res_path=conf.respath)
 
         job.create()
 

@@ -1,18 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from tkinter import *
-from tkinter.ttk import *
-from tkinter import messagebox
-
-from  lfd.gui.jobcreator.lefttopframe import TopFrame
-from  lfd.gui.jobcreator.leftmidframe import MidFrame
-from  lfd.gui.jobcreator.leftbotframe import BotFrame
-
-import lfd.createjobs as cj
-
 import collections
 
-class LeftFrame(Frame):
+from tkinter import (RAISED,
+                     LEFT,
+                     BOTH)
+from tkinter import ttk
+
+from lfd.gui.jobcreator.lefttopframe import TopFrame
+from lfd.gui.jobcreator.leftmidframe import MidFrame
+from lfd.gui.jobcreator.leftbotframe import BotFrame
+
+
+class LeftFrame(ttk.Frame):
     """LeftFrame of the jobcreator gui. Contains 3 subframes: top, mid and bot.
     In order they control the folowing settings for job creation:
 
@@ -28,7 +28,7 @@ class LeftFrame(Frame):
 
     """
     def __init__(self, parent):
-        Frame.__init__(self, parent, relief=RAISED, borderwidth=1)
+        ttk.Frame.__init__(self, parent, relief=RAISED, borderwidth=1)
         self.pack(side=LEFT, fill=BOTH, expand=1)
 
         # carry the root frame and the root job so that configurations can be
@@ -40,9 +40,8 @@ class LeftFrame(Frame):
         self.midFrame = MidFrame(self)
         self.botFrame = BotFrame(self)
 
-        a = Button(self, text="Create Jobs", command=self.root.create)
+        a = ttk.Button(self, text="Create Jobs", command=self.root.create)
         a.grid(row=10, column=0, columnspan=2)
-
 
     def getConf(self):
         """Reads the complete configuration selected by the user."""
@@ -52,15 +51,15 @@ class LeftFrame(Frame):
         # template path will never really be used as the template will be read
         # dirrectly from the rightFrame and sent in as a string.
         conf = Conf(
-            n = self.topFrame.getn(),
-            q =  self.topFrame.queue.get(),
-            ppn =  self.topFrame.ppn.get(),
-            cmd = self.topFrame.getcommand(),
-            cput =  self.topFrame.cputime.get(),
-            wallt = self.topFrame.wallclock.get(),
-            respath = self.botFrame.respath.get(),
-            savepath = self.botFrame.jobsavepath.get(),
-            tmpltpath = self.botFrame.tmpltpath.get(),
-            runs = self.midFrame.runs
+            n=self.topFrame.getn(),
+            q=self.topFrame.queue.get(),
+            ppn=self.topFrame.ppn.get(),
+            cmd=self.topFrame.getcommand(),
+            cput=self.topFrame.cputime.get(),
+            wallt=self.topFrame.wallclock.get(),
+            respath=self.botFrame.respath.get(),
+            savepath=self.botFrame.jobsavepath.get(),
+            tmpltpath=self.botFrame.tmpltpath.get(),
+            runs=self.midFrame.runs
         )
         return conf
