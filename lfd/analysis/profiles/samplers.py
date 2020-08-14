@@ -1,21 +1,15 @@
-import warnings
 import inspect
 import itertools
-import os.path
-import glob
 
 import numpy as np
 
-from lfd.analysis.profiles.convolutionobj import ConvolutionObject
 from lfd.analysis.profiles import consts
-from lfd.analysis.profiles.objectprofiles import *
-from lfd.analysis.profiles.seeing import *
-from lfd.analysis.profiles.defocusing import *
-from lfd.analysis.profiles.convolution import *
-from lfd.analysis.profiles import *
+from lfd.analysis.profiles.seeing import GausKolmogorov
+from lfd.analysis.profiles.defocusing import FluxPerAngle
+from lfd.analysis.profiles.convolution import convolve
 
 
-__all__ = ["generic_sampler",]
+__all__ = ["generic_sampler", ]
 
 
 def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
@@ -76,7 +70,7 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
     Examples
     --------
     >>> convProfiles, convMeas = generic_sampler(sources=profiles.PointSource,
-                                                 sfwhm=s, h=h, returnType='grid')
+                                               sfwhm=s, h=h, returnType='grid')
     """
     ########
     #       SANITIZE INPUT
@@ -96,9 +90,9 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
                   "keyword or set the instrument to LSST or SDSS.")
         if seeingFWHM is None:
             if instrument == consts.SDSS:
-                seeingFWHM = [consts.SDSSSEEING,]
+                seeingFWHM = [consts.SDSSSEEING, ]
             elif instrument == consts.LSST:
-                seeingFWHM = [consts.LSSTSEEING,]
+                seeingFWHM = [consts.LSSTSEEING, ]
             else:
                 raise ValueError(errmsg)
         # make sure seeingFWHM is iterable, otherwise combinations will fail
@@ -114,10 +108,10 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
     ########
     if testRun:
         stop = 0
-        tmplstr = ('%-10s ' * (len(kwargs)+1)).rstrip()
+        tmplstr = ('%-10s ' * (len(kwargs) + 1)).rstrip()
         print(tmplstr % (*kwargs.keys(), "source"))
         for v in combinations:
-            print(tmplstr % v )
+            print(tmplstr % v)
             stop += 1
             if stop > ntest:
                 break
@@ -130,11 +124,11 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
     keys = kwargs.keys()
     for x in combinations:
         convargs, seeingfwhm, source = [], x[-2], x[-1]
-        srckwargs = {k:v for k,v in zip(keys, x[:-2])}
+        srckwargs = {k: v for k, v in zip(keys, x[:-2])}
 
         # convolve can't accept a None, so create args list of profiles
         # name the individual profiles so we can calc FWHMs on them if needed
-        O = source(**srckwargs, instrument=instrument)
+        O = source(**srckwargs, instrument=instrument)  # noqa: E741
         convargs.append(O)
         if defocusProfile is not None:
             D = defocusProfile(**srckwargs, instrument=instrument)
@@ -151,7 +145,7 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
         if 'grid' in returnType:
             if seeingProfile:
                 sfwhm.append(seeingfwhm)
-                #sfwhm.append(S.calc_fwhm())
+                # sfwhm.append(S.calc_fwhm())
 
             # if no seeing profile, the above convolutions FWHM is dfwhm, else
             # a new convolution is needed since the above will be ofwhm
@@ -198,12 +192,11 @@ def generic_sampler(sources, instrument=None, seeingProfile=GausKolmogorov,
 
         if seeingProfile:
             dt.append(("seeing", "<U14"))
-            addVals.append([seeingProfile.__name__,]*len(ofwhm))
+            addVals.append([seeingProfile.__name__, ] * len(ofwhm))
 
         if defocusProfile:
             dt.append(("defocus", "<U12"))
-            addVals.append([defocusProfile.__name__,]*len(ofwhm))
-
+            addVals.append([defocusProfile.__name__, ] * len(ofwhm))
 
         # Third, add a column for existing measurements
         keys = ('dfwhm', 'ofwhm', 'depth')

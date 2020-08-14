@@ -64,16 +64,17 @@ the linear feature in the Event class, but it has some merrits as a feature
 on its own.
 
 """
-
 import warnings
-warnings.simplefilter('always', SyntaxWarning)
+# warnings.simplefilter('always', SyntaxWarning)
 
 from sqlalchemy.ext.mutable import MutableComposite
 
 from lfd.results.coord_conversion import (convert_ccd2frame, convert_frame2ccd,
                                           CoordinateConversionError)
 
+
 __all__ = ["Point"]
+
 
 class Point(MutableComposite):
     """Provides a more comfortable interface for handling coordinates and coord
@@ -81,7 +82,6 @@ class Point(MutableComposite):
 
     Parameters
     ----------
-
     x : float
       'ccd' or 'frame' coordinate, depending on coordsys
     y : float
@@ -97,7 +97,6 @@ class Point(MutableComposite):
 
     Example
     -------
-
     >>> p = Point(10, 10, coordsys="ccd")
     >>> p = Point(10, 10, camcol=2, filter='r')
 
@@ -117,26 +116,17 @@ class Point(MutableComposite):
     >>> p.move(x=10, y=10)
     >>> p.move(cx=100, y=10)
     >>> p.y = 100
-
     """
-
     def __init__(self, x=None, y=None, cx=None, cy=None, camcol=None,
                  filter=None, coordsys="frame"):
-        """p = Point(x, y, cx, cy, camcol, filter, coordsys)
-
-        x, y     - point coordinates in 'frame' coord sys
-        cx, cy   - point coordinates in 'ccd' coord sys
-        coordsys - coordsys to be used
-        camcol   - camera column, if 'frame' coord sys
-        filter   - filter row, if 'filter' coord sys
+        """Returns a Point object given its SDSS frame identifier and position
+        either in the focal plane or on an individual CCD
 
         >>>  p = Point(10, 10) # assumes 'ccd'
         >>>  p = Point(3790, 5415, coordsys='ccd')
         >>>  p = Point(-1, -1, camcol=2, filter='u') # assumes 'filter'
         >>>  p = Point(-1, -1, camcol=2, filter='u', coordsys='frame')
-
         """
-
         self.coordsys = coordsys.lower()
 
         # assume we are inside CCD, will be set to False in conversions if we
@@ -147,34 +137,52 @@ class Point(MutableComposite):
             cx, cy = x, y
             x, y = None, None
 
-        # For the last elif - it's impossible to use the all([x, y, camcol, filter])
-        # because x and y might have the value of 0 which is falsy. 
         if all([x, y, camcol, filter, cx, cy]):
             self._initAll(x, y, cx, cy, camcol, filter)
         elif self.coordsys == "ccd" and all((cx, cy)):
             self._initCCD(cx, cy)
-        elif self.coordsys == "frame" and camcol is not None and \
-             filter is not None and x is not None and y is not None:
+        elif all(self.coordsys == "frame",
+                 camcol is not None,
+                 filter is not None,
+                 x is not None,
+                 y is not None):
             self._initFrame(x, y, camcol, filter)
         else:
-            errmsg = "Expected (x,y, coordsys='ccd') or "
-            errmsg += "(x, y, camcol, filter). Got ({0}, {1}, {2}, {3}, {4}) "
-            errmsg += "instead."
-            raise TypeError(errmsg.format(x, y, camcol, filter, coordsys))
+            raise TypeError("Expected (x,y, coordsys='ccd') or (x, y, camcol, filter). "
+                            f"Got ({x}, {y}, {camcol}, {filter}, {coordsys})")
 
     def _initAll(self, x, y, cx, cy, camcol, filter, check=True):
+        """Return a Point object when coordinates are given in both coordinate
+        systems. Performs consistency checks.
+
+        Parameters
+        ----------
+        x : `float`
+            'frame'  coordinates
+        y : `float`
+            'frame' coordinates
+        cx : `float`
+            'ccd' coordinate
+        cy : `float`
+            'ccd' coordinate
+        camcol : `int`
+            Camera column of reference frame
+        filter : `str`
+            Filter row of the reference frame
+        check : `bool`, optional
+            When True performs consistency checks that ensure given coordiantes
+            match between the two coordinate systems.
+        """
         # check for consistency when defaulting to immediate _initAll
         # do provided CCD coordinates actually match the given 'frame' coords.
         if check:
             tmpcx, tmpcy = convert_frame2ccd(x, y, camcol, filter)
             if tmpcx != cx or tmpcy != cy:
-                msg = ("Supplied coordinates between two coordinate systems are "
-                       "inconsistent. Received 'frame' (x={0}, y={1}, "
-                       "camcol={2}, filter={3}) and 'ccd' (cx={4}, cy={5}) "
-                       "coordinates, but calculated (cx={6}, cy={7}) 'ccd' "
-                       "coordinates. Attempt a rollback.")
-                raise ValueError(msg.format(x, y, camcol, filter, cx, cy,
-                                            tmpcx, tmpcy))
+                raise ValueError("Inconsistent coordinates! \nReceived: 'frame' "
+                                 f"(x={x}, y={y}, camcol={camcol}, filter={filter}) "
+                                 f"and 'ccd' (cx={cx}, cy={cy}) coordinates \n"
+                                 f"Calculated (cx={tmpcx}, cy={tmpcy}) 'ccd' coordinates.\n"
+                                 "To fix: attempt a rollback, ensure consistency, try again.")
         self._x = x
         self._y = y
         self._cx = cx
@@ -186,27 +194,49 @@ class Point(MutableComposite):
         self.changed()
 
     def _initFrame(self, x, y, camcol, filter):
+        """Returns a Point object given its CCD coordinates and the CCD ID.
+
+        Parameters
+        ----------
+        x : `float`
+            'frame'  coordinates
+        y : `float`
+            'frame' coordinates
+        camcol : `int`
+            Camera column of reference frame
+        filter : `str`
+            Filter row of the reference frame
+        """
         # consistency check is not needed because conversion was done
         cx, cy = convert_frame2ccd(x, y, camcol, filter)
         self._initAll(x, y, cx, cy, camcol, filter, check=False)
 
     def _initCCD(self, cx, cy):
-        # if we can't convert to frame system, inCcd == False then
-        # we check if we are in frame-reference mode
+        """Returns a Point object given its CCD coordinates.
+
+        Parameters
+        ----------
+        cx : `float`
+            'ccd' coordinate
+        cy : `float`
+            'ccd' coordinate
+        """
+        # if can't convert to frame system, inCcd == False, then check if in
+        # frame-reference mode
         try:
             x, y, camcol, filter = convert_ccd2frame(cx, cy)
             self.inCcd = True
         except CoordinateConversionError:
             self.inCcd = False
             try:
-                # if however there is no prior _x or _camcol we are not in frame
-                # reference mode 
+                # if there is no prior _x or _camcol we are not in frame
+                # reference mode
                 x = self._x - (self._cx - cx)
                 y = self._y - (self._cy - cy)
                 camcol = self._camcol
                 filter = self._filter
             except AttributeError:
-                # and we default to a 'ccd' absolute position mode 
+                # and we default to a 'ccd' absolute position mode
                 x, y, camcol, filter = None, None, None, None
         # checks are again not needed as we are guaranteed consistency through
         # conversions
@@ -226,7 +256,7 @@ class Point(MutableComposite):
         return self._x, self._y, self._cx, self._cy
 
     def _check_sensibility(self, attr):
-        """For a given attribute attr checks for a series of conditions that
+        """For a given attribute attr, checks a series of conditions that
         indicate an illogical operation or in some cases operations that could
         leave an Event in an inconsistent state. Is not always correct, but
         that's why it's a warning not Error.
@@ -240,25 +270,21 @@ class Point(MutableComposite):
         |               | the frame coordinate system coordinates are not     |
         |               | defined.                                            |
         +---------------+-----------------------------------------------------+
-
         """
-        msg = "Attribute {0} should only be accessed when coordsys={1}"
         if attr in (["camcol", "filter"]) and self.coordsys == "ccd":
-            warnings.warn(msg.format(attr, "frame"), SyntaxWarning)
+            warnings.warn(f"Attribute {attr} should only be accessed when coordsys=frame",
+                          SyntaxWarning)
         if attr == "frame" and not self.inCcd:
-            msg = ("Used coordinates are not within the boundary of any CCD: "
-                   "(cx={0}, cy={1})")
-            warnings.warn(msg.format(self._cx, self._cy))
+            warnings.warn(f"Used coordinates ({self._cx}, {self._cy}) are not "
+                          "within any CCD boundaries.")
 
     def useCoordSys(self, coordsys):
         """Use a particular coordinate system, either 'frame' or 'ccd'.
 
         Parameters
         ----------
-
         coordsys : str
           coordsys designation, 'frame' or 'ccd'
-
         """
         self._check_sensibility(coordsys)
         if coordsys.lower() in ["frame", "ccd"]:
@@ -268,7 +294,6 @@ class Point(MutableComposite):
         """Switch to the other coordinate system ('frame'-> 'ccd' and
         vice-versa). Not particularily useful as both are usually accessible,
         but practical to state which coordinate system we are currently in.
-
         """
         if self.coordsys == "frame":
             self.useCoordSys("ccd")
@@ -316,13 +341,16 @@ class Point(MutableComposite):
 
         **kwargs : dict
           x, y or cx, cy and coordsys  and their values
-
         """
         if not kwargs:
-            try: x, y, coordsys = args
-            except: pass
-            try: (x, y), coordsys = args
-            except: pass
+            try:
+                x, y, coordsys = args
+            except ValueError:
+                pass
+            try:
+                (x, y), coordsys = args
+            except ValueError:
+                pass
             if coordsys == 'ccd':
                 cx, cy = x, y
         else:
@@ -333,17 +361,16 @@ class Point(MutableComposite):
             coordsys = kwargs.pop("coordsys", self.coordsys)
 
         if coordsys == "frame":
-            warn= True if (x==self.x) and (y==self.y) else False
+            warn = True if (x == self.x) and (y == self.y) else False
             self._initFrame(x, y, self._camcol, self._filter)
         elif coordsys == "ccd":
-            warn= True if (cx==self.cx) and (cy==self.cy) else False
+            warn = True if (cx == self.cx) and (cy == self.cy) else False
             self._initCCD(cx, cy)
         else:
             warn = True
 
         if warn:
-            warnings.warn("Unmantched coordinates and coordsys. Point not "
-                          "moved.")
+            warnings.warn("Unmantched coordinates and coordsys. Point not moved.")
 
     @property
     def camcol(self):
@@ -382,4 +409,3 @@ class Point(MutableComposite):
             self._initFrame(self._x, val, self._camcol, self._filter)
         elif self.coordsys == "ccd":
             self._initCCD(self._cx, val)
-

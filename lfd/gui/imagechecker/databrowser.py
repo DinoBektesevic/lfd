@@ -1,15 +1,14 @@
 """Data Browsers are classes that maintain index consistency between two
 Indexers and provide the functionality required to browse two indexers
 simultaneously. Since the source databases for results and images could be
-completely disjointed this means one of the Indexers is designated as a primary
-indexer. Browsing follows primary indexer while the secondary indexer is
-queried for the corresponding item.
-
+completely disjointed, one of the Indexers must be designated as a primary
+indexer. Browsing then iterates through the primary indexer while the secondary
+indexer is queried for the corresponding item.
 """
-import os
+
 
 from lfd.gui.imagechecker.indexers import ImageIndexer, EventIndexer
-from lfd.gui.imagechecker.imagedb import session_scope
+
 
 class GenericBrowser(type):
     """GenericBrowser metaclass offers the ability to rename the values of
@@ -22,13 +21,13 @@ class GenericBrowser(type):
     and the other way around for ImageBrowser. This is completely superfluous
     and here more because I wanted to tr something out than out of any real
     neccessity.
-
     """
     def __new__(cls, name, bases, attrs):
         if len(bases) > 0 and "rename" in attrs.keys():
             for old, new in attrs["rename"].items():
                 attrs[new] = bases[0].__dict__[old]
         return super(GenericBrowser, cls).__new__(cls, name, bases, attrs)
+
 
 class Browser(metaclass=GenericBrowser):
     """Browser is the generic abstraction of a browser that iterates over the
@@ -57,13 +56,11 @@ class Browser(metaclass=GenericBrowser):
       the primary Indexer (EventIndexer or ImageIndexer)
     secondaryIndexer : lfd.gui.imagechecker.Indexer
       the secondary Indexer
-
     """
     def __init__(self, primaryIndexer=None, secondaryIndexer=None):
         """Identify primary and secondary indexer classes. To instantiate the
         actual indexers one of the _initPrimary or _initSecondary methods has
         to be called.
-
         """
         self.primaryIndexer = None if primaryIndexer is None else primaryIndexer
         self.secondaryIndexer = None if secondaryIndexer is None else secondaryIndexer
@@ -73,36 +70,35 @@ class Browser(metaclass=GenericBrowser):
     def _initPrimary(self, URI):
         """Instantiate the primary indexer."""
         self.__primary = self.primaryIndexer(URI)
-        run    = self.__primary.item.run
+        run = self.__primary.item.run
         camcol = self.__primary.item.camcol
         filter = self.__primary.item.filter
-        field  = self.__primary.item.field
+        field = self.__primary.item.field
         if self.__secondary is not None:
             self.__secondary.get(run, camcol, filter, field)
 
     def _initSecondary(self, URI):
         """Instantiate the secondary indexer."""
         self.__secondary = self.secondaryIndexer(URI)
-        run    = self.__primary.item.run
+        run = self.__primary.item.run
         camcol = self.__primary.item.camcol
         filter = self.__primary.item.filter
-        field  = self.__primary.item.field
+        field = self.__primary.item.field
         self.__secondary.get(run, camcol, filter, field)
 
     def getNext(self):
         """Advance the index of the primary by a step and then find if the
         secondary contains the newly selected object.
-
         """
         if self.__primary is not None:
             self.__primary.next()
-            tmp = self._primary.item #images.image
+            tmp = self._primary.item
             self.__secondary.get(run=tmp.run, camcol=tmp.camcol, filter=tmp.filter,
-                               field=tmp.field)
+                                 field=tmp.field)
+
     def getPrevious(self):
         """Regress the index of the primary by a step and then find if the
         secondary contains the newly selected object.
-
         """
         if self.__primary is not None:
             self.__primary.previous()
@@ -115,10 +111,9 @@ class Browser(metaclass=GenericBrowser):
         advance both indexers to the item if possible. Relationship from
         primary to secondary indexer can be many to one, so providing 'which'
         allows selection on a particular secondary of interest.
-
         """
         self.__primary.get(run=run, camcol=camcol, filter=filter, field=field,
-                        which=which)
+                           which=which)
         self.__secondary.get(run=run, camcol=camcol, filter=filter, field=field)
 
     @property
@@ -133,12 +128,14 @@ class Browser(metaclass=GenericBrowser):
 
     @property
     def _pitem(self):
-        """The item, of the primary indexer, pointed to by the current index."""
+        """The item, of the primary indexer, pointed to by the current index.
+        """
         return self.__primary.item
 
     @property
     def _sitem(self):
-        """The item, of the secondary indexer, pointed to by the current index."""
+        """The item, of the secondary indexer, pointed to by the current index.
+        """
         return self.__secondary.item
 
 
@@ -156,9 +153,9 @@ class EventBrowser(Browser):
       URI of the database of Images
 
     """
-    rename = {"_primary":"events", "_secondary":"images", "_pitem":"event",
-              "_sitem":"image", "_initPrimary":"initEvents",
-              "_initSecondary":"initImages"}
+    rename = {"_primary": "events", "_secondary": "images", "_pitem": "event",
+              "_sitem": "image", "_initPrimary": "initEvents",
+              "_initSecondary": "initImages"}
 
     def __init__(self, resdbURI=None, imgdbURI=None):
         super().__init__(primaryIndexer=EventIndexer,
@@ -185,9 +182,9 @@ class ImageBrowser(Browser):
       URI of the database of Images
 
     """
-    rename = {"_primary":"images", "_secondary":"events", "_pitem":"image",
-              "_sitem":"event", "_initPrimary":"initImages",
-              "_initSecondary":"initEvents"}
+    rename = {"_primary": "images", "_secondary": "events", "_pitem": "image",
+              "_sitem": "event", "_initPrimary": "initImages",
+              "_initSecondary": "initEvents"}
 
     def __init__(self, resdbURI=None, imgdbURI=None):
         super().__init__(primaryIndexer=ImageIndexer,

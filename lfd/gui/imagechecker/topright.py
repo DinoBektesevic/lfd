@@ -1,8 +1,11 @@
-from tkinter import *
-from tkinter.ttk import *
+from tkinter import (TOP,
+                     BOTH,
+                     RIDGE)
+from tkinter import ttk
 from lfd.gui.utils import multi_getattr
 
-class TopRight(Frame):
+
+class TopRight(ttk.Frame):
     """Top right part of the right frame. Used to display the data on currently
     selected Event.
 
@@ -17,14 +20,13 @@ class TopRight(Frame):
     * displayKeys - keys that will be displayed in the information table of the
       Event. Any valid column name of Event is accepted, by default will be:
       `[run, camcol, filter, field, frame.t.iso]`
-
     """
     def __init__(self, parent):
-        Frame.__init__(self, width=300)
+        ttk.Frame.__init__(self, width=300)
         self.pack(side=TOP, fill=BOTH)
-        #self.grid_propagate(False)
+        # self.grid_propagate(False)
 
-        self.unverified_color =  "DarkGoldenrod1"
+        self.unverified_color = "DarkGoldenrod1"
         self.falsepositive_color = "red"
         self.positive_color = "DarkOliveGreen3"
 
@@ -44,25 +46,32 @@ class TopRight(Frame):
         # order of the calls to these two functions would not matter
         for widget in self.winfo_children():
             widget.destroy()
-
         event = self.data.event
+
         # spacer between top of window and table
-        Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
+        ttk.Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
+
+        style = ttk.Style()
+        style.configure("Unverified.TLabel", background=self.unverified_color,
+                        relief=RIDGE)
+        style.configure("FalsePositive.TLabel", background=self.falsepositive_color,
+                        relief=RIDGE)
+        style.configure("Positive.TLabel", background=self.positive_color,
+                        relief=RIDGE)
 
         for row, key in enumerate(self.displayKeys, 1):
             if not event.verified:
-                color = self.unverified_color
+                pickedStyle = "Unverified.TLabel"
             elif event.false_positive:
-                color = self.falsepositive_color
+                pickedStyle = "FalsePositive.TLabel"
             else:
-                color = self.positive_color
+                pickedStyle = "Positive.TLabel"
 
-            Label(self, text=key, relief=RIDGE, width=10,
-                  background=color).grid(row=row, column=0, padx=(25, 0))
-            Label(self, text=multi_getattr(event, key), relief=RIDGE, width=25,
-                  background=color).grid(row=row, column=1, padx=(0, 40))
+            ttk.Label(self, text=key, style=pickedStyle, width=10).grid(
+                row=row, column=0, padx=(25, 0))
+            ttk.Label(self, text=multi_getattr(event, key), style=pickedStyle,
+                      width=25).grid(row=row, column=1, padx=(0, 40))
+            row += 1
 
-            row+=1
-
-        #spacer between topright and botright
-        Label(self).grid(row=0, columnspan=2, padx=50, pady=13)
+        # spacer between topright and botright
+        ttk.Label(self).grid(row=0, columnspan=2, padx=50, pady=13)

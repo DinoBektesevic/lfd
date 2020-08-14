@@ -10,11 +10,6 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lfd.analysis.profiles.convolution import convolve
-from lfd.analysis.profiles.objectprofiles import *
-from lfd.analysis.profiles.seeing import *
-from lfd.analysis.profiles.consts import *
-
 
 __all__ = ["PERSISTENT_CACHE", "EPHEMERAL_CACHE",
            "search_cached", "cache_data", "get_data"]
@@ -46,10 +41,12 @@ def get_cache_dirs(path=None, name="data"):
 
     return cacheList
 
+
 PERSISTENT_CACHE = get_cache_dirs(name="data")
 """Cache for data that ships with lfd. Contains Rabina profiles as well as data
 that recreates plots from published papers. This cache is not meant to be
 written to be the user, for that see EPHEMERAL_CACHE."""
+
 
 EPHEMERAL_CACHE = ospath.expanduser("~/.lfd")
 """Ephemeral cache is used for data created by the user. If it doesn't exist
@@ -168,7 +165,7 @@ def cache_data(data, name):
 
     for fname, data in zip(filename, data):
         try:
-            paths = search_cached(fname)
+            search_cached(fname)
         except FileNotFoundError:
             # no files with that name exist in either cache, all is well
             filepath = os.path.join(EPHEMERAL_CACHE, fname)

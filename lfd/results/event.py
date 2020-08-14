@@ -5,17 +5,20 @@ points...) required. While that may be true, Event is still composed of
 multiple smaller movimg pieces with which it can have complex relationships
 with so there are some things worth remembering when working with Event.
 """
+import warnings
+
 import sqlalchemy as sql
 from sqlalchemy.orm import relationship, composite
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from astropy.time import Time
 
-from lfd.results import Base
+from lfd.results import Base, ccd_dimensions
 from lfd.results import __query_aliases as query_aliases
 from lfd.results.point import Point
 from lfd.results.basictime import BasicTime, LineTime
 from lfd.results.utils import session_scope
+
 
 __all__ = ["Event"]
 
@@ -121,19 +124,19 @@ class Event(Base):
 
     or in the SDSS modified tai format:
 
-    >>> foo = Event(frame, 1, 1, 2, 2, start_t=4575925956.49, format="sdss-tai")
+    >>> foo = Event(frame, 1, 1, 2, 2, start_t=4575925956.5, format="sdss-tai")
 
     """
     __tablename__ = "events"
     id = sql.Column(sql.Integer, primary_key=True)
 
-    # a copy of each of the foreign key components must be kept for join to work
-    _run    = sql.Column(sql.Integer)
+    # a copy of foreign key components must be kept for join to work
+    _run = sql.Column(sql.Integer)
     _camcol = sql.Column(sql.Integer)
     _filter = sql.Column(sql.String(length=1))
-    _field  = sql.Column(sql.Integer)
+    _field = sql.Column(sql.Integer)
 
-    # we hide the coordinates because they should be accessed through properties
+    # hide the coordinates because they should be accessed through properties
     _x1 = sql.Column(sql.Float, nullable=False)
     _y1 = sql.Column(sql.Float, nullable=False)
     _x2 = sql.Column(sql.Float, nullable=False)
@@ -148,24 +151,23 @@ class Event(Base):
     false_positive = sql.Column(sql.Boolean, nullable=False, default=True)
 
     start_t = sql.Column(BasicTime)
-    end_t   = sql.Column(BasicTime)
+    end_t = sql.Column(BasicTime)
 
-    # the order in instantiation of the composite and the Point class in __init__
-    # itself is **very important**. The Point will resolve its init procedures
-    # itself so that various different inits are possible, but this is based on
-    # the order of init parameters and on their value (Truthy or None). If the
-    # order of the init parameters in the __init__ function does not match the
-    # order of parameters in the composite, when instantiating from the DB wrong
-    # values will be sent as wrong parameters. Additionally _camcol and _filter
-    # can not be in front of the _cx and _cy because __composite_values__ of
-    # Point DO NOT CHANGE THEM. Therefore the x, y, cx, cy will map to
-    # x, y, camcol, filter, cx, cy but because types won't be correct - it will
-    # default to None
+    # the order in instantiation of the composite and the Point class in
+    # __init__ **very important**. The Point resolves whatwhich attributes of
+    # the class link to which attributes of the composite class. The order of
+    # init parameters and their values (Truthy or None) set which attrs match.
+    # If the order of the init parameters in the __init__ function does not
+    # match the order of parameters in the composite, wrong values will be
+    # sent as wrong parameters. Additionally _camcol and _filter can not be in
+    # front of the _cx and _cy because __composite_values__ of Point DO NOT
+    # CHANGE THEM. Therefore the x, y, cx, cy will map to x, y, camcol, filter,
+    # cx, cy but because types won't be correct - they will default to None
     lt = composite(LineTime, start_t, end_t)
     p1 = composite(Point, _x1, _y1, _cx1, _cy1, _camcol, _filter)
     p2 = composite(Point, _x2, _y2, _cx2, _cy2, _camcol, _filter)
 
-    #http://docs.sqlalchemy.org/en/latest/orm/relationship_persistence.html#mutable-primary-keys-update-cascades
+    # http://docs.sqlalchemy.org/en/latest/orm/relationship_persistence.html#mutable-primary-keys-update-cascades  # noqa: E501
     # THIS IS THE ONLY WAY to make sure foreign keys work as foreign composite
     # key. It is a many-to-one relationship where 1 frame can have many events.
     # On-update cascades shoud ensure that an update of frames row all events
@@ -173,15 +175,14 @@ class Event(Base):
     __table_args__ = (
         sql.ForeignKeyConstraint(['_run', '_camcol', "_filter", "_field"],
                                  ['frames.run', 'frames.camcol', "frames.filter",
-                                  "frames.field"], onupdate="CASCADE"),{}
-	  )
+                                  "frames.field"], onupdate="CASCADE"), {}
+    )
 
     # back_populates will create an attribute on Event that will make the Frame
     # object accessible through Event. How do cascades work, or why don't they
     # work?!?!
     frame = relationship("Frame", back_populates="events",
                          cascade="save-update,merge,expunge")
-
 
     def __init__(self, frame, x1=None, y1=None, x2=None, y2=None, cx1=None,
                  cy1=None, cx2=None, cy2=None, start_t=None, end_t=None,
@@ -226,7 +227,7 @@ class Event(Base):
         self.p1 = p1
         self.p2 = p2
 
-        # the same is not true for frame - it's a relationship and won't fill in
+        # the same is not true for frame - a relationship and won't fill in
         # object attributes untill commited to DB. So, we fill then in manually
         self.frame = frame
         self._run = frame.run
@@ -237,7 +238,7 @@ class Event(Base):
         # assume sdss-tai format in case format is not supplied.
         t_format = kwargs.pop("format", "sdss-tai")
         self.start_t = self.__init_t(start_t, t_format)
-        self.end_t   = self.__init_t(end_t, t_format)
+        self.end_t = self.__init_t(end_t, t_format)
 
     def __init_t(self, t, format):
         # It might not be possible to determine the times of the linear
@@ -297,33 +298,31 @@ class Event(Base):
         # make new coords
         newx = []
         newy = []
-        success = False
 
         # check vertical border x=0, then y=b, ignore if it's outside CCD
-        if b >= 0 and b <= H_FILTER:
+        if b >= 0 and b <= ccd_dimensions.H_FILTER:
             newx.append(0)
             newy.append(b)
 
         # check the vertical border x=W_CAMCOL, then y = m*W_CAMCOL+b
-        tmp = m*W_CAMCOL + b
-        if tmp >= 0 and tmp <= W_CAMCOL:
-            newx.append(W_CAMCOL)
+        tmp = m * ccd_dimensions.W_CAMCOL + b
+        if tmp >= 0 and tmp <= ccd_dimensions.W_CAMCOL:
+            newx.append(ccd_dimensions.W_CAMCOL)
             newy.append(tmp)
 
         # check the horizontal border y=0, then x = -b/m
         tmp = -b/m
-        if tmp >= 0 and tmp <= W_CAMCOL:
+        if tmp >= 0 and tmp <= ccd_dimensions.W_CAMCOL:
             newx.append(tmp)
             newy.append(0)
 
         # check the horizontal border y=H_FILTER, then x = (H_FILTER-b)/m
-        tmp = (H_FILTER-b)/m
-        if tmp >= 0 and tmp <= W_CAMCOL:
+        tmp = (ccd_dimensions.H_FILTER - b)/m
+        if tmp >= 0 and tmp <= ccd_dimensions.W_CAMCOL:
             newx.append(tmp)
-            newy.append(H_FILTER)
+            newy.append(ccd_dimensions.H_FILTER)
 
         return newx, newy
-
 
     def snap2ccd(self):
         """Snap the curent coordinates to the points of intersection of the
@@ -336,8 +335,8 @@ class Event(Base):
         """
         # calculate the line slope and intercept y=mx+b, pray it works, needs
         # checks for verticality and horizontality
-        m = (self.y2-self.y1)/(self.x2-self.x1)
-        b = -m*self.x1 + self.y1
+        m = (self.y2 - self.y1)/(self.x2 - self.x1)
+        b = -m * self.x1 + self.y1
 
         newx, newy = self._findPointsOnSides(m, b)
 
@@ -353,14 +352,12 @@ class Event(Base):
             msg = "Could not compute edge points, returned: P1{0} and P2{1}."
             raise ValueError(msg.format(newx, newy))
 
-
-
     @classmethod
     def query(cls, condition=None):
-        """A class method that can be used to query the Event table. Appropriate
-        for interactive work, not as appropriate for large codebase usage. See
-        package help for more details on how the Session is kept open. Will
-        return a query object, not the query result.
+        """Query the Event table. Appropriate for interactive work, not as
+        appropriate for large codebase usage. See package help for more details
+        on how the Session is kept open. Will return a query object, not the
+        query result.
 
         If condition is supplied it is interpreted as a common string SQL. It's
         sufficient to use the names of mapped classes and their attributes as
@@ -390,9 +387,9 @@ class Event(Base):
         with session_scope() as s:
             return s.query(cls).join("frame").filter(sql.text(condition))
 
-    ###########################################################################
-    ##################                frame                       #############
-    ###########################################################################
+    # #########################################################################
+    # ################                frame                       #############
+    # #########################################################################
     @hybrid_property
     def run(self):
         return self._run
@@ -409,9 +406,9 @@ class Event(Base):
     def field(self):
         return self._field
 
-    ###########################################################################
-    ###################                 p1                       ##############
-    ###########################################################################
+    # #########################################################################
+    # #################                 p1                       ##############
+    # #########################################################################
     def __check_sensibility(self, attr):
         if attr[-1:] == "1":
             camcol, filter = self.p1._camcol, self.p1._filter
@@ -443,7 +440,7 @@ class Event(Base):
 
     @hybrid_property
     def cx1(self):
-       return self._cx1
+        return self._cx1
 
     @cx1.setter
     def cx1(self, val):
@@ -459,10 +456,9 @@ class Event(Base):
         self.p1._initCCD(self.cx1, val)
         self.__check_sensibility("cy1")
 
-
-    ###########################################################################
-    ###################                 p2                       ##############
-    ###########################################################################
+    # #########################################################################
+    # #################                 p2                       ##############
+    # #########################################################################
     @hybrid_property
     def x2(self):
         return self._x2
@@ -481,7 +477,7 @@ class Event(Base):
 
     @hybrid_property
     def cx2(self):
-       return self._cx2
+        return self._cx2
 
     @cx2.setter
     def cx2(self, val):

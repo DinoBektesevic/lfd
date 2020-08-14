@@ -1,12 +1,14 @@
-"""Indexers establish order amongs items 
+"""Indexers establish order amongs items iterated in the GUI, in this case the
+PNG images and matching events in the events database.
 """
-import sqlalchemy as sql
+
 
 from lfd import results as res
 from lfd.results import Event
 
 from lfd.gui.imagechecker import imagedb
 from lfd.gui.imagechecker.imagedb import Image
+
 
 class Indexer:
     """Generic indexer of items in a database. Given a list of items or a
@@ -56,7 +58,7 @@ class Indexer:
         of items and loads the newly pointed to object.
 
         """
-        if self.current == None:
+        if self.current is None:
             self.current = None
         else:
             dummyindex = self.current + step
@@ -64,7 +66,7 @@ class Indexer:
                 self.current = self.maxindex
             elif dummyindex < 0:
                 self.current = 0
-            else: # 0 < dummyindex < self.maxindex:
+            else:  # 0 < dummyindex < self.maxindex:
                 self.current = dummyindex
             self.get()
 
@@ -168,9 +170,8 @@ class Indexer:
 class EventIndexer(Indexer):
     """Indexes Events database providing a convenient way to establish order
     among the items.
-
     """
-    def __init__(self,  URI=None):
+    def __init__(self, URI=None):
         super().__init__()
 
         if URI is not None:
@@ -205,10 +206,10 @@ class EventIndexer(Indexer):
 
         """
         with res.session_scope() as session:
-            query = session.query(Event).filter(Event.run==run,
-                                                Event.filter==filter,
-                                                Event.camcol==camcol,
-                                                Event.field==field)
+            query = session.query(Event).filter(Event.run == run,
+                                                Event.filter == filter,
+                                                Event.camcol == camcol,
+                                                Event.field == field)
             events = query.all()
             if len(events) > 1:
                 event = events[which][0]
@@ -217,8 +218,10 @@ class EventIndexer(Indexer):
             else:
                 return None
 
+            # session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON
+            # EXPUNGE HAPPEN?!
             session.expunge(event.frame)
-#                session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON EXPUNGE HAPPEN?!
+
         return event
 
     def _getFromItemId(self, eventid):
@@ -234,11 +237,13 @@ class EventIndexer(Indexer):
         """
         with res.session_scope() as session:
             q = session.query(Event)
-            q = q.filter(Event.id==eventid)
+            q = q.filter(Event.id == eventid)
             event = q.first()
             if event is not None:
+                # session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON
+                # EXPUNGE HAPPEN?!
                 session.expunge(event.frame)
-#                session.expunge(event) --> SOMEHOW NOW MAGICALLY CASCADES ON EXPUNGE HAPPEN?!
+
         return event
 
     @property
@@ -247,7 +252,9 @@ class EventIndexer(Indexer):
         return self.item
 
     def commit(self):
-        """Add the object back to the session and commit any changes made to it."""
+        """Add the object back to the session and commit any changes made to
+        it.
+        """
         self.event.verified = True
         with res.session_scope() as session:
             session.add(self.event)
@@ -257,9 +264,8 @@ class EventIndexer(Indexer):
 class ImageIndexer(Indexer):
     """Indexes Image database providing a convenient way to establish order
     among the items.
-
     """
-    def __init__(self,  URI=None):
+    def __init__(self, URI=None):
         super().__init__()
 
         if URI is not None:
@@ -294,10 +300,10 @@ class ImageIndexer(Indexer):
 
         """
         with imagedb.session_scope() as session:
-            query = session.query(Image).filter(Image.run==run,
-                                                Image.filter==filter,
-                                                Image.camcol==camcol,
-                                                Image.field==field)
+            query = session.query(Image).filter(Image.run == run,
+                                                Image.filter == filter,
+                                                Image.camcol == camcol,
+                                                Image.field == field)
             images = query.all()
             if len(images) > 1:
                 image = images[which][0]
@@ -322,12 +328,11 @@ class ImageIndexer(Indexer):
         """
         with imagedb.session_scope() as session:
             query = session.query(Image)
-            query = query.filter(Image.id==imageid)
+            query = query.filter(Image.id == imageid)
             image = query.first()
             if image is not None:
                 session.expunge(image)
         return image
-
 
     @property
     def image(self):

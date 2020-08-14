@@ -34,18 +34,19 @@ Dependencies
 
 Erin Sheldon's SDSS utilities come bundled with the provided code.
 """
-
 import os as _os
+
+from lfd import analysis  # noqa: F401
+from lfd import detecttrails
+from lfd import createjobs
+from lfd import gui  # noqa: F401
+from lfd import results
+
 
 BOSS = None
 PHOTO_REDUX = None
 BOSS_PHOTOOBJ = None
 
-from lfd import analysis
-from lfd import detecttrails
-from lfd import createjobs
-from lfd import gui
-from lfd import results
 
 def setup_detecttrails(bosspath=BOSS, photoobjpath=BOSS_PHOTOOBJ,
                        photoreduxpath=PHOTO_REDUX, debugpath=None):
@@ -104,11 +105,11 @@ def setup_createjobs(photoreduxpath=None):
     """
     # see if BOSS was set previously and assume SDSS convention
     if (BOSS is not None) and (photoreduxpath is None):
-        photoredux = _os.path.join(BOSS, "photo/redux")
+        photoreduxpath = _os.path.join(BOSS, "photo/redux")
     # otherwise assume both the SDSS convention and that BOSS is on ~/Desktop
     if (BOSS is None) and (photoreduxpath is None):
         bosspath = _os.path.join(_os.path.expanduser("~"), "Desktop/boss")
-        photoredux = _os.path.join(bosspath, "photo/redux")
+        photoreduxpath = _os.path.join(bosspath, "photo/redux")
     # unless of course photoreduxpath was set manually
     createjobs.setup(photoreduxpath)
 
@@ -134,4 +135,3 @@ def setup_results(URI="sqlite:///", dbpath="~/Desktop", name="foo.db",
     dbpath = _os.path.expanduser(dbpath)
     db_uri = _os.path.join(URI+dbpath, name)
     results.connect2db(uri=db_uri, echo=echo)
-

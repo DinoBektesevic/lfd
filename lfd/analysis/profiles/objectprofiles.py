@@ -2,16 +2,15 @@
 objects such as PointSource, Disk etc...
 
 """
-import warnings
-import copy
 import os
+import warnings
 
 import numpy as np
 from scipy import stats
 import cv2
 
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject
-from lfd.analysis.profiles.consts import *
+from lfd.analysis.profiles.consts import RAD2ARCSEC
 import lfd.analysis.profiles.utils as utils
 
 
@@ -148,14 +147,16 @@ class DiskSource(ConvolutionObject):
             rr = rr*RAD2ARCSEC
 
         theta = self.theta
-        _f = lambda x: 2*np.sqrt(theta**2-x**2)/(np.pi*theta**2)
+
+        def _f(x):
+            lambda x: 2*np.sqrt(theta**2-x**2)/(np.pi*theta**2)
 
         # testing showed faster abs performs faster for smaller arrays and
         # logical_or outperforms abs by 12% for larger ones
         if len(rr) < 50000:
-            mask = np.abs(rr)>=theta
+            mask = np.abs(rr) >= theta
         else:
-            mask = np.logical_or(rr>theta, rr<-theta)
+            mask = np.logical_or(rr > theta, rr < -theta)
 
         rr[mask] = 0
         rr[~mask] = _f(rr[~mask])
@@ -201,9 +202,9 @@ class RabinaSource(ConvolutionObject):
     Parameters
     ----------
     angle : `string`, `float` or `int`
-        If string the path to the premade 2D integrated Rabina profile projection,
-        if float or int the angle in radians that will be converted into a filename
-        of one of the premade Rabina profiles.
+        If string, it's the path to the premade 2D integrated Rabina profile
+        projection. If float or int, it's the angle in radians that will be
+        converted into a filename of one of the premade Rabina profiles.
     h : `float`
         height of the object, in meters
 
@@ -211,9 +212,9 @@ class RabinaSource(ConvolutionObject):
     ----
     Integrating 3D Rabina profile to create the 2D projection is very costly.
     Premade profiles range from 0 to 1.5 radians in steps of 0.1 radians, or
-    approximately 0 to 90 degrees in steps of ~6 degrees. If a specific projection
-    angle is required code to generate one can be found in `profiles/rabina` dir
-    (see also: profiles.utils.get_rabina_dir).
+    approximately 0 to 90 degrees in steps of ~6 degrees. If a specific
+    projection angle is required code to generate one can be found in the
+    persistent cache (see also: profiles.utils.get_rabina_dir).
     """
     xmin, xmax = -5., 5.
     ymin, ymax = -5., 5.
@@ -228,31 +229,30 @@ class RabinaSource(ConvolutionObject):
             imgneg = utils.get_rabina_profile(angle, useCV2=True)
         except ValueError:
             if not os.path.isfile(self.projection):
-                raise ValueError(f"Expected path to file or an angle got {projection} instead.")
+                raise ValueError(f"Expected path to file or an angle got {angle} instead.")
             imgneg = cv2.imread(self.projection, cv2.IMREAD_GRAYSCALE)
         if imgneg is None:
-            raise RuntimeError(f"OpenCV underscriptively failed to open {imgpath}. "
-                               "Try to open it manually.")
+            raise RuntimeError(f"OpenCV underscriptively failed to open the image. "
+                               "Try to open images in persistent cache manually.")
 
-        #xmin, xmax = RabinaProfile.xmin, RabinaProfile.xmax
-        #ymin, ymax = RabinaSource.ymin, RabinaSource.ymax
-
-        #xstep = (xmax-xmin)/RabinaProfile.N
-        ystep = (RabinaSource.ymax- RabinaSource.ymin)/RabinaSource.N
+        # xmin, xmax = RabinaProfile.xmin, RabinaProfile.xmax
+        # ymin, ymax = RabinaSource.ymin, RabinaSource.ymax
+        # xstep = (xmax-xmin)/RabinaProfile.N
+        ystep = (RabinaSource.ymax - RabinaSource.ymin) / RabinaSource.N
 
         white = 255.*np.ones(imgneg.shape)
 
-        img = -1.*(imgneg-white)
+        img = -1.0 * (imgneg - white)
         imgr = np.zeros(img.shape)
         imgr[2:-2, 2:-2] += img[2:-2, 2:-2]
         self.raw = imgr/imgr.max()
 
-        #meterscalex = np.arange(xmin, xmax, xstep)
-        meterscaley = np.arange( RabinaSource.ymin,  RabinaSource.ymax, ystep)
+        # meterscalex = np.arange(xmin, xmax, xstep)
+        meterscaley = np.arange(RabinaSource.ymin, RabinaSource.ymax, ystep)
 
-        #scalex = meterscalex/(h*1000.) * RAD2ARCSEC
+        # scalex = meterscalex/(h*1000.) * RAD2ARCSEC
         self.scaley = meterscaley/(h*1000.) * RAD2ARCSEC
-        #self.distx = imgrn.sum(axis=0)
+        # self.distx = imgrn.sum(axis=0)
         disty = self.raw.sum(axis=1)
 
         ConvolutionObject.__init__(self, disty, self.scaley)
@@ -274,9 +274,9 @@ class RabinaSource(ConvolutionObject):
         # testing showed faster abs performs faster for smaller arrays and
         # logical_or outperforms abs by 12% for larger ones
         if len(rr) < 50000:
-            mask = np.abs(rr)>=self.scaley[-1]
+            mask = np.abs(rr) >= self.scaley[-1]
         else:
-            mask = np.logical_or(rr>self.scaley[-1], rr<-self.scaley[-1])
+            mask = np.logical_or(rr > self.scaley[-1], rr < -self.scaley[-1])
 
         rr[mask] = 0
         # RabinaSource will always raise interpolation warning, do not silence

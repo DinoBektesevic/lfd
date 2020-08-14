@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-from scipy import misc, signal, interpolate, stats
+from scipy import interpolate
 
 
 class ConvolutionObject:
@@ -95,14 +95,14 @@ class ConvolutionObject:
             warnings.warn("Required value estimated by interpolation.")
             return self.__guessf(r)
         except ValueError:
-             warnings.warn("Interpolation performed for value outside scale range. "
+            warnings.warn("Interpolation performed for value outside scale range. "
                           "This can occur when extending profiles into tails of "
                           "their distribution where they are assumed to be 0. "
                           "Is this the case?")
-             newobj = np.zeros(len(r))
-             overlap = (r>self.scaleleft) & (r < self.scaleright)
-             newobj[overlap] += self.__guessf(r[overlap])
-             return newobj
+            newobj = np.zeros(len(r))
+            overlap = (r > self.scaleleft) & (r < self.scaleright)
+            newobj[overlap] += self.__guessf(r[overlap])
+            return newobj
 
     def f(self, r=None):
         """Returns the value of the profile function at a point/array of points
@@ -161,11 +161,10 @@ class ConvolutionObject:
         """Calculates Full-Width-Half-Maximum of the object."""
         if len(self.obj) != len(self.scale):
             errormsg = ("Expected len(obj) == len(scale) but got, "
-                       "len({0}) != len({1}) instead. Run rescale method "
-                       "for possible fix.")
+                        "len({0}) != len({1}) instead. Run rescale method "
+                        "for possible fix.")
             raise ValueError(errormsg.format(len(self.obj), len(self.scale)))
 
-        #maxobj = max(self.obj)
         left = np.where(self.obj >= self.peak/2.)[0][0]
         right = np.where(self.obj >= self.peak/2.)[0][-1]
 

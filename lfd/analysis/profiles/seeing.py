@@ -6,9 +6,11 @@ effects of atmospheric seeing on a point source. The function is described in:
 import numpy as np
 
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject
-from lfd.analysis.profiles.consts import *
+from lfd.analysis.profiles.consts import FWHM2SIGMA
+
 
 __all__ = ["GausKolmogorov"]
+
 
 class GausKolmogorov(ConvolutionObject):
     """Simple Gaus-Kolmogorov seeing. Convolving with this function has the
@@ -45,8 +47,10 @@ class GausKolmogorov(ConvolutionObject):
         if sigma is None:
             sigma = self.sigma
         sigma2 = 2*sigma*sigma
-        gk = lambda x: 0.909*(1/(np.pi*sigma2) * np.exp((-x*x)/sigma2) + \
-                         0.1*(1/(np.pi*sigma2) * np.exp((-x*x)/sigma2)))
+
+        def gk(x):
+            lambda x: 0.909 * (1 / (np.pi * sigma2) * np.exp((-x * x) / sigma2)
+                               + 0.1 * (1 / (np.pi * sigma2) * np.exp((-x * x) / sigma2)))
         try:
             return gk(r)
         except TypeError:

@@ -8,7 +8,8 @@ described in::
 import numpy as np
 
 from lfd.analysis.profiles.convolutionobj import ConvolutionObject
-from lfd.analysis.profiles.consts import *
+from lfd.analysis.profiles.consts import RAD2ARCSEC
+
 
 __all__ = ["FluxPerAngle"]
 
@@ -39,7 +40,6 @@ class FluxPerAngle(ConvolutionObject):
             self.h = h
             self.Ro, self.Ri = instrument
             thetao = self.Ro / (h * 1000000.)
-            thetai = self.Ri / (h * 1000000.)
             radscale = np.arange(-2*thetao, 2*thetao, thetao*res)
             scale = np.multiply(radscale, RAD2ARCSEC)
         obj = self.f(scale, h, instrument, units=units)
@@ -63,12 +63,11 @@ class FluxPerAngle(ConvolutionObject):
         # we check more explicitly here than in others because the default unit
         # is arcsec instead of RAD like elsewhere, but calculations are in RAD
         if units.upper() not in ("RAD", "ARCSEC"):
-            raise ValueError("Unrecognized units. Options: 'rad'" + \
-                             "or 'arcsec' instead recieved {0}".format(units))
+            raise ValueError("Unrecognized units. Options: 'rad'"
+                             f"or 'arcsec' instead recieved {units}")
 
         if units.upper() == "ARCSEC":
-            rr = rr/RAD2ARCSEC
-
+            rr = rr / RAD2ARCSEC
 
         if instrument is None:
             Ro, Ri = None, None
@@ -82,18 +81,16 @@ class FluxPerAngle(ConvolutionObject):
 
         thetao = Ro / (h * 1000000.)
         thetai = Ri / (h * 1000000.)
-        thetao2 = thetao*thetao
-        thetai2 = thetai*thetai
+        thetao2 = thetao * thetao
+        thetai2 = thetai * thetai
 
-        # The quicker way to resolve the equation involves sometimes taking a square
-        # root of very small negative numbers, avoiding that is to take a performance
-        # penalty. We need to silence both lines because `thetao2-thetai2` is evaluated
-        # imediately.
+        # Solving the equation involves sometimes taking a square root of very
+        # small negative numbers, We silence that warning.
         with np.errstate(invalid='ignore'):
-            defocusf = lambda x: 2./(np.pi*(thetao2 - thetai2)) * \
-                (
-                    np.nan_to_num(np.sqrt(thetao2-x*x)) -
-                    np.nan_to_num(0.5*(np.sign(thetai-x)+1) * np.sqrt(thetai2-x*x))
+            def defocusf(x):
+                lambda x: 2./(np.pi*(thetao2 - thetai2)) * (
+                    np.nan_to_num(np.sqrt(thetao2-x*x))
+                    - np.nan_to_num(0.5*(np.sign(thetai-x)+1) * np.sqrt(thetai2-x*x))
                 )
             res = defocusf(rr)
 
