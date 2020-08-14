@@ -9,7 +9,7 @@ system on, and between, the images::
   ||        |   |        |  \|        |   |        |   |        |   |        |
   |----------   ----------   \---------   ---------- __----------   ----------
   |                           \-->lin. feat           ^ H_FILTER_SPACING
-  |x---------   x---------   x-\--------   x---------_|_ 
+  |x---------   x---------   x-\--------   x---------_|_
   ||        |   |        |   |  \      |   |        | ^
  i||  CCD   |   |  CCD   |   |   * P2  |   |  CCD   | | H_FILTER
   ||        |   |        |   |         |   |        | |
@@ -53,7 +53,7 @@ ARCMIN2PIX : float
   , but expressed in minutes because of how values were given in the tables.
 MM2ARCMIN : float
   3.63535503, detector image scale, mm/arcminute.
-"""
+"""  # noqa: W605
 
 W_CAMCOL = 2048.0
 W_CAMCOL_SPACING = 1743.820956
@@ -61,9 +61,8 @@ W_CAMCOL_SPACING = 1743.820956
 H_FILTER = 2048.0
 H_FILTER_SPACING = 660.4435401
 
-MAX_W_CCDARRAY = 21008.0 #unrounded: 21007.10478
-MAX_H_CCDARRAY = 12882.0 #unrounded: 12881.77416
+MAX_W_CCDARRAY = 21008.0  # unrounded: 21007.10478
+MAX_H_CCDARRAY = 12882.0  # unrounded: 12881.77416
 
 ARCMIN2PIX = 0.0066015625
 MM2ARCMIN = 3.63535503
-

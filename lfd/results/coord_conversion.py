@@ -12,12 +12,10 @@ class CoordinateConversionError(ArithmeticError):
 
     Example
     -------
-
     >>> raise CoordinateConversionError(incoords, outcoords)
 
     Parameters
     ----------
-
     incoords : tuple, list
       a set of ingoing to-be-converted coordinates
     outcoords : tuple, list
@@ -30,9 +28,7 @@ class CoordinateConversionError(ArithmeticError):
 
     incoords are (cx, cy) CCD coordinates and outcoords are the frame
     (x, y, camcol, filter) coordinates or vice-versa.
-
     """
-
     def __init__(self, incoords, outcoords, msg=None, *args):
         """CoordinateConversionError(incoords, outcoords)
         where incoords are (cx, cy) CCD coordinates and outcoords are the frame
@@ -43,7 +39,6 @@ class CoordinateConversionError(ArithmeticError):
 
         Parameters
         ----------
-
         incoords : tuple, list
           a set of ingoing to-be-converted coordinates
         outcoords : tuple, list
@@ -51,16 +46,16 @@ class CoordinateConversionError(ArithmeticError):
         msg : str
           customize the error message. String .format method with positional
           arguments with incoords and outcoords always being the first two,
-          rest is then appended in the order it was given in *args. 
+          rest is then appended in the order it was given in *args.
         *args : tuple, list
-          any additional args can be supplemented and are appended to the end of
-          the error message
-    
+          any additional args can be supplemented and are appended to the end
+          of the error message
+
+        Notes
+        -----
         incoords are (cx, cy) CCD coordinates and outcoords are the frame
         (x, y, camcol, filter) coordinates or vice-versa.
-
         """
-
         if msg is not None:
             self.message = msg
         else:
@@ -92,10 +87,8 @@ def get_filter_int(filter):
      u -> 2
      z -> 3
      g -> 4
-
     """
-
-    return {"r":0, "i":1, "u":2, "z":3, "g":4}[filter]
+    return {"r": 0, "i": 1, "u": 2, "z": 3, "g": 4}[filter]
 
 
 def get_filter_from_int(filterint):
@@ -107,9 +100,7 @@ def get_filter_from_int(filterint):
      2 -> u
      3 -> z
      4 -> g
-
     """
-
     return ["r", "i", "u", "z", "g"][filterint-1]
 
 
@@ -126,22 +117,22 @@ def convert_ccd2frame(x, y):
     system. Only one such sollution is guaranteed to exists.
 
     """
-
     res = [None, None, None, "nofilter"]
     solved_camcol = False
     solved_filter = False
 
     # whatever you have in your book is wrong, you messed something up in your
-    # notes? Given a camcol and filter the annon funcs calculate the coordinates
+    # notes? Given a camcol and filter the annon funcs calculate the coords
     # in the frame coord sys. on the given single CCD at (camcol, filter)
-    newx = lambda camcol: \
-           x - camcol * (ccd.W_CAMCOL + ccd.W_CAMCOL_SPACING)
-    newy = lambda filter: \
-           y - filter * (ccd.H_FILTER + ccd.H_FILTER_SPACING)
+    def newx(camcol):
+        return x - camcol * (ccd.W_CAMCOL + ccd.W_CAMCOL_SPACING)
+
+    def newy(camcol):
+        return y - filter * (ccd.H_FILTER + ccd.H_FILTER_SPACING)
 
     # to invert the solution we iterate over all camcols and only one camcol
-    # will produce a value of x coordinate contained within the respective single
-    # CCD. We store the calculated frame x coordinate and the respective camcol
+    # will produce a value of x coordinate contained within the respective CCD.
+    # We store the calculated frame x coordinate and the respective camcol
     for i in range(0, 6):
         tmp = newx(i)
         if tmp >= 0 and tmp <= ccd.W_CAMCOL:
@@ -165,24 +156,22 @@ def convert_ccd2frame(x, y):
     if solved_camcol and solved_filter:
         return res
     else:
-        raise CoordinateConversionError((x,y), res)
+        raise CoordinateConversionError((x, y), res)
 
 
 def convert_frame2ccd(x, y, camcol, filter):
-    """Converts from frame coordinates (x, y, camcol, filter) to CCD coordinates
-    (cx, cy) via the following formulae::
+    """Converts from frame coordinates (x, y, camcol, filter) to CCD
+    coordinates (cx, cy) via the following formulae::
 
      cx = x + (camcol-1) * (W_CAMCOL + W_CAMCOL_SPACING)
      cy = y +  filter    * (H_FILTER + H_FILTER_SPACING)
 
     Filter can be sent as an integer or a string from {riuzg}.
-
     """
-
     # check filter type and resolve into integer
     if isinstance(filter, str) and filter in "riuzg":
         filter = get_filter_int(filter)
-    elif isinstance(filter, int) and filter in (1,2,3,4,5):
+    elif isinstance(filter, int) and filter in (1, 2, 3, 4, 5):
         pass
     else:
         raise ValueError("Unrecognized filter: {0}".format(filter))
@@ -191,7 +180,7 @@ def convert_frame2ccd(x, y, camcol, filter):
     if camcol > 6 or camcol < 1:
         raise ValueError("Unrecognized camcol: {0}".format(filter))
 
-    newx = x + (camcol-1) * (ccd.W_CAMCOL_SPACING+ccd.W_CAMCOL)
-    newy = y + filter*(ccd.H_FILTER + ccd.H_FILTER_SPACING)
+    newx = x + (camcol - 1) * (ccd.W_CAMCOL_SPACING + ccd.W_CAMCOL)
+    newy = y + filter * (ccd.H_FILTER + ccd.H_FILTER_SPACING)
 
-    return [newx,newy]
+    return [newx, newy]

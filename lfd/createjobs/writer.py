@@ -1,5 +1,6 @@
 import os
 
+
 def get_node_with_files(job, run):
     """
     .. deprecated:: 1.0
@@ -8,7 +9,6 @@ def get_node_with_files(job, run):
     of run are stored. Returns the node number. In cases where
     error occured while reading node number returns the first,
     "01", node.
-
     """
     os.path.join(job.dir, "lst-lnk")
     f = open(os.path.join(job.dir, "lst_lnk"))
@@ -17,6 +17,7 @@ def get_node_with_files(job, run):
     if read[index-1] == "/":
         return read[index-32:index-30]
     return "01"
+
 
 def writeJob(job, verbose=True):
     """Writes the job#.dqs files. Takes in a Jobs instance and processes the
@@ -28,11 +29,10 @@ def writeJob(job, verbose=True):
 
     Parameters
     ----------
-    job : lfd.createjobs.Job
+    job : `lfd.createjobs.Job`
        Job object from which job scripts are to be created.
-    verbose : bool
+    verbose : `bool`
        deprecated to alleviate clutter
-
     """
     runlst = job.makeRunlst()
     for i in range(0, len(runlst)):
@@ -62,7 +62,7 @@ def writeJob(job, verbose=True):
             elif job.pick.lower() == "runfilter":
                 command = "run={0}, filter='{1}'".format(x, job.filter)
             elif job.pick.lower() == "runcamcol":
-                command = "run={0}, camcol={2}".format(x,  job.camcol)
+                command = "run={0}, camcol={2}".format(x, job.camcol)
             elif job.pick.lower() == "runfiltercamcol":
                 command = "run={0}, filter='{1}', camcol={2}"
                 command = command.format(x, job.filter, job.camcol)
@@ -78,12 +78,11 @@ def writeJob(job, verbose=True):
             header += job.command.replace("$", command)
 
             if job.pernode:
-                node = get_node_with_files(job, run)
+                node = get_node_with_files(job, x.run)
                 header = header.replace("NODEFLAG", "fermi-node"+node)
                 header = header.replace("FERMINODE", "fermi-node"+node)
             else:
-                 header = header.replace("NODEFLAG", "1")
-                 header = header.replace("FERMINODE", "fermi-node01")
+                header = header.replace("NODEFLAG", "1")
+                header = header.replace("FERMINODE", "fermi-node01")
         newjob.writelines(header+footer)
     newjob.close()
-

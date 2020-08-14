@@ -8,7 +8,7 @@ grid in the CCD plane where the distance between camcols is only slightly less
 than the size of the CCD itself so that the gaps can be filled in by another
 run.
 
-A single Frame can contain many Events. 
+A single Frame can contain many Events.
 """
 import sqlalchemy as sql
 from sqlalchemy.orm import relationship
@@ -20,13 +20,14 @@ from lfd.results import __query_aliases as query_aliases
 from lfd.results.basictime import BasicTime
 from lfd.results.utils import session_scope
 
+
 __all__ = ["Frame"]
 
 
 class Frame(Base):
     """Class Frame maps table 'frames'. Corresponds to an SDSS frame. A frame
     is uniquely defined by the set (run, camcol, filter, field). For in-depth
-    see datamodel: https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html
+    see datamodel: https://data.sdss.org/datamodel/files/BOSS_PHOTOOBJ/frames/RERUN/RUN/CAMCOL/frame.html # noqa: E501 W505
 
     Parameters
     ----------
@@ -62,7 +63,6 @@ class Frame(Base):
 
     Example
     -------
-
     Almost everything is not nullable so supply everything:
 
     >>> foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1, crval2,
@@ -76,14 +76,12 @@ class Frame(Base):
     Time can be given as SDSS TAI or any of the other formats supported by
     Astropy Time Object. In the DB itself it is always forced to the SDSS TAI
     time format.
-
     """
-
     __tablename__ = "frames"
-    run    = sql.Column(sql.Integer, primary_key=True)
+    run = sql.Column(sql.Integer, primary_key=True)
     camcol = sql.Column(sql.Integer, primary_key=True)
     filter = sql.Column(sql.String(length=1), primary_key=True)
-    field  = sql.Column(sql.Integer, primary_key=True)
+    field = sql.Column(sql.Integer, primary_key=True)
 
     crpix1 = sql.Column(sql.Float, nullable=False)
     crpix2 = sql.Column(sql.Float, nullable=False)
@@ -97,14 +95,14 @@ class Frame(Base):
 
     t = sql.Column(BasicTime, nullable=False)
 
-    #http://docs.sqlalchemy.org/en/latest/orm/cascades.html
+    # http://docs.sqlalchemy.org/en/latest/orm/cascades.html
     events = relationship("Event", back_populates="frame", passive_updates=False,
                           cascade="save-update,delete,expunge", lazy="joined",
                           innerjoin=True)
 
     def __init__(self, run, camcol, filter, field, crpix1, crpix2, crval1, crval2,
                  cd11, cd12, cd21, cd22, t, **kwargs):
-        """Supply everything:
+        """Return a Frame object given SDSS frame identifiers, time and WCS:
 
         >>> foo = Frame(run, camcol, filter, field, crpix1, cprix2, crval1,
                         crval2, cd11, cd21, cd22, t)
@@ -116,13 +114,11 @@ class Frame(Base):
 
         Time can be given as Astropy Time Object, SDSS TAI format or any of the
         formats supported by Astropy Time object.
-
         """
-
-        self.run    = run
+        self.run = run
         self.camcol = camcol
         self.filter = filter
-        self.field  = field
+        self.field = field
 
         self.crpix1 = crpix1
         self.crpix2 = crpix2
@@ -144,7 +140,6 @@ class Frame(Base):
             else:
                 self.t = Time(t, format=format)
 
-
     def __repr__(self):
         m = self.__class__.__module__
         n = self.__class__.__name__
@@ -160,8 +155,9 @@ class Frame(Base):
     @classmethod
     def query(cls, condition=None):
         """Class method that used to query the Frame ('frames') table. Returns
-        a Query object. Appropriate for interactive work as Session remains open
-        for the lifetime of the Query. See results package help to see details.
+        a Query object. Appropriate for interactive work as Session remains
+        open for the lifetime of the Query. See results package help to see
+        details.
 
         If condition is supplied it is interpreted as an SQL string query. It's
         suffiecient to use mapped class names and their attributes as the
@@ -172,7 +168,6 @@ class Frame(Base):
         Frame.query("Frame.run > 2").first()
         Frame.query("field == 1 and filter == 'i'").all()
         Frame.query("Event.y1 > 2).all()
-
         """
 
         if condition is None:
